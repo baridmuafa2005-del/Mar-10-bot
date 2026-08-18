@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MAR-10 Multi-Robot Lab</title>
+    <title>MAR-10 Lab System</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; font-family: 'Segoe UI', Roboto, sans-serif; }
 
@@ -11,254 +11,119 @@
             background: #040108; 
             min-height: 100vh; 
             display: flex; 
+            flex-direction: column;
             align-items: center; 
             justify-content: center; 
-            overflow: hidden; 
+            overflow-x: hidden; 
             position: relative;
+            padding: 20px 10px;
         }
 
-        /* EFEK GRID & SCANLINE DILUAR KOTAK (BIAR RAME) */
+        /* BACKGROUND GRID & SCANLINE */
         .bg-grid {
             position: absolute;
-            width: 200%;
-            height: 200%;
+            width: 200%; height: 200%;
             background-image: 
-                linear-gradient(rgba(186, 104, 200, 0.07) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(186, 104, 200, 0.07) 1px, transparent 1px);
-            background-size: 40px 40px;
+                linear-gradient(rgba(186, 104, 200, 0.08) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(186, 104, 200, 0.08) 1px, transparent 1px);
+            background-size: 30px 30px;
             transform: perspective(500px) rotateX(60deg);
-            bottom: -50%;
-            z-index: 0;
-            pointer-events: none;
-        }
-
-        .scanline {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(to bottom, transparent 50%, rgba(0, 240, 255, 0.03) 51%);
-            background-size: 100% 4px;
-            z-index: 1;
-            pointer-events: none;
+            bottom: -50%; z-index: 0; pointer-events: none;
         }
 
         .credit {
             position: absolute;
-            top: 20px;
-            left: 20px;
-            color: #e1bee7;
-            font-size: 13px;
-            font-weight: 600;
+            top: 15px; left: 15px;
+            color: #e1bee7; font-size: 12px; font-weight: 600;
             background: rgba(255, 255, 255, 0.05);
-            padding: 6px 14px;
-            border-radius: 20px;
+            padding: 5px 12px; border-radius: 20px;
             border: 1px solid rgba(186, 104, 200, 0.3);
             z-index: 10;
         }
 
-        /* CONTAINER UTAMA MENAMPUNG 3 ROBOT */
+        /* DASHBOARD CONTAINER */
         .lab-container {
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 24px;
+            gap: 15px;
             z-index: 2;
             width: 100%;
-            max-width: 950px;
-            padding: 20px;
+            max-width: 800px;
+            flex-wrap: wrap;
         }
 
-        /* CARD ROBOT PENDAMPING (KIRI & KANAN) */
-        .side-robot-card {
-            background: rgba(18, 10, 28, 0.7);
-            border: 1px solid rgba(0, 240, 255, 0.3);
-            border-radius: 20px;
-            padding: 16px;
-            width: 160px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            box-shadow: 0 0 25px rgba(0, 240, 255, 0.15);
-            backdrop-filter: blur(12px);
-            position: relative;
-        }
-
-        .side-title {
-            color: #00f0ff;
-            font-size: 10px;
-            font-weight: 800;
-            letter-spacing: 2px;
-            margin-bottom: 12px;
-        }
-
-        /* DESAIN ROBOT KIRI: SCANNER ROBOT */
-        .scanner-bot {
-            width: 80px;
-            height: 95px;
-            background: #140824;
-            border: 2px solid #00f0ff;
-            border-radius: 16px;
-            position: relative;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 0 15px rgba(0, 240, 255, 0.3);
-            animation: floatSide 4s infinite ease-in-out;
-        }
-
-        .scanner-visor {
-            width: 60px;
-            height: 25px;
-            background: #080210;
-            border-radius: 8px;
-            border: 1px solid #00f0ff;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .laser-beam {
-            width: 100%;
-            height: 3px;
-            background: #00f0ff;
-            box-shadow: 0 0 8px #00f0ff;
-            position: absolute;
-            animation: scanBeam 1.5s infinite alternate ease-in-out;
-        }
-
-        @keyframes scanBeam {
-            0% { top: 0%; }
-            100% { top: 85%; }
-        }
-
-        /* DESAIN ROBOT KANAN: RADAR/SECURITY ROBOT */
-        .radar-bot {
-            width: 80px;
-            height: 95px;
-            background: #140824;
-            border: 2px solid #ab47bc;
-            border-radius: 16px;
-            position: relative;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 0 15px rgba(171, 71, 188, 0.3);
-            animation: floatSide 3.5s infinite ease-in-out reverse;
-        }
-
-        .radar-antenna {
-            width: 3px;
-            height: 16px;
-            background: #ab47bc;
-            position: absolute;
-            top: -16px;
-        }
-
-        .radar-dish {
-            width: 14px;
-            height: 14px;
-            border: 2px solid #ab47bc;
-            border-radius: 50%;
-            position: absolute;
-            top: -24px;
-            animation: rotateRadar 2s infinite linear;
-        }
-
-        @keyframes rotateRadar {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
-
-        @keyframes floatSide {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-8px); }
-        }
-
-        .status-badge {
-            margin-top: 12px;
-            font-size: 10px;
-            color: #a7ffeb;
-            background: rgba(0, 240, 255, 0.1);
-            padding: 4px 8px;
-            border-radius: 8px;
-            border: 1px solid rgba(0, 240, 255, 0.2);
-        }
-
-        /* CARD ROBOT UTAMA (MAR-10) */
+        /* CARD UTAMA */
         .main-card {
             background: rgba(18, 10, 28, 0.92);
             border: 1.5px solid rgba(186, 104, 200, 0.5);
-            border-radius: 28px;
-            padding: 24px;
+            border-radius: 24px;
+            padding: 20px 16px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            box-shadow: 0 0 45px rgba(123, 31, 162, 0.45);
+            box-shadow: 0 0 35px rgba(123, 31, 162, 0.45);
             backdrop-filter: blur(16px);
-            width: 350px;
+            width: 100%;
+            max-width: 330px;
             position: relative;
         }
 
         .brand {
-            color: #fff;
-            font-weight: 800;
-            letter-spacing: 4px;
-            margin-bottom: 12px;
-            text-shadow: 0 0 12px #ab47bc;
+            color: #fff; font-weight: 800; letter-spacing: 4px;
+            margin-bottom: 10px; text-shadow: 0 0 12px #ab47bc; font-size: 18px;
         }
 
         .chat-bubble {
             background: rgba(186, 104, 200, 0.15);
             border: 1px solid rgba(186, 104, 200, 0.4);
-            color: #f3e5f5;
-            padding: 10px 18px;
-            border-radius: 16px;
-            font-size: 13px;
-            font-weight: 600;
-            margin-bottom: 20px;
-            text-align: center;
-            box-shadow: 0 0 10px rgba(186, 104, 200, 0.2);
-            transition: all 0.2s ease;
-            width: 100%;
+            color: #f3e5f5; padding: 8px 14px;
+            border-radius: 14px; font-size: 12px; font-weight: 600;
+            margin-bottom: 15px; text-align: center; width: 100%;
         }
 
+        /* STAGE ROBOT & TEKS HELLO PAS DI SANGPING KANAN KEPALA */
         .robot-stage {
             width: 100%;
-            height: 190px;
+            height: 160px;
             position: relative;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-bottom: 15px;
+            margin-bottom: 10px;
         }
 
-        /* TEKS HELLO KANAN (PERTAMA MASUK WEB) */
+        /* TEKS HELLO TIDAK NABRAK MUKA ROBOT */
         .hello-side-text {
             position: absolute;
-            right: -12px;
-            top: 25%;
-            font-size: 36px;
+            right: 0px;
+            top: 20px;
+            font-size: 22px;
             font-weight: 900;
             color: #00f0ff;
-            text-shadow: 0 0 15px #00f0ff, 0 0 30px #ab47bc;
-            letter-spacing: 2px;
-            z-index: 5;
-            animation: pulseHello 1.5s infinite alternate ease-in-out;
-            transition: opacity 0.4s ease, transform 0.4s ease;
+            text-shadow: 0 0 12px #00f0ff, 0 0 20px #ab47bc;
+            letter-spacing: 1px;
+            z-index: 10;
+            background: rgba(4, 1, 8, 0.85);
+            padding: 4px 8px;
+            border-radius: 8px;
+            border: 1px solid rgba(0, 240, 255, 0.4);
+            animation: pulseHello 1.2s infinite alternate ease-in-out;
+            transition: opacity 0.3s ease, transform 0.3s ease;
         }
 
         @keyframes pulseHello {
-            0% { transform: scale(1) translateY(0); opacity: 0.85; }
-            100% { transform: scale(1.08) translateY(-4px); opacity: 1; }
+            0% { transform: scale(1); }
+            100% { transform: scale(1.08); }
         }
 
         .hello-side-text.hidden {
             opacity: 0;
-            transform: scale(0.6) translateX(20px);
+            transform: scale(0.6);
             pointer-events: none;
         }
 
-        /* ROBOT UTAMA */
+        /* ROBOT DESAIN */
         .robot-container {
             position: relative;
             display: flex;
@@ -271,163 +136,106 @@
 
         @keyframes floatRobot {
             0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-7px); }
+            50% { transform: translateY(-6px); }
         }
 
         .robot-head {
-            width: 150px;
-            height: 115px;
+            width: 135px; height: 100px;
             background: linear-gradient(145deg, #2b1842, #140924);
-            border: 3px solid #ba68c8;
-            border-radius: 30px;
-            position: relative;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 0 20px rgba(186, 104, 200, 0.3);
+            border: 3px solid #ba68c8; border-radius: 26px;
+            position: relative; display: flex; align-items: center; justify-content: center;
         }
 
         .ear {
-            width: 13px;
-            height: 24px;
-            background: #ba68c8;
-            position: absolute;
-            top: 50%;
-            transform: translateY(-50%);
-            border-radius: 5px;
+            width: 10px; height: 20px; background: #ba68c8;
+            position: absolute; top: 50%; transform: translateY(-50%); border-radius: 4px;
         }
-        .ear.left { left: -11px; }
-        .ear.right { right: -11px; }
+        .ear.left { left: -9px; } .ear.right { right: -9px; }
 
         .robot-screen {
-            width: 115px;
-            height: 75px;
-            background: #090312;
-            border-radius: 18px;
-            border: 2px solid rgba(186, 104, 200, 0.4);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            overflow: hidden;
+            width: 100px; height: 65px; background: #090312;
+            border-radius: 16px; border: 2px solid rgba(186, 104, 200, 0.4);
+            display: flex; align-items: center; justify-content: center;
+            position: relative; overflow: hidden;
         }
 
         .face-features {
-            display: flex;
-            gap: 20px;
-            align-items: center;
-            transition: transform 0.08s ease-out;
-            will-change: transform;
+            display: flex; gap: 16px; align-items: center; transition: transform 0.08s ease-out;
         }
 
         .eye {
-            width: 15px;
-            height: 22px;
-            background: #00f0ff;
-            border-radius: 10px;
-            box-shadow: 0 0 12px #00f0ff;
-            transition: all 0.2s ease;
+            width: 13px; height: 18px; background: #00f0ff;
+            border-radius: 8px; box-shadow: 0 0 10px #00f0ff; transition: all 0.2s ease;
         }
 
-        .eye.happy { height: 8px; border-radius: 10px 10px 0 0; background: #00f0ff; box-shadow: 0 0 12px #00f0ff; }
-        .eye.focus { height: 5px; width: 18px; background: #ffaa00; box-shadow: 0 0 12px #ffaa00; }
-        .eye.ouch { transform: rotate(25deg); background: #ff0055; box-shadow: 0 0 12px #ff0055; height: 15px; }
-        .eye.angry { transform: rotate(-25deg); background: #ff0055; box-shadow: 0 0 12px #ff0055; height: 15px; }
+        .eye.happy { height: 6px; border-radius: 8px 8px 0 0; }
+        .eye.focus { height: 4px; width: 16px; background: #ffaa00; box-shadow: 0 0 10px #ffaa00; }
+        .eye.ouch { transform: rotate(25deg); background: #ff0055; box-shadow: 0 0 10px #ff0055; }
+        .eye.angry { transform: rotate(-25deg); background: #ff0055; box-shadow: 0 0 10px #ff0055; }
 
         .robot-body {
-            width: 95px;
-            height: 42px;
+            width: 80px; height: 35px;
             background: linear-gradient(145deg, #1d0f30, #10061c);
-            border: 3px solid #ba68c8;
-            border-top: none;
-            border-radius: 0 0 20px 20px;
-            margin-top: -4px;
-            position: relative;
+            border: 3px solid #ba68c8; border-top: none; border-radius: 0 0 18px 18px;
+            margin-top: -3px; position: relative;
         }
 
         .arm {
-            width: 15px;
-            height: 38px;
-            background: #ba68c8;
-            position: absolute;
-            top: 20%;
-            border-radius: 8px;
-            box-shadow: 0 0 8px rgba(186, 104, 200, 0.4);
-            transition: transform 0.2s ease;
+            width: 12px; height: 32px; background: #ba68c8;
+            position: absolute; top: 20%; border-radius: 6px; transition: transform 0.2s ease;
         }
+        .arm.left { left: -14px; transform-origin: top right; transform: rotate(20deg); }
+        .arm.right { right: -14px; transform-origin: top left; transform: rotate(-20deg); }
 
-        .arm.left { left: -16px; transform-origin: top right; transform: rotate(20deg); }
-        .arm.right { right: -16px; transform-origin: top left; transform: rotate(-20deg); }
+        .audio-wave { display: flex; gap: 3px; height: 12px; margin-bottom: 8px; }
+        .wave-bar { width: 3px; height: 100%; background: #ba68c8; border-radius: 2px; animation: waveAnim 1s infinite alternate; }
+        .wave-bar:nth-child(1) { animation-delay: 0.1s; } .wave-bar:nth-child(2) { animation-delay: 0.3s; }
+        .wave-bar:nth-child(3) { animation-delay: 0.5s; } .wave-bar:nth-child(4) { animation-delay: 0.2s; }
+        @keyframes waveAnim { 0% { height: 20%; } 100% { height: 100%; } }
 
-        .robot-container.active .arm.left { transform: rotate(50deg); }
-        .robot-container.active .arm.right { transform: rotate(-50deg); }
-
-        /* VISUALISASI AUDIO WAVEFORM DI ATAS INPUT INPUT */
-        .audio-wave {
-            display: flex;
-            gap: 4px;
-            align-items: flex-end;
-            height: 14px;
-            margin-bottom: 8px;
-        }
-
-        .wave-bar {
-            width: 3px;
-            height: 100%;
-            background: #ba68c8;
-            border-radius: 2px;
-            animation: waveAnim 1s infinite ease-in-out alternate;
-        }
-
-        .wave-bar:nth-child(1) { animation-delay: 0.1s; }
-        .wave-bar:nth-child(2) { animation-delay: 0.3s; }
-        .wave-bar:nth-child(3) { animation-delay: 0.5s; }
-        .wave-bar:nth-child(4) { animation-delay: 0.2s; }
-        .wave-bar:nth-child(5) { animation-delay: 0.4s; }
-
-        @keyframes waveAnim {
-            0% { height: 20%; }
-            100% { height: 100%; }
-        }
-
-        .input-group { display: flex; width: 100%; gap: 8px; }
+        .input-group { display: flex; width: 100%; gap: 6px; }
         input {
             flex: 1; background: rgba(255, 255, 255, 0.06);
-            border: 1px solid rgba(186, 104, 200, 0.3);
-            border-radius: 12px; padding: 10px 14px; color: #fff; outline: none; font-size: 13px;
+            border: 1px solid rgba(186, 104, 200, 0.3); border-radius: 10px;
+            padding: 8px 12px; color: #fff; outline: none; font-size: 12px;
         }
-        input:focus { border-color: #ba68c8; box-shadow: 0 0 8px rgba(186, 104, 200, 0.3); }
         button {
             background: linear-gradient(135deg, #ab47bc, #7b1fa2);
-            border: none; color: #fff; font-weight: bold; padding: 10px 16px; border-radius: 12px; cursor: pointer;
-            box-shadow: 0 4px 12px rgba(123, 31, 162, 0.4);
+            border: none; color: #fff; font-weight: bold; padding: 8px 14px;
+            border-radius: 10px; cursor: pointer; font-size: 12px;
         }
 
-        @media (max-width: 768px) {
-            .side-robot-card { display: none; }
+        /* ROBOT PENDAMPING SISI (TETAP MUNCUL DI HP) */
+        .side-robots-wrapper {
+            display: flex; gap: 12px; justify-content: center; width: 100%; max-width: 330px;
         }
+
+        .side-robot-card {
+            background: rgba(18, 10, 28, 0.75);
+            border: 1px solid rgba(0, 240, 255, 0.3);
+            border-radius: 16px; padding: 10px; flex: 1;
+            display: flex; flex-direction: column; align-items: center; backdrop-filter: blur(8px);
+        }
+
+        .side-title { color: #00f0ff; font-size: 9px; font-weight: 800; letter-spacing: 1px; margin-bottom: 6px; }
+
+        .mini-bot {
+            width: 50px; height: 50px; background: #140824;
+            border: 1.5px solid #00f0ff; border-radius: 10px;
+            display: flex; align-items: center; justify-content: center; position: relative;
+        }
+
+        .mini-eye { width: 6px; height: 6px; background: #00f0ff; border-radius: 50%; box-shadow: 0 0 6px #00f0ff; }
+        .status-badge { margin-top: 6px; font-size: 8px; color: #a7ffeb; background: rgba(0, 240, 255, 0.1); padding: 2px 6px; border-radius: 6px; }
     </style>
 </head>
 <body>
 
     <div class="bg-grid"></div>
-    <div class="scanline"></div>
-
     <div class="credit">By Mario</div>
 
     <div class="lab-container">
-        <!-- ROBOT KIRI: SCANNER BOT -->
-        <div class="side-robot-card">
-            <div class="side-title">UNIT-01 // SCAN</div>
-            <div class="scanner-bot">
-                <div class="scanner-visor">
-                    <div class="laser-beam"></div>
-                </div>
-            </div>
-            <div class="status-badge">SCANNING...</div>
-        </div>
-
-        <!-- ROBOT UTAMA: MAR-10 -->
+        <!-- ROBOT UTAMA MAR-10 -->
         <div class="main-card">
             <div class="brand">MAR-10</div>
             
@@ -451,13 +259,11 @@
                     </div>
                 </div>
 
-                <!-- TEKS HELLO KANAN -->
+                <!-- TEKS HELLO DIPINDAH DI SINI SUPAYA TIDAK MENUMPUK KEPALA ROBOT -->
                 <div class="hello-side-text" id="helloText">HELLO!</div>
             </div>
 
-            <!-- VISUALISASI WAVEFORM SENSOR -->
             <div class="audio-wave">
-                <div class="wave-bar"></div>
                 <div class="wave-bar"></div>
                 <div class="wave-bar"></div>
                 <div class="wave-bar"></div>
@@ -470,17 +276,23 @@
             </div>
         </div>
 
-        <!-- ROBOT KANAN: RADAR BOT -->
-        <div class="side-robot-card">
-            <div class="side-title">UNIT-02 // RADAR</div>
-            <div class="radar-bot">
-                <div class="radar-dish"></div>
-                <div class="radar-antenna"></div>
-                <div class="scanner-visor" style="width: 40px; height: 12px; margin-top: 10px;">
-                    <div style="width: 8px; height: 8px; background: #ab47bc; border-radius: 50%; margin: 1px auto;"></div>
+        <!-- ROBOT PENDAMPING DUA DI BAWAH/SAMPING CARD UTAMA -->
+        <div class="side-robots-wrapper">
+            <div class="side-robot-card">
+                <div class="side-title">SCANNER-BOT</div>
+                <div class="mini-bot">
+                    <div class="mini-eye"></div>
                 </div>
+                <div class="status-badge">SCANNING</div>
             </div>
-            <div class="status-badge" style="color: #e1bee7; background: rgba(171, 71, 188, 0.1); border-color: rgba(171, 71, 188, 0.3);">ACTIVE</div>
+
+            <div class="side-robot-card" style="border-color: rgba(171, 71, 188, 0.4);">
+                <div class="side-title" style="color: #ab47bc;">RADAR-BOT</div>
+                <div class="mini-bot" style="border-color: #ab47bc;">
+                    <div class="mini-eye" style="background: #ab47bc; box-shadow: 0 0 6px #ab47bc;"></div>
+                </div>
+                <div class="status-badge" style="color: #e1bee7; background: rgba(171, 71, 188, 0.15);">ACTIVE</div>
+            </div>
         </div>
     </div>
 
@@ -499,8 +311,8 @@
             const robotX = rect.left + rect.width / 2;
             const robotY = rect.top + rect.height / 2;
 
-            const moveX = Math.max(-16, Math.min(16, (x - robotX) / 10));
-            const moveY = Math.max(-10, Math.min(10, (y - robotY) / 10));
+            const moveX = Math.max(-14, Math.min(14, (x - robotX) / 8));
+            const moveY = Math.max(-8, Math.min(8, (y - robotY) / 8));
 
             face.style.transform = `translate(${moveX}px, ${moveY}px)`;
         }
@@ -510,15 +322,16 @@
             if (e.touches.length > 0) trackMouse(e.touches[0].clientX, e.touches[0].clientY);
         });
 
-        // HILANGKAN TEKS HELLO SETIAP KALI DISENTUH/DIKLIK
+        // FUNGSI UNTUK MENGHILANGKAN HELLO BEGITU SENTUH/KLIK MANA SAJA
         function dismissHello() {
             if (!helloText.classList.contains('hidden')) {
                 helloText.classList.add('hidden');
             }
         }
 
-        window.addEventListener('click', dismissHello);
-        window.addEventListener('touchstart', dismissHello);
+        // KETUK DILUAR ATAU DI MANA SAJA
+        document.addEventListener('click', dismissHello);
+        document.addEventListener('touchstart', dismissHello);
 
         const reactions = [
             { text: "Hello Mario", class: "happy" },
