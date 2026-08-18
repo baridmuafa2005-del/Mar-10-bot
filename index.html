@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MAR-10 AI</title>
+    <title>MAR-10 Interactive Robot</title>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; font-family: 'Segoe UI', sans-serif; }
-        
+        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; font-family: 'Segoe UI', Roboto, sans-serif; }
+
         body { 
             background: #090510; 
             height: 100vh; 
@@ -32,16 +32,16 @@
         }
 
         .main-card {
-            background: rgba(18, 10, 26, 0.75);
-            border: 1px solid rgba(186, 104, 200, 0.25);
-            border-radius: 24px;
+            background: rgba(18, 10, 26, 0.85);
+            border: 1px solid rgba(186, 104, 200, 0.3);
+            border-radius: 28px;
             padding: 24px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
             backdrop-filter: blur(16px);
-            max-width: 350px;
+            max-width: 340px;
             width: 90%;
         }
 
@@ -50,71 +50,127 @@
             font-weight: 800;
             letter-spacing: 4px;
             margin-bottom: 14px;
-            text-shadow: 0 0 10px #ab47bc;
+            text-shadow: 0 0 12px #ab47bc;
         }
 
         .chat-bubble {
-            background: rgba(186, 104, 200, 0.12);
-            border: 1px solid rgba(186, 104, 200, 0.3);
+            background: rgba(186, 104, 200, 0.15);
+            border: 1px solid rgba(186, 104, 200, 0.35);
             color: #f3e5f5;
             padding: 10px 16px;
             border-radius: 14px;
             font-size: 13px;
             font-weight: 600;
-            margin-bottom: 16px;
+            margin-bottom: 20px;
             text-align: center;
             transition: all 0.2s ease;
         }
 
-        /* FRAME ROBOT TANPA KOTAK KAKU */
-        .robot-stage {
-            width: 220px;
+        /* --- STRUKTUR ROBOT CSS (SAMA KAYAK KALKULATOR) --- */
+        .robot-container {
+            width: 200px;
             height: 220px;
             position: relative;
             display: flex;
-            justify-content: center;
+            flex-direction: column;
             align-items: center;
-            margin-bottom: 16px;
-            overflow: hidden;
-            border-radius: 16px;
-        }
-
-        .robot-img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            /* Trik buang background abu-abu/terang dari gambar */
-            mix-blend-mode: lighten; 
-            transition: transform 0.1s ease-out;
-            will-change: transform;
+            justify-content: center;
             cursor: pointer;
+            margin-bottom: 20px;
+            /* Animasi Bernafas / Melayang Halus */
+            animation: floatRobot 3s infinite ease-in-out;
         }
 
-        .input-group {
+        @keyframes floatRobot {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-8px); }
+        }
+
+        /* KEPALA ROBOT */
+        .robot-head {
+            width: 170px;
+            height: 140px;
+            background: linear-gradient(145deg, #2a1b40, #160c26);
+            border: 3px solid #ba68c8;
+            border-radius: 35px;
+            position: relative;
             display: flex;
-            width: 100%;
-            gap: 8px;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 20px rgba(186, 104, 200, 0.3);
         }
 
-        input {
-            flex: 1;
-            background: rgba(255, 255, 255, 0.06);
-            border: 1px solid rgba(186, 104, 200, 0.25);
+        /* TELINGA ROBOT */
+        .ear {
+            width: 16px;
+            height: 30px;
+            background: #ab47bc;
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            border-radius: 6px;
+        }
+        .ear.left { left: -14px; }
+        .ear.right { right: -14px; }
+
+        /* LAYAR MUKANYA */
+        .robot-screen {
+            width: 135px;
+            height: 90px;
+            background: #0d0714;
+            border-radius: 22px;
+            border: 2px solid rgba(186, 104, 200, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* AREA MATA & EKSPRESI (BISA NENGOK) */
+        .face-features {
+            display: flex;
+            gap: 25px;
+            align-items: center;
+            transition: transform 0.08s ease-out;
+            will-change: transform;
+        }
+
+        .eye {
+            width: 18px;
+            height: 26px;
+            background: #00f0ff;
             border-radius: 12px;
-            padding: 10px 14px;
-            color: #fff;
-            outline: none;
-            font-size: 13px;
+            box-shadow: 0 0 12px #00f0ff;
+            transition: all 0.2s ease;
         }
 
+        /* EKSPRESI DINAMIS KHUSUS PAS DIKLIK */
+        .eye.happy { height: 10px; border-radius: 12px 12px 0 0; }
+        .eye.focus { height: 6px; background: #ffaa00; box-shadow: 0 0 12px #ffaa00; }
+        .eye.ouch { transform: rotate(20deg); background: #ff0055; box-shadow: 0 0 12px #ff0055; }
+
+        /* BADAN ROBOT */
+        .robot-body {
+            width: 110px;
+            height: 55px;
+            background: linear-gradient(145deg, #1f1133, #120820);
+            border: 3px solid #ba68c8;
+            border-top: none;
+            border-radius: 0 0 25px 25px;
+            margin-top: -5px;
+        }
+
+        /* CONTROLS */
+        .input-group { display: flex; width: 100%; gap: 8px; }
+        input {
+            flex: 1; background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(186, 104, 200, 0.3);
+            border-radius: 12px; padding: 10px 14px; color: #fff; outline: none; font-size: 13px;
+        }
         button {
             background: linear-gradient(135deg, #ab47bc, #7b1fa2);
-            border: none;
-            color: #fff;
-            font-weight: bold;
-            padding: 10px 16px;
-            border-radius: 12px;
-            cursor: pointer;
+            border: none; color: #fff; font-weight: bold; padding: 10px 16px; border-radius: 12px; cursor: pointer;
         }
     </style>
 </head>
@@ -125,10 +181,20 @@
     <div class="main-card">
         <div class="brand">MAR-10</div>
         
-        <div class="chat-bubble" id="bubble">Need something, Mario?</div>
+        <div class="chat-bubble" id="bubble">Hello! Move cursor or tap me ✨</div>
 
-        <div class="robot-stage">
-            <img src="file_000000008a0c8207914d567c9bf5127b.png" class="robot-img" id="robot" alt="MAR-10 Robot">
+        <div class="robot-container" id="robot">
+            <div class="robot-head">
+                <div class="ear left"></div>
+                <div class="robot-screen">
+                    <div class="face-features" id="face">
+                        <div class="eye" id="leftEye"></div>
+                        <div class="eye" id="rightEye"></div>
+                    </div>
+                </div>
+                <div class="ear right"></div>
+            </div>
+            <div class="robot-body"></div>
         </div>
 
         <div class="input-group">
@@ -138,51 +204,61 @@
     </div>
 
     <script>
-        const robot = document.getElementById('robot');
+        const face = document.getElementById('face');
+        const leftEye = document.getElementById('leftEye');
+        const rightEye = document.getElementById('rightEye');
         const bubble = document.getElementById('bubble');
+        const robot = document.getElementById('robot');
         const userInput = document.getElementById('userInput');
         const sendBtn = document.getElementById('sendBtn');
 
-        // Pergerakan diganti jadi geser halus (Parallax), bukan diputer miring kaku
-        window.addEventListener('mousemove', (e) => {
-            const x = (window.innerWidth / 2 - e.clientX) / 25;
-            const y = (window.innerHeight / 2 - e.clientY) / 25;
-            robot.style.transform = `translate(${-x}px, ${-y}px) scale(1.05)`;
-        });
+        // EYE TRACKING PERSIS KALKULATOR (Mata ikut arah kursor/touch)
+        function trackMouse(x, y) {
+            const rect = robot.getBoundingClientRect();
+            const robotX = rect.left + rect.width / 2;
+            const robotY = rect.top + rect.height / 2;
 
+            const moveX = Math.max(-20, Math.min(20, (x - robotX) / 10));
+            const moveY = Math.max(-15, Math.min(15, (y - robotY) / 10));
+
+            face.style.transform = `translate(${moveX}px, ${moveY}px)`;
+        }
+
+        window.addEventListener('mousemove', (e) => trackMouse(e.clientX, e.clientY));
         window.addEventListener('touchmove', (e) => {
-            if (e.touches.length > 0) {
-                const x = (window.innerWidth / 2 - e.touches[0].clientX) / 25;
-                const y = (window.innerHeight / 2 - e.touches[0].clientY) / 25;
-                robot.style.transform = `translate(${-x}px, ${-y}px) scale(1.05)`;
-            }
+            if (e.touches.length > 0) trackMouse(e.touches[0].clientX, e.touches[0].clientY);
         });
 
-        const dialogs = [
-            "MAR-10 Online & Tracking!",
-            "Ouch! Don't touch my head!",
-            "Need something, Mario?",
-            "System operational ⚡"
+        // REAKSI DIKLIK & BERUBAH EKSPRESI (Yay, Focus, Ouch, Hello)
+        const reactions = [
+            { text: "Yay! ✨", class: "happy" },
+            { text: "Focusing... 🧠", class: "focus" },
+            { text: "Ouch! 😅", class: "ouch" },
+            { text: "Hello! 👋", class: "" }
         ];
-        let idx = 0;
+        let stateIndex = 0;
 
         robot.addEventListener('click', () => {
-            idx = (idx + 1) % dialogs.length;
-            bubble.innerText = dialogs[idx];
+            const state = reactions[stateIndex];
+            bubble.innerText = state.text;
+
+            leftEye.className = "eye " + state.class;
+            rightEye.className = "eye " + state.class;
+
+            stateIndex = (stateIndex + 1) % reactions.length;
         });
 
+        // INPUT TEKS
         function handleSend() {
             const val = userInput.value.trim();
             if (val !== "") {
-                bubble.innerText = `"${val}" Processing... ⚡`;
+                bubble.innerText = `"${val}"? Let's count! 🔢`;
                 userInput.value = "";
             }
         }
 
         sendBtn.addEventListener('click', handleSend);
-        userInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') handleSend();
-        });
+        userInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') handleSend(); });
     </script>
 </body>
 </html>
