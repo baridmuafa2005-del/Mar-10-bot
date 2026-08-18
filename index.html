@@ -3,28 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MAR-10 Interactive Robot</title>
+    <title>MAR-10 Lab System</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; font-family: 'Segoe UI', Roboto, sans-serif; }
 
         body { 
-            background: #06020a; 
-            height: 100vh; 
+            background: #05020a; 
+            min-height: 100vh; 
             display: flex; 
-            flex-direction: column; 
             align-items: center; 
             justify-content: center; 
-            overflow: hidden; 
+            overflow-x: hidden; 
             position: relative;
         }
 
+        /* GLOW BACKGROUND RAME */
         body::before {
             content: '';
             position: absolute;
-            width: 300px;
-            height: 300px;
-            background: radial-gradient(circle, rgba(186, 104, 200, 0.25) 0%, transparent 70%);
-            top: 20%;
+            width: 450px;
+            height: 450px;
+            background: radial-gradient(circle, rgba(186, 104, 200, 0.2) 0%, transparent 70%);
             z-index: 0;
         }
 
@@ -42,20 +41,103 @@
             z-index: 10;
         }
 
+        /* WRAPPER UTAMA BIAR PANEL KANAN & KIRI BISA BERJARAK */
+        .dashboard-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            z-index: 1;
+            width: 95%;
+            max-width: 900px;
+        }
+
+        /* PANEL ANATOMI ROBOT (KIRI & KANAN) */
+        .anatomy-panel {
+            background: rgba(18, 10, 28, 0.6);
+            border: 1px dashed rgba(186, 104, 200, 0.3);
+            border-radius: 20px;
+            padding: 16px;
+            width: 180px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            box-shadow: 0 0 20px rgba(123, 31, 162, 0.15);
+            backdrop-filter: blur(10px);
+        }
+
+        .anatomy-title {
+            color: #ba68c8;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+        }
+
+        /* ROBOT ANATOMI MINI (KIRI: SYSTEM / KANAN: CORE) */
+        .mini-anatomy-robot {
+            width: 80px;
+            height: 90px;
+            border: 1.5px solid rgba(0, 240, 255, 0.5);
+            border-radius: 16px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 240, 255, 0.03);
+            box-shadow: 0 0 10px rgba(0, 240, 255, 0.1);
+        }
+
+        .mini-anatomy-robot .wire-head {
+            width: 45px;
+            height: 35px;
+            border: 1px dashed #00f0ff;
+            border-radius: 8px;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+        }
+
+        .mini-anatomy-robot .wire-eye {
+            width: 6px;
+            height: 6px;
+            background: #00f0ff;
+            border-radius: 50%;
+            box-shadow: 0 0 6px #00f0ff;
+        }
+
+        .mini-anatomy-robot .wire-body {
+            width: 35px;
+            height: 25px;
+            border: 1px dashed #ba68c8;
+            border-radius: 4px;
+        }
+
+        .stat-line {
+            width: 100%;
+            margin-top: 10px;
+            font-size: 10px;
+            color: #ab47bc;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        /* CARD ROBOT UTAMA (MAR-10) */
         .main-card {
-            background: rgba(18, 10, 28, 0.88);
-            border: 1px solid rgba(186, 104, 200, 0.4);
+            background: rgba(18, 10, 28, 0.9);
+            border: 1px solid rgba(186, 104, 200, 0.45);
             border-radius: 28px;
             padding: 24px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            box-shadow: 0 0 35px rgba(123, 31, 162, 0.35);
+            box-shadow: 0 0 40px rgba(123, 31, 162, 0.4);
             backdrop-filter: blur(16px);
-            max-width: 360px;
-            width: 90%;
+            width: 340px;
             position: relative;
-            z-index: 1;
         }
 
         .brand {
@@ -80,10 +162,10 @@
             transition: all 0.2s ease;
         }
 
-        /* CONTAINER ROBOT & TEKS HELLO BESAR */
+        /* STAGE ROBOT & TEKS HELLO BESAR */
         .robot-stage {
             width: 100%;
-            height: 200px;
+            height: 190px;
             position: relative;
             display: flex;
             align-items: center;
@@ -91,32 +173,33 @@
             margin-bottom: 15px;
         }
 
-        /* TEKS HELLO BESAR DI SAMPING KANAN */
+        /* TEKS HELLO PAS BARU MASUK WEB */
         .hello-side-text {
             position: absolute;
-            right: 0px;
-            top: 30%;
-            font-size: 32px;
+            right: -10px;
+            top: 25%;
+            font-size: 34px;
             font-weight: 900;
             color: #00f0ff;
             text-shadow: 0 0 15px #00f0ff, 0 0 30px #ab47bc;
             letter-spacing: 2px;
             z-index: 5;
             animation: pulseHello 1.5s infinite alternate ease-in-out;
-            transition: opacity 0.3s ease, transform 0.3s ease;
+            transition: opacity 0.4s ease, transform 0.4s ease;
         }
 
         @keyframes pulseHello {
-            0% { transform: scale(1) translateY(0); opacity: 0.8; }
+            0% { transform: scale(1) translateY(0); opacity: 0.85; }
             100% { transform: scale(1.08) translateY(-4px); opacity: 1; }
         }
 
         .hello-side-text.hidden {
             opacity: 0;
-            transform: scale(0.8);
+            transform: scale(0.7) translateX(20px);
             pointer-events: none;
         }
 
+        /* DESAIN ROBOT CSS */
         .robot-container {
             position: relative;
             display: flex;
@@ -132,13 +215,12 @@
             50% { transform: translateY(-7px); }
         }
 
-        /* KEPALA ROBOT */
         .robot-head {
-            width: 160px;
-            height: 125px;
+            width: 150px;
+            height: 115px;
             background: linear-gradient(145deg, #2b1842, #140924);
             border: 3px solid #ba68c8;
-            border-radius: 32px;
+            border-radius: 30px;
             position: relative;
             display: flex;
             align-items: center;
@@ -147,93 +229,81 @@
         }
 
         .ear {
-            width: 14px;
-            height: 26px;
+            width: 13px;
+            height: 24px;
             background: #ba68c8;
             position: absolute;
             top: 50%;
             transform: translateY(-50%);
-            border-radius: 6px;
+            border-radius: 5px;
         }
-        .ear.left { left: -12px; }
-        .ear.right { right: -12px; }
+        .ear.left { left: -11px; }
+        .ear.right { right: -11px; }
 
         .robot-screen {
-            width: 125px;
-            height: 80px;
+            width: 115px;
+            height: 75px;
             background: #090312;
-            border-radius: 20px;
+            border-radius: 18px;
             border: 2px solid rgba(186, 104, 200, 0.4);
             display: flex;
             align-items: center;
             justify-content: center;
             position: relative;
             overflow: hidden;
-            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.8);
         }
 
         .face-features {
             display: flex;
-            gap: 22px;
+            gap: 20px;
             align-items: center;
             transition: transform 0.08s ease-out;
             will-change: transform;
         }
 
         .eye {
-            width: 16px;
-            height: 24px;
+            width: 15px;
+            height: 22px;
             background: #00f0ff;
             border-radius: 10px;
             box-shadow: 0 0 12px #00f0ff;
             transition: all 0.2s ease;
         }
 
-        /* EKSPRESI MATA */
         .eye.happy { height: 8px; border-radius: 10px 10px 0 0; background: #00f0ff; box-shadow: 0 0 12px #00f0ff; }
-        .eye.focus { height: 5px; width: 20px; background: #ffaa00; box-shadow: 0 0 12px #ffaa00; }
-        .eye.ouch { transform: rotate(25deg); background: #ff0055; box-shadow: 0 0 12px #ff0055; height: 16px; }
-        .eye.angry { transform: rotate(-25deg); background: #ff0055; box-shadow: 0 0 12px #ff0055; height: 16px; }
+        .eye.focus { height: 5px; width: 18px; background: #ffaa00; box-shadow: 0 0 12px #ffaa00; }
+        .eye.ouch { transform: rotate(25deg); background: #ff0055; box-shadow: 0 0 12px #ff0055; height: 15px; }
+        .eye.angry { transform: rotate(-25deg); background: #ff0055; box-shadow: 0 0 12px #ff0055; height: 15px; }
 
-        /* BADAN & TANGAN */
         .robot-body {
-            width: 100px;
-            height: 45px;
+            width: 95px;
+            height: 42px;
             background: linear-gradient(145deg, #1d0f30, #10061c);
             border: 3px solid #ba68c8;
             border-top: none;
-            border-radius: 0 0 22px 22px;
+            border-radius: 0 0 20px 20px;
             margin-top: -4px;
             position: relative;
         }
 
         .arm {
-            width: 16px;
-            height: 40px;
+            width: 15px;
+            height: 38px;
             background: #ba68c8;
             position: absolute;
             top: 20%;
-            border-radius: 10px;
+            border-radius: 8px;
             box-shadow: 0 0 8px rgba(186, 104, 200, 0.4);
             transition: transform 0.2s ease;
         }
 
-        .arm.left {
-            left: -18px;
-            transform-origin: top right;
-            transform: rotate(20deg);
-        }
-
-        .arm.right {
-            right: -18px;
-            transform-origin: top left;
-            transform: rotate(-20deg);
-        }
+        .arm.left { left: -16px; transform-origin: top right; transform: rotate(20deg); }
+        .arm.right { right: -16px; transform-origin: top left; transform: rotate(-20deg); }
 
         .robot-container.active .arm.left { transform: rotate(50deg); }
         .robot-container.active .arm.right { transform: rotate(-50deg); }
 
-        /* CONTROLS */
+        /* CONTROLS INPUT */
         .input-group { display: flex; width: 100%; gap: 8px; }
         input {
             flex: 1; background: rgba(255, 255, 255, 0.06);
@@ -246,42 +316,78 @@
             border: none; color: #fff; font-weight: bold; padding: 10px 16px; border-radius: 12px; cursor: pointer;
             box-shadow: 0 4px 12px rgba(123, 31, 162, 0.4);
         }
+
+        /* RESPONSIVE BIAR TETAP BAGUS DI HP */
+        @media (max-width: 768px) {
+            .anatomy-panel { display: none; }
+        }
     </style>
 </head>
 <body>
 
     <div class="credit">By Mario</div>
 
-    <div class="main-card">
-        <div class="brand">MAR-10</div>
-        
-        <div class="chat-bubble" id="bubble">System Online</div>
-
-        <div class="robot-stage">
-            <div class="robot-container" id="robot">
-                <div class="robot-head">
-                    <div class="ear left"></div>
-                    <div class="robot-screen">
-                        <div class="face-features" id="face">
-                            <div class="eye" id="leftEye"></div>
-                            <div class="eye" id="rightEye"></div>
-                        </div>
-                    </div>
-                    <div class="ear right"></div>
+    <div class="dashboard-wrapper">
+        <!-- PANEL ANATOMI KIRI -->
+        <div class="anatomy-panel">
+            <div class="anatomy-title">ANATOMY // 01</div>
+            <div class="mini-anatomy-robot">
+                <div class="wire-head">
+                    <div class="wire-eye"></div>
+                    <div class="wire-eye"></div>
                 </div>
-                <div class="robot-body">
-                    <div class="arm left"></div>
-                    <div class="arm right"></div>
-                </div>
+                <div class="wire-body"></div>
             </div>
-
-            <!-- TEKS HELLO BESAR DI SAMPING KANAN -->
-            <div class="hello-side-text" id="helloText">HELLO!</div>
+            <div class="stat-line"><span>CPU:</span> <span>ONLINE</span></div>
+            <div class="stat-line"><span>SENSORS:</span> <span>100%</span></div>
         </div>
 
-        <div class="input-group">
-            <input type="text" id="userInput" placeholder="Say something..." autocomplete="off">
-            <button id="sendBtn">Send</button>
+        <!-- CARD ROBOT UTAMA -->
+        <div class="main-card">
+            <div class="brand">MAR-10</div>
+            
+            <div class="chat-bubble" id="bubble">System Online</div>
+
+            <div class="robot-stage">
+                <div class="robot-container" id="robot">
+                    <div class="robot-head">
+                        <div class="ear left"></div>
+                        <div class="robot-screen">
+                            <div class="face-features" id="face">
+                                <div class="eye" id="leftEye"></div>
+                                <div class="eye" id="rightEye"></div>
+                            </div>
+                        </div>
+                        <div class="ear right"></div>
+                    </div>
+                    <div class="robot-body">
+                        <div class="arm left"></div>
+                        <div class="arm right"></div>
+                    </div>
+                </div>
+
+                <!-- TEKS HELLO BESAR (HILANG SAAT DI-KLIK/INPUT) -->
+                <div class="hello-side-text" id="helloText">HELLO!</div>
+            </div>
+
+            <div class="input-group">
+                <input type="text" id="userInput" placeholder="Say something..." autocomplete="off">
+                <button id="sendBtn">Send</button>
+            </div>
+        </div>
+
+        <!-- PANEL ANATOMI KANAN -->
+        <div class="anatomy-panel">
+            <div class="anatomy-title">CORE // 02</div>
+            <div class="mini-anatomy-robot" style="border-color: #ba68c8;">
+                <div class="wire-head" style="border-color: #ba68c8;">
+                    <div class="wire-eye" style="background: #ba68c8; box-shadow: 0 0 6px #ba68c8;"></div>
+                    <div class="wire-eye" style="background: #ba68c8; box-shadow: 0 0 6px #ba68c8;"></div>
+                </div>
+                <div class="wire-body" style="border-color: #00f0ff;"></div>
+            </div>
+            <div class="stat-line"><span>POWER:</span> <span>98%</span></div>
+            <div class="stat-line"><span>SYNC:</span> <span>ACTIVE</span></div>
         </div>
     </div>
 
@@ -295,14 +401,14 @@
         const userInput = document.getElementById('userInput');
         const sendBtn = document.getElementById('sendBtn');
 
-        // MATA ROBOT NGIKUTIN KURSOR
+        // MATA ROBOT TRACKING KURSOR
         function trackMouse(x, y) {
             const rect = robot.getBoundingClientRect();
             const robotX = rect.left + rect.width / 2;
             const robotY = rect.top + rect.height / 2;
 
-            const moveX = Math.max(-18, Math.min(18, (x - robotX) / 10));
-            const moveY = Math.max(-12, Math.min(12, (y - robotY) / 10));
+            const moveX = Math.max(-16, Math.min(16, (x - robotX) / 10));
+            const moveY = Math.max(-10, Math.min(10, (y - robotY) / 10));
 
             face.style.transform = `translate(${moveX}px, ${moveY}px)`;
         }
@@ -312,7 +418,14 @@
             if (e.touches.length > 0) trackMouse(e.touches[0].clientX, e.touches[0].clientY);
         });
 
-        // REAKSI DIKLIK & INTERAKSI
+        // FUNGSI UNTUK MENGHILANGKAN TEKS HELLO
+        function dismissHello() {
+            if (!helloText.classList.contains('hidden')) {
+                helloText.classList.add('hidden');
+            }
+        }
+
+        // DIALOG & REAKSI MATA
         const reactions = [
             { text: "Hello Mario", class: "happy" },
             { text: "Focusing on task", class: "focus" },
@@ -323,13 +436,9 @@
         let stateIndex = 0;
 
         robot.addEventListener('click', () => {
-            // Sembunyikan teks HELLO besar saat pertama disentuh
-            if (!helloText.classList.contains('hidden')) {
-                helloText.classList.add('hidden');
-            }
+            dismissHello(); // Teks HELLO hilang pas disentuh
 
             const state = reactions[stateIndex];
-            
             bubble.innerText = state.text;
 
             leftEye.className = "eye " + state.class;
@@ -345,9 +454,7 @@
         function handleSend() {
             const val = userInput.value.trim();
             if (val !== "") {
-                if (!helloText.classList.contains('hidden')) {
-                    helloText.classList.add('hidden');
-                }
+                dismissHello(); // Teks HELLO hilang pas kirim pesan
                 bubble.innerText = `Processing: ${val}`;
                 userInput.value = "";
                 leftEye.className = "eye focus";
