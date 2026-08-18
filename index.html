@@ -8,7 +8,7 @@
         * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; font-family: 'Segoe UI', Roboto, sans-serif; }
 
         body { 
-            background: #090510; 
+            background: #06020a; 
             height: 100vh; 
             display: flex; 
             flex-direction: column; 
@@ -16,6 +16,16 @@
             justify-content: center; 
             overflow: hidden; 
             position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(186, 104, 200, 0.25) 0%, transparent 70%);
+            top: 20%;
+            z-index: 0;
         }
 
         .credit {
@@ -28,71 +38,107 @@
             background: rgba(255, 255, 255, 0.05);
             padding: 6px 14px;
             border-radius: 20px;
-            border: 1px solid rgba(186, 104, 200, 0.2);
+            border: 1px solid rgba(186, 104, 200, 0.3);
+            z-index: 10;
         }
 
         .main-card {
-            background: rgba(18, 10, 26, 0.85);
-            border: 1px solid rgba(186, 104, 200, 0.3);
+            background: rgba(18, 10, 28, 0.88);
+            border: 1px solid rgba(186, 104, 200, 0.4);
             border-radius: 28px;
             padding: 24px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+            box-shadow: 0 0 35px rgba(123, 31, 162, 0.35);
             backdrop-filter: blur(16px);
-            max-width: 340px;
+            max-width: 360px;
             width: 90%;
+            position: relative;
+            z-index: 1;
         }
 
         .brand {
             color: #fff;
             font-weight: 800;
             letter-spacing: 4px;
-            margin-bottom: 14px;
+            margin-bottom: 12px;
             text-shadow: 0 0 12px #ab47bc;
         }
 
         .chat-bubble {
             background: rgba(186, 104, 200, 0.15);
-            border: 1px solid rgba(186, 104, 200, 0.35);
+            border: 1px solid rgba(186, 104, 200, 0.4);
             color: #f3e5f5;
-            padding: 10px 16px;
-            border-radius: 14px;
+            padding: 10px 18px;
+            border-radius: 16px;
             font-size: 13px;
             font-weight: 600;
             margin-bottom: 20px;
             text-align: center;
+            box-shadow: 0 0 10px rgba(186, 104, 200, 0.2);
             transition: all 0.2s ease;
         }
 
-        /* --- STRUKTUR ROBOT CSS (SAMA KAYAK KALKULATOR) --- */
+        /* CONTAINER ROBOT & TEKS HELLO BESAR */
+        .robot-stage {
+            width: 100%;
+            height: 200px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 15px;
+        }
+
+        /* TEKS HELLO BESAR DI SAMPING KANAN */
+        .hello-side-text {
+            position: absolute;
+            right: 0px;
+            top: 30%;
+            font-size: 32px;
+            font-weight: 900;
+            color: #00f0ff;
+            text-shadow: 0 0 15px #00f0ff, 0 0 30px #ab47bc;
+            letter-spacing: 2px;
+            z-index: 5;
+            animation: pulseHello 1.5s infinite alternate ease-in-out;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+
+        @keyframes pulseHello {
+            0% { transform: scale(1) translateY(0); opacity: 0.8; }
+            100% { transform: scale(1.08) translateY(-4px); opacity: 1; }
+        }
+
+        .hello-side-text.hidden {
+            opacity: 0;
+            transform: scale(0.8);
+            pointer-events: none;
+        }
+
         .robot-container {
-            width: 200px;
-            height: 220px;
             position: relative;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
             cursor: pointer;
-            margin-bottom: 20px;
-            /* Animasi Bernafas / Melayang Halus */
             animation: floatRobot 3s infinite ease-in-out;
+            z-index: 2;
         }
 
         @keyframes floatRobot {
             0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-8px); }
+            50% { transform: translateY(-7px); }
         }
 
         /* KEPALA ROBOT */
         .robot-head {
-            width: 170px;
-            height: 140px;
-            background: linear-gradient(145deg, #2a1b40, #160c26);
+            width: 160px;
+            height: 125px;
+            background: linear-gradient(145deg, #2b1842, #140924);
             border: 3px solid #ba68c8;
-            border-radius: 35px;
+            border-radius: 32px;
             position: relative;
             display: flex;
             align-items: center;
@@ -100,66 +146,92 @@
             box-shadow: 0 0 20px rgba(186, 104, 200, 0.3);
         }
 
-        /* TELINGA ROBOT */
         .ear {
-            width: 16px;
-            height: 30px;
-            background: #ab47bc;
+            width: 14px;
+            height: 26px;
+            background: #ba68c8;
             position: absolute;
             top: 50%;
             transform: translateY(-50%);
             border-radius: 6px;
         }
-        .ear.left { left: -14px; }
-        .ear.right { right: -14px; }
+        .ear.left { left: -12px; }
+        .ear.right { right: -12px; }
 
-        /* LAYAR MUKANYA */
         .robot-screen {
-            width: 135px;
-            height: 90px;
-            background: #0d0714;
-            border-radius: 22px;
+            width: 125px;
+            height: 80px;
+            background: #090312;
+            border-radius: 20px;
             border: 2px solid rgba(186, 104, 200, 0.4);
             display: flex;
             align-items: center;
             justify-content: center;
             position: relative;
             overflow: hidden;
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.8);
         }
 
-        /* AREA MATA & EKSPRESI (BISA NENGOK) */
         .face-features {
             display: flex;
-            gap: 25px;
+            gap: 22px;
             align-items: center;
             transition: transform 0.08s ease-out;
             will-change: transform;
         }
 
         .eye {
-            width: 18px;
-            height: 26px;
+            width: 16px;
+            height: 24px;
             background: #00f0ff;
-            border-radius: 12px;
+            border-radius: 10px;
             box-shadow: 0 0 12px #00f0ff;
             transition: all 0.2s ease;
         }
 
-        /* EKSPRESI DINAMIS KHUSUS PAS DIKLIK */
-        .eye.happy { height: 10px; border-radius: 12px 12px 0 0; }
-        .eye.focus { height: 6px; background: #ffaa00; box-shadow: 0 0 12px #ffaa00; }
-        .eye.ouch { transform: rotate(20deg); background: #ff0055; box-shadow: 0 0 12px #ff0055; }
+        /* EKSPRESI MATA */
+        .eye.happy { height: 8px; border-radius: 10px 10px 0 0; background: #00f0ff; box-shadow: 0 0 12px #00f0ff; }
+        .eye.focus { height: 5px; width: 20px; background: #ffaa00; box-shadow: 0 0 12px #ffaa00; }
+        .eye.ouch { transform: rotate(25deg); background: #ff0055; box-shadow: 0 0 12px #ff0055; height: 16px; }
+        .eye.angry { transform: rotate(-25deg); background: #ff0055; box-shadow: 0 0 12px #ff0055; height: 16px; }
 
-        /* BADAN ROBOT */
+        /* BADAN & TANGAN */
         .robot-body {
-            width: 110px;
-            height: 55px;
-            background: linear-gradient(145deg, #1f1133, #120820);
+            width: 100px;
+            height: 45px;
+            background: linear-gradient(145deg, #1d0f30, #10061c);
             border: 3px solid #ba68c8;
             border-top: none;
-            border-radius: 0 0 25px 25px;
-            margin-top: -5px;
+            border-radius: 0 0 22px 22px;
+            margin-top: -4px;
+            position: relative;
         }
+
+        .arm {
+            width: 16px;
+            height: 40px;
+            background: #ba68c8;
+            position: absolute;
+            top: 20%;
+            border-radius: 10px;
+            box-shadow: 0 0 8px rgba(186, 104, 200, 0.4);
+            transition: transform 0.2s ease;
+        }
+
+        .arm.left {
+            left: -18px;
+            transform-origin: top right;
+            transform: rotate(20deg);
+        }
+
+        .arm.right {
+            right: -18px;
+            transform-origin: top left;
+            transform: rotate(-20deg);
+        }
+
+        .robot-container.active .arm.left { transform: rotate(50deg); }
+        .robot-container.active .arm.right { transform: rotate(-50deg); }
 
         /* CONTROLS */
         .input-group { display: flex; width: 100%; gap: 8px; }
@@ -168,9 +240,11 @@
             border: 1px solid rgba(186, 104, 200, 0.3);
             border-radius: 12px; padding: 10px 14px; color: #fff; outline: none; font-size: 13px;
         }
+        input:focus { border-color: #ba68c8; box-shadow: 0 0 8px rgba(186, 104, 200, 0.3); }
         button {
             background: linear-gradient(135deg, #ab47bc, #7b1fa2);
             border: none; color: #fff; font-weight: bold; padding: 10px 16px; border-radius: 12px; cursor: pointer;
+            box-shadow: 0 4px 12px rgba(123, 31, 162, 0.4);
         }
     </style>
 </head>
@@ -181,20 +255,28 @@
     <div class="main-card">
         <div class="brand">MAR-10</div>
         
-        <div class="chat-bubble" id="bubble">Hello! Move cursor or tap me ✨</div>
+        <div class="chat-bubble" id="bubble">System Online</div>
 
-        <div class="robot-container" id="robot">
-            <div class="robot-head">
-                <div class="ear left"></div>
-                <div class="robot-screen">
-                    <div class="face-features" id="face">
-                        <div class="eye" id="leftEye"></div>
-                        <div class="eye" id="rightEye"></div>
+        <div class="robot-stage">
+            <div class="robot-container" id="robot">
+                <div class="robot-head">
+                    <div class="ear left"></div>
+                    <div class="robot-screen">
+                        <div class="face-features" id="face">
+                            <div class="eye" id="leftEye"></div>
+                            <div class="eye" id="rightEye"></div>
+                        </div>
                     </div>
+                    <div class="ear right"></div>
                 </div>
-                <div class="ear right"></div>
+                <div class="robot-body">
+                    <div class="arm left"></div>
+                    <div class="arm right"></div>
+                </div>
             </div>
-            <div class="robot-body"></div>
+
+            <!-- TEKS HELLO BESAR DI SAMPING KANAN -->
+            <div class="hello-side-text" id="helloText">HELLO!</div>
         </div>
 
         <div class="input-group">
@@ -209,17 +291,18 @@
         const rightEye = document.getElementById('rightEye');
         const bubble = document.getElementById('bubble');
         const robot = document.getElementById('robot');
+        const helloText = document.getElementById('helloText');
         const userInput = document.getElementById('userInput');
         const sendBtn = document.getElementById('sendBtn');
 
-        // EYE TRACKING PERSIS KALKULATOR (Mata ikut arah kursor/touch)
+        // MATA ROBOT NGIKUTIN KURSOR
         function trackMouse(x, y) {
             const rect = robot.getBoundingClientRect();
             const robotX = rect.left + rect.width / 2;
             const robotY = rect.top + rect.height / 2;
 
-            const moveX = Math.max(-20, Math.min(20, (x - robotX) / 10));
-            const moveY = Math.max(-15, Math.min(15, (y - robotY) / 10));
+            const moveX = Math.max(-18, Math.min(18, (x - robotX) / 10));
+            const moveY = Math.max(-12, Math.min(12, (y - robotY) / 10));
 
             face.style.transform = `translate(${moveX}px, ${moveY}px)`;
         }
@@ -229,21 +312,31 @@
             if (e.touches.length > 0) trackMouse(e.touches[0].clientX, e.touches[0].clientY);
         });
 
-        // REAKSI DIKLIK & BERUBAH EKSPRESI (Yay, Focus, Ouch, Hello)
+        // REAKSI DIKLIK & INTERAKSI
         const reactions = [
-            { text: "Yay! ✨", class: "happy" },
-            { text: "Focusing... 🧠", class: "focus" },
-            { text: "Ouch! 😅", class: "ouch" },
-            { text: "Hello! 👋", class: "" }
+            { text: "Hello Mario", class: "happy" },
+            { text: "Focusing on task", class: "focus" },
+            { text: "Ouch stop it", class: "ouch" },
+            { text: "System ready", class: "" },
+            { text: "Don't touch my face", class: "angry" }
         ];
         let stateIndex = 0;
 
         robot.addEventListener('click', () => {
+            // Sembunyikan teks HELLO besar saat pertama disentuh
+            if (!helloText.classList.contains('hidden')) {
+                helloText.classList.add('hidden');
+            }
+
             const state = reactions[stateIndex];
+            
             bubble.innerText = state.text;
 
             leftEye.className = "eye " + state.class;
             rightEye.className = "eye " + state.class;
+
+            robot.classList.add('active');
+            setTimeout(() => robot.classList.remove('active'), 300);
 
             stateIndex = (stateIndex + 1) % reactions.length;
         });
@@ -252,8 +345,13 @@
         function handleSend() {
             const val = userInput.value.trim();
             if (val !== "") {
-                bubble.innerText = `"${val}"? Let's count! 🔢`;
+                if (!helloText.classList.contains('hidden')) {
+                    helloText.classList.add('hidden');
+                }
+                bubble.innerText = `Processing: ${val}`;
                 userInput.value = "";
+                leftEye.className = "eye focus";
+                rightEye.className = "eye focus";
             }
         }
 
