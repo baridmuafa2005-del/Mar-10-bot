@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MAR-10 BOT - AI Interactive Experience</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; font-family: 'Segoe UI', Roboto, Helvetica, sans-serif; }
+        
+        body { 
+            background-color: #08080a; 
+            height: 100vh; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            overflow: hidden; 
+            position: relative;
+        }
+
+        /* Background dari gambar anatomi (dibuat gelap, bersih dari teks, & ada efek vignette) */
+        .bg-layer {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-image: url('1000257437.png');
+            background-size: cover;
+            background-position: center;
+            filter: brightness(0.2) contrast(1.3) blur(2px);
+            z-index: 1;
+        }
+
+        /* Overlay gelap sinematik */
+        .overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle, rgba(10,10,15,0.4) 0%, rgba(2,2,5,0.85) 100%);
+            z-index: 2;
+        }
+
+        /* Kontainer Utama */
+        .main-container {
+            position: relative;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 450px;
+            padding: 20px;
+        }
+
+        /* Judul Brand */
+        .brand-title {
+            color: #ffffff;
+            font-size: 24px;
+            font-weight: 800;
+            letter-spacing: 5px;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            text-shadow: 0 0 15px rgba(255,255,255,0.3);
+            opacity: 0.9;
+        }
+
+        /* Bubble Chat Futuristik */
+        .chat-bubble {
+            background: rgba(20, 20, 30, 0.75);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            color: #e0e0e0;
+            padding: 12px 20px;
+            border-radius: 18px;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            max-width: 90%;
+            text-align: center;
+            animation: pulseGlow 3s infinite alternate;
+        }
+
+        @keyframes pulseGlow {
+            0% { box-shadow: 0 10px 30px rgba(0,0,0,0.5), inset 0 0 5px rgba(255,255,255,0.05); }
+            100% { box-shadow: 0 10px 35px rgba(100,100,255,0.15), inset 0 0 12px rgba(100,180,255,0.1); }
+        }
+
+        /* Area Robot Interaktif (Mengikuti Kursor) */
+        .robot-wrapper {
+            width: 280px;
+            height: 350px;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 25px;
+            perspective: 1000px;
+        }
+
+        .robot-image {
+            width: 100%;
+            height: 100%;
+            background-image: url('1000257438.png');
+            background-size: cover;
+            background-position: center;
+            border-radius: 30px;
+            box-shadow: 0 20px 45px rgba(0, 0, 0, 0.8), 0 0 20px rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: transform 0.1s ease-out;
+            will-change: transform;
+        }
+
+        /* Input Form yang Elegan & Dark Vibe */
+        .input-box-container {
+            display: flex;
+            width: 100%;
+            background: rgba(15, 15, 22, 0.85);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 14px;
+            padding: 6px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.6);
+            transition: border-color 0.3s;
+        }
+
+        .input-box-container:focus-within {
+            border-color: rgba(255, 255, 255, 0.4);
+            box-shadow: 0 8px 25px rgba(100,100,255,0.15);
+        }
+
+        .name-input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: #ffffff;
+            font-size: 14px;
+            padding: 10px 14px;
+        }
+
+        .name-input::placeholder {
+            color: rgba(255, 255, 255, 0.35);
+        }
+
+        .submit-btn {
+            background: #ffffff;
+            color: #08080a;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .submit-btn:hover {
+            background: #d8d8d8;
+            transform: scale(1.02);
+        }
+
+        /* Kredit Kreator */
+        .credit {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 10;
+            color: rgba(255,255,255,0.6);
+            font-size: 13px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            background: rgba(0,0,0,0.3);
+            padding: 6px 14px;
+            border-radius: 20px;
+            border: 1px solid rgba(255,255,255,0.08);
+            backdrop-filter: blur(5px);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="credit">By Mario</div>
+    <div class="bg-layer"></div>
+    <div class="overlay"></div>
+
+    <div class="main-container">
+        <div class="brand-title">MAR-10 BOT</div>
+        
+        <div class="chat-bubble" id="chatBubble">
+            System Online. What's your name?
+        </div>
+
+        <div class="robot-wrapper" id="robotWrapper">
+            <div class="robot-image" id="robotImage"></div>
+        </div>
+
+        <div class="input-box-container">
+            <input type="text" class="name-input" id="userNameInput" placeholder="Enter your name..." autocomplete="off">
+            <button class="submit-btn" id="submitBtn">Send</button>
+        </div>
+    </div>
+
+    <script>
+        const robotWrapper = document.getElementById('robotWrapper');
+        const robotImage = document.getElementById('robotImage');
+        const chatBubble = document.getElementById('chatBubble');
+        const userNameInput = document.getElementById('userNameInput');
+        const submitBtn = document.getElementById('submitBtn');
+
+        let userName = "";
+
+        // Efek Interaktif: Robot melirik / bergeser mengikuti arah kursor mouse (atau sentuhan jari di HP)
+        document.addEventListener('mousemove', (e) => {
+            const xPos = (window.innerWidth / 2 - e.clientX) / 25;
+            const yPos = (window.innerHeight / 2 - e.clientY) / 25;
+            robotImage.style.transform = `rotateY(${xPos}deg) rotateX(${-yPos}deg) scale(1.02)`;
+        });
+
+        // Dukungan untuk sentuhan layar sentuh (HP)
+        document.addEventListener('touchmove', (e) => {
+            if(e.touches.length > 0) {
+                const touch = e.touches[0];
+                const xPos = (window.innerWidth / 2 - touch.clientX) / 30;
+                const yPos = (window.innerHeight / 2 - touch.clientY) / 30;
+                robotImage.style.transform = `rotateY(${xPos}deg) rotateX(${-yPos}deg) scale(1.02)`;
+            }
+        });
+
+        // Reset posisi saat kursor keluar
+        document.addEventListener('mouseleave', () => {
+            robotImage.style.transform = `rotateY(0deg) rotateX(0deg) scale(1)`;
+        });
+
+        // Fungsi saat pengguna mengirim nama
+        function handleNameSubmit() {
+            const val = userNameInput.value.trim();
+            if (val !== "") {
+                userName = val;
+                chatBubble.style.opacity = 0;
+                setTimeout(() => {
+                    chatBubble.innerText = `Hi ${userName}, MAR-10 Bot ready for assistance.`;
+                    chatBubble.style.opacity = 1;
+                }, 300);
+                userNameInput.value = "";
+                userNameInput.blur();
+            }
+        }
+
+        submitBtn.addEventListener('click', handleNameSubmit);
+        userNameInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                handleNameSubmit();
+            }
+        });
+    </script>
+</body>
+</html>
