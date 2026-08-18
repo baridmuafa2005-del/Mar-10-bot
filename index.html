@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MAR-10 Interactive AI</title>
+    <title>MAR-10 AI</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; font-family: 'Segoe UI', sans-serif; }
         
         body { 
-            background: #060309; 
+            background: #090510; 
             height: 100vh; 
             display: flex; 
             flex-direction: column; 
@@ -22,7 +22,6 @@
             position: absolute;
             top: 20px;
             left: 20px;
-            z-index: 10;
             color: #e1bee7;
             font-size: 13px;
             font-weight: 600;
@@ -33,61 +32,60 @@
         }
 
         .main-card {
-            background: rgba(20, 10, 30, 0.65);
-            border: 1px solid rgba(186, 104, 200, 0.3);
-            border-radius: 28px;
-            padding: 25px;
+            background: rgba(18, 10, 26, 0.75);
+            border: 1px solid rgba(186, 104, 200, 0.25);
+            border-radius: 24px;
+            padding: 24px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            box-shadow: 0 10px 40px rgba(123, 31, 162, 0.3);
-            backdrop-filter: blur(15px);
-            max-width: 360px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(16px);
+            max-width: 350px;
             width: 90%;
-            position: relative;
-            z-index: 2;
         }
 
         .brand {
             color: #fff;
             font-weight: 800;
             letter-spacing: 4px;
-            margin-bottom: 15px;
-            text-shadow: 0 0 12px #ab47bc;
+            margin-bottom: 14px;
+            text-shadow: 0 0 10px #ab47bc;
         }
 
         .chat-bubble {
-            background: rgba(186, 104, 200, 0.15);
-            border: 1px solid rgba(186, 104, 200, 0.4);
+            background: rgba(186, 104, 200, 0.12);
+            border: 1px solid rgba(186, 104, 200, 0.3);
             color: #f3e5f5;
             padding: 10px 16px;
-            border-radius: 15px;
+            border-radius: 14px;
             font-size: 13px;
             font-weight: 600;
-            margin-bottom: 15px;
+            margin-bottom: 16px;
             text-align: center;
-            box-shadow: 0 0 15px rgba(186, 104, 200, 0.2);
-            transition: opacity 0.2s ease, transform 0.2s ease;
+            transition: all 0.2s ease;
         }
 
-        /* --- STAGE ROBOT TRACKING --- */
+        /* FRAME ROBOT TANPA KOTAK KAKU */
         .robot-stage {
-            width: 240px;
-            height: 280px;
+            width: 220px;
+            height: 220px;
             position: relative;
             display: flex;
             justify-content: center;
             align-items: center;
-            margin-bottom: 15px;
-            perspective: 600px; /* Memberikan kedalaman pandangan */
+            margin-bottom: 16px;
+            overflow: hidden;
+            border-radius: 16px;
         }
 
         .robot-img {
             width: 100%;
             height: 100%;
-            object-fit: contain;
-            filter: drop-shadow(0 15px 25px rgba(123, 31, 162, 0.4));
-            transition: transform 0.08s ease-out; /* Bikin pergerakan ngeliatnya sangat responsif & mulus */
+            object-fit: cover;
+            /* Trik buang background abu-abu/terang dari gambar */
+            mix-blend-mode: lighten; 
+            transition: transform 0.1s ease-out;
             will-change: transform;
             cursor: pointer;
         }
@@ -100,18 +98,13 @@
 
         input {
             flex: 1;
-            background: rgba(255, 255, 255, 0.07);
-            border: 1px solid rgba(186, 104, 200, 0.3);
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(186, 104, 200, 0.25);
             border-radius: 12px;
             padding: 10px 14px;
             color: #fff;
             outline: none;
             font-size: 13px;
-        }
-
-        input:focus {
-            border-color: #ba68c8;
-            box-shadow: 0 0 10px rgba(186, 104, 200, 0.4);
         }
 
         button {
@@ -122,12 +115,6 @@
             padding: 10px 16px;
             border-radius: 12px;
             cursor: pointer;
-            box-shadow: 0 4px 12px rgba(123, 31, 162, 0.4);
-            transition: transform 0.1s ease;
-        }
-
-        button:active {
-            transform: scale(0.92);
         }
     </style>
 </head>
@@ -138,10 +125,9 @@
     <div class="main-card">
         <div class="brand">MAR-10</div>
         
-        <div class="chat-bubble" id="bubble">Move your cursor, I'm watching you 👀</div>
+        <div class="chat-bubble" id="bubble">Need something, Mario?</div>
 
         <div class="robot-stage">
-            <!-- Pakai file PNG robot kamu -->
             <img src="file_000000008a0c8207914d567c9bf5127b.png" class="robot-img" id="robot" alt="MAR-10 Robot">
         </div>
 
@@ -157,66 +143,38 @@
         const userInput = document.getElementById('userInput');
         const sendBtn = document.getElementById('sendBtn');
 
-        // Fitur Tracking Kursor (Robot Menengok / Melihat ke Arah Kursor)
-        function trackCursor(x, y) {
-            const rect = robot.getBoundingClientRect();
-            const robotCenterX = rect.left + rect.width / 2;
-            const robotCenterY = rect.top + rect.height / 2;
-
-            // Hitung jarak kursor dari titik tengah robot
-            const deltaX = x - robotCenterX;
-            const deltaY = y - robotCenterY;
-
-            // Batasi sudut rotasi supaya pergerakan nengoknya kelihatan natural
-            const rotateX = Math.max(-25, Math.min(25, -deltaY / 12)); 
-            const rotateY = Math.max(-30, Math.min(30, deltaX / 12));
-            const translateX = Math.max(-15, Math.min(15, deltaX / 20));
-            const translateY = Math.max(-15, Math.min(15, deltaY / 20));
-
-            // Terapkan efek pandangan 2D/3D Parallax
-            robot.style.transform = `perspective(600px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translate(${translateX}px, ${translateY}px)`;
-        }
-
-        // Listener Mouse & Touch
+        // Pergerakan diganti jadi geser halus (Parallax), bukan diputer miring kaku
         window.addEventListener('mousemove', (e) => {
-            trackCursor(e.clientX, e.clientY);
+            const x = (window.innerWidth / 2 - e.clientX) / 25;
+            const y = (window.innerHeight / 2 - e.clientY) / 25;
+            robot.style.transform = `translate(${-x}px, ${-y}px) scale(1.05)`;
         });
 
         window.addEventListener('touchmove', (e) => {
             if (e.touches.length > 0) {
-                trackCursor(e.touches[0].clientX, e.touches[0].clientY);
+                const x = (window.innerWidth / 2 - e.touches[0].clientX) / 25;
+                const y = (window.innerHeight / 2 - e.touches[0].clientY) / 25;
+                robot.style.transform = `translate(${-x}px, ${-y}px) scale(1.05)`;
             }
         });
 
-        // Reset tatapan kalau kursor keluar layar
-        window.addEventListener('mouseleave', () => {
-            robot.style.transform = `perspective(600px) rotateX(0deg) rotateY(0deg) translate(0px, 0px)`;
-        });
-
-        // Respon saat robot diklik
-        const clickDialogs = [
-            "Hey! Stop staring at me 😂",
-            "I follow your every move... 👁️",
+        const dialogs = [
             "MAR-10 Online & Tracking!",
             "Ouch! Don't touch my head!",
-            "Need something, Mario?"
+            "Need something, Mario?",
+            "System operational ⚡"
         ];
-        let dialogIdx = 0;
+        let idx = 0;
 
         robot.addEventListener('click', () => {
-            bubble.style.transform = 'scale(0.9)';
-            setTimeout(() => {
-                bubble.innerText = clickDialogs[dialogIdx];
-                bubble.style.transform = 'scale(1)';
-                dialogIdx = (dialogIdx + 1) % clickDialogs.length;
-            }, 100);
+            idx = (idx + 1) % dialogs.length;
+            bubble.innerText = dialogs[idx];
         });
 
-        // Respon Input Teks
         function handleSend() {
             const val = userInput.value.trim();
             if (val !== "") {
-                bubble.innerText = `"${val}"? Processing... ⚡`;
+                bubble.innerText = `"${val}" Processing... ⚡`;
                 userInput.value = "";
             }
         }
