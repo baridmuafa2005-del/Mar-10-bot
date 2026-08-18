@@ -18,21 +18,14 @@
             position: relative;
         }
 
-        /* Background Dinamis dengan Efek Bernapas */
         .bg-layer {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
-            background-image: url('file_00000000b81c820796f02e3609...'); /* Sesuaikan nama file background di GitHub kamu */
+            background-image: url('file_00000000b81c820796f02e3609...'); /* Sesuaikan nama file background kamu */
             background-size: cover;
             background-position: center;
             filter: brightness(0.15) contrast(1.4) hue-rotate(250deg) blur(3px);
             z-index: 1;
-            animation: bgPulse 8s infinite alternate ease-in-out;
-        }
-
-        @keyframes bgPulse {
-            0% { transform: scale(1); filter: brightness(0.12) contrast(1.3) hue-rotate(250deg) blur(3px); }
-            100% { transform: scale(1.05); filter: brightness(0.18) contrast(1.5) hue-rotate(260deg) blur(3px); }
         }
 
         .overlay {
@@ -53,7 +46,6 @@
             padding: 20px;
         }
 
-        /* Judul Brand dengan Efek Neon Berdenyut */
         .brand-title {
             color: #ffffff;
             font-size: 26px;
@@ -62,12 +54,6 @@
             margin-bottom: 12px;
             text-transform: uppercase;
             text-shadow: 0 0 10px rgba(186, 104, 200, 0.8), 0 0 25px rgba(123, 31, 162, 0.6);
-            animation: titleGlow 3s infinite alternate ease-in-out;
-        }
-
-        @keyframes titleGlow {
-            0% { text-shadow: 0 0 8px rgba(186, 104, 200, 0.6), 0 0 20px rgba(123, 31, 162, 0.4); }
-            100% { text-shadow: 0 0 15px rgba(224, 64, 251, 1), 0 0 35px rgba(186, 104, 200, 0.8); }
         }
 
         .chat-bubble {
@@ -86,7 +72,7 @@
             transition: all 0.3s ease;
         }
 
-        /* Wrapper Robot dengan Efek Melayang (Floating Animation) */
+        /* --- WADAH ROBOT & ANIMASI FLEKSIBEL --- */
         .robot-wrapper {
             width: 260px;
             height: 330px;
@@ -96,12 +82,15 @@
             align-items: center;
             margin-bottom: 22px;
             perspective: 1000px;
-            animation: floatRobot 4s infinite ease-in-out;
+            /* Animation Melayang Mulus */
+            animation: floatOrganic 4s infinite ease-in-out;
         }
 
-        @keyframes floatRobot {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-10px); }
+        @keyframes floatOrganic {
+            0% { transform: translateY(0px) rotate(0deg); }
+            33% { transform: translateY(-8px) rotate(1deg); }
+            66% { transform: translateY(-3px) rotate(-1deg); }
+            100% { transform: translateY(0px) rotate(0deg); }
         }
 
         .robot-image {
@@ -109,15 +98,23 @@
             height: 100%;
             object-fit: cover;
             border-radius: 24px;
-            /* Efek Neon Glow Ungu Hidup di Sekeliling Gambar Robot */
-            box-shadow: 0 20px 45px rgba(0, 0, 0, 0.9), 0 0 25px rgba(186, 104, 200, 0.4), inset 0 0 15px rgba(186, 104, 200, 0.2);
-            border: 1px solid rgba(186, 104, 200, 0.5);
-            transition: transform 0.1s ease-out, box-shadow 0.3s ease;
+            box-shadow: 0 20px 45px rgba(0, 0, 0, 0.9), 0 0 20px rgba(186, 104, 200, 0.3);
+            border: 1px solid rgba(186, 104, 200, 0.4);
+            transition: transform 0.1s ease-out;
             will-change: transform;
+            /* Efek Bernafas & Cahaya Hidup */
+            animation: robotBreathing 3.5s infinite ease-in-out;
         }
 
-        .robot-image:hover {
-            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.95), 0 0 35px rgba(224, 64, 251, 0.7);
+        @keyframes robotBreathing {
+            0%, 100% { 
+                filter: brightness(1) drop-shadow(0 0 10px rgba(186, 104, 200, 0.2)); 
+                transform: scale(1);
+            }
+            50% { 
+                filter: brightness(1.15) drop-shadow(0 0 25px rgba(224, 64, 251, 0.6)); 
+                transform: scale(1.02);
+            }
         }
 
         .input-box-container {
@@ -129,12 +126,6 @@
             border-radius: 14px;
             padding: 5px;
             box-shadow: 0 8px 25px rgba(123, 31, 162, 0.2);
-            transition: all 0.3s ease;
-        }
-
-        .input-box-container:focus-within {
-            border-color: rgba(224, 64, 251, 0.8);
-            box-shadow: 0 0 20px rgba(186, 104, 200, 0.5);
         }
 
         .name-input {
@@ -161,13 +152,6 @@
             font-size: 13px;
             cursor: pointer;
             box-shadow: 0 4px 15px rgba(123, 31, 162, 0.4);
-            transition: all 0.2s ease;
-        }
-
-        .submit-btn:hover {
-            background: linear-gradient(135deg, #ba68c8, #8e24aa);
-            transform: scale(1.05);
-            box-shadow: 0 6px 20px rgba(186, 104, 200, 0.6);
         }
 
         .credit {
@@ -216,11 +200,11 @@
         const userNameInput = document.getElementById('userNameInput');
         const submitBtn = document.getElementById('submitBtn');
 
-        // Interaksi kursor 3D tilt yang responsif mengikuti arah mouse/sentuhan layar HP
+        // Gerakan miring 3D kalau layar diusap/dikursor
         function moveRobot(clientX, clientY) {
-            const xPos = (window.innerWidth / 2 - clientX) / 15;
-            const yPos = (window.innerHeight / 2 - clientY) / 15;
-            robotImage.style.transform = `rotateY(${xPos}deg) rotateX(${-yPos}deg) scale(1.03)`;
+            const xPos = (window.innerWidth / 2 - clientX) / 18;
+            const yPos = (window.innerHeight / 2 - clientY) / 18;
+            robotImage.style.transform = `rotateY(${xPos}deg) rotateX(${-yPos}deg)`;
         }
 
         document.addEventListener('mousemove', (e) => moveRobot(e.clientX, e.clientY));
@@ -231,10 +215,9 @@
         });
 
         document.addEventListener('mouseleave', () => {
-            robotImage.style.transform = `rotateY(0deg) rotateX(0deg) scale(1)`;
+            robotImage.style.transform = `rotateY(0deg) rotateX(0deg)`;
         });
 
-        // Fitur sapaan interaktif saat pengguna memasukkan nama
         function handleNameSubmit() {
             const val = userNameInput.value.trim();
             if (val !== "") {
