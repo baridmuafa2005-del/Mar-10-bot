@@ -1,217 +1,462 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Anatomi Tubuh Realistis - Wayang Interactive</title>
-    <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, sans-serif; user-select: none; }
-        
-        body {
-            background: #0f172a;
-            color: #fff;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 15px 10px;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-        h1 { font-size: 18px; color: #38bdf8; margin-bottom: 4px; text-align: center; }
-        p.subtitle { font-size: 11px; color: #94a3b8; margin-bottom: 12px; text-align: center; }
+<title>Interactive Human Anatomy</title>
 
-        /* AREA KERTAS / CANVAS ANATOMI */
-        .stage {
-            position: relative;
-            width: 320px;
-            height: 520px;
-            background: #ffffff;
-            border-radius: 12px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-            overflow: hidden;
-            display: flex;
-            justify-content: center;
-        }
+<style>
+* {
+  box-sizing: border-box;
+}
 
-        /* GAMBAR ANATOMI MEDIS ASLI (BACKGROUND BADAN) */
-        .body-medical {
-            position: absolute;
-            top: 10px;
-            height: 500px;
-            z-index: 1;
-            pointer-events: none;
-        }
+body {
+  margin: 0;
+  background: #0b0f14;
+  color: white;
+  font-family: Arial, sans-serif;
+  min-height: 100vh;
+}
 
-        /* TANGAN KANAN WAYANG (INTERAKTIF) */
-        .arm-container-right {
-            position: absolute;
-            top: 125px;
-            left: 55px;
-            width: 50px;
-            height: 200px;
-            z-index: 2;
-            transform-origin: 25px 15px; /* Pivot Bahu Kanan */
-            cursor: grab;
-            transition: transform 0.05s ease-out;
-        }
+/* HEADER */
+header {
+  text-align: center;
+  padding: 25px 15px 10px;
+}
 
-        /* TANGAN KIRI WAYANG (INTERAKTIF) */
-        .arm-container-left {
-            position: absolute;
-            top: 125px;
-            right: 55px;
-            width: 50px;
-            height: 200px;
-            z-index: 2;
-            transform-origin: 25px 15px; /* Pivot Bahu Kiri */
-            cursor: grab;
-            transition: transform 0.05s ease-out;
-        }
+header h1 {
+  margin: 0;
+  font-size: 28px;
+  letter-spacing: 2px;
+}
 
-        .arm-img {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-        }
+header p {
+  color: #8e99a6;
+  margin-top: 8px;
+}
 
-        /* POP-UP TEKS NAMA ORGAN */
-        .info-pop {
-            position: absolute;
-            top: 15px;
-            background: rgba(15, 23, 42, 0.9);
-            border: 2px solid #38bdf8;
-            color: #fff;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: bold;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-            opacity: 0;
-            transform: translateY(-10px);
-            transition: all 0.3s ease;
-            z-index: 20;
-            pointer-events: none;
-        }
-        .info-pop.show { opacity: 1; transform: translateY(0); }
+/* ANATOMY AREA */
+.anatomy-container {
+  position: relative;
+  width: min(700px, 95vw);
+  margin: 20px auto;
+  border-radius: 20px;
+  overflow: hidden;
+  background: white;
+  box-shadow:
+    0 0 40px rgba(0,0,0,.6);
+}
 
-        /* TITIK SENSOR ORGAN (CLICK DETECTOR) */
-        .sensor {
-            position: absolute;
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
-            background: rgba(56, 189, 248, 0.3);
-            border: 1px stroke #0284c7;
-            z-index: 10;
-            cursor: pointer;
-        }
-        .sensor:hover { background: rgba(244, 63, 94, 0.6); }
+/* GAMBAR */
+.anatomy-container img {
+  width: 100%;
+  display: block;
+  transition: transform .8s ease;
+}
 
-        .hint {
-            margin-top: 12px;
-            background: rgba(255,255,255,0.05);
-            padding: 10px;
-            border-radius: 8px;
-            font-size: 11px;
-            color: #94a3b8;
-            width: 320px;
-            text-align: center;
-        }
-    </style>
+/* EFEK HIDUP */
+.anatomy-container.alive img {
+  animation: breathing 5s ease-in-out infinite;
+}
+
+@keyframes breathing {
+
+  0%,100% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.008);
+  }
+
+}
+
+/* HOTSPOT */
+.hotspot {
+
+  position: absolute;
+
+  width: 45px;
+  height: 45px;
+
+  transform: translate(-50%, -50%);
+
+  border-radius: 50%;
+
+  background: rgba(0, 200, 255, 0);
+
+  border: 2px solid transparent;
+
+  cursor: pointer;
+
+  transition:
+    .25s ease;
+
+  z-index: 5;
+}
+
+.hotspot:hover {
+
+  background: rgba(0, 200, 255, .25);
+
+  border-color: #00d9ff;
+
+  box-shadow:
+    0 0 20px #00d9ff;
+
+}
+
+.hotspot.active {
+
+  background: rgba(0, 220, 255, .35);
+
+  border-color: #00e5ff;
+
+  box-shadow:
+    0 0 10px #00e5ff,
+    0 0 30px #00e5ff;
+
+  animation: selected .8s infinite alternate;
+
+}
+
+@keyframes selected {
+
+  from {
+    transform:
+      translate(-50%, -50%)
+      scale(1);
+  }
+
+  to {
+    transform:
+      translate(-50%, -50%)
+      scale(1.15);
+  }
+
+}
+
+/* INFO PANEL */
+
+.info {
+
+  position: fixed;
+
+  left: 50%;
+  bottom: 25px;
+
+  transform:
+    translate(-50%, 120px);
+
+  width: min(400px, 90vw);
+
+  padding: 18px;
+
+  border-radius: 15px;
+
+  background:
+    rgba(12,18,25,.95);
+
+  border:
+    1px solid #00d9ff;
+
+  box-shadow:
+    0 0 30px rgba(0,220,255,.25);
+
+  opacity: 0;
+
+  transition: .4s ease;
+
+  z-index: 100;
+
+  backdrop-filter: blur(10px);
+}
+
+.info.show {
+
+  transform:
+    translate(-50%, 0);
+
+  opacity: 1;
+
+}
+
+.info h2 {
+
+  margin: 0 0 5px;
+
+  color: #00dcff;
+
+  font-size: 20px;
+
+}
+
+.info p {
+
+  margin: 0;
+
+  color: #c6ced7;
+
+}
+
+/* BUTTON */
+
+.controls {
+
+  text-align: center;
+
+  margin: 20px;
+}
+
+button.control {
+
+  background: #151d26;
+
+  color: white;
+
+  border: 1px solid #354454;
+
+  border-radius: 10px;
+
+  padding: 10px 18px;
+
+  cursor: pointer;
+
+  margin: 5px;
+
+}
+
+button.control:hover {
+
+  border-color: #00d9ff;
+
+  box-shadow:
+    0 0 15px rgba(0,220,255,.3);
+
+}
+
+/* MOBILE */
+
+@media(max-width:600px) {
+
+  header h1 {
+    font-size: 21px;
+  }
+
+  .hotspot {
+
+    width: 35px;
+    height: 35px;
+
+  }
+
+}
+</style>
 </head>
+
+
 <body>
 
-    <h1>Anatomi Tubuh Manusia 🧬</h1>
-    <p class="subtitle">Klik Organ & Drag Tangan (Wayang Motion)</p>
 
-    <div class="stage" id="stage">
-        <div class="info-pop" id="infoPop">Klik bagian tubuh!</div>
+<header>
 
-        <!-- GAMBAR ANATOMI MEDIS (BADAN UTAMA) -->
-        <img src="https://upload.wikimedia.org/wikipedia/commons/e/e1/Full_human_skeleton_front_no_labels.svg" class="body-medical" alt="Anatomi Medis">
+  <h1>ANATOMI TUBUH MANUSIA</h1>
 
-        <!-- TANGAN KANAN WAYANG -->
-        <div class="arm-container-right" id="armRight">
-            <svg viewBox="0 0 40 200" class="arm-img">
-                <path d="M20,10 Q10,100 15,190" stroke="#d1d5db" stroke-width="12" stroke-linecap="round" fill="none"/>
-                <circle cx="15" cy="190" r="10" fill="#fca5a5"/>
-            </svg>
-        </div>
+  <p>
+    Sentuh bagian tubuh untuk melihat informasinya
+  </p>
 
-        <!-- TANGAN KIRI WAYANG -->
-        <div class="arm-container-left" id="armLeft">
-            <svg viewBox="0 0 40 200" class="arm-img">
-                <path d="M20,10 Q30,100 25,190" stroke="#d1d5db" stroke-width="12" stroke-linecap="round" fill="none"/>
-                <circle cx="25" cy="190" r="10" fill="#fca5a5"/>
-            </svg>
-        </div>
+</header>
 
-        <!-- TITIK DETEKSI KLIK ORGAN -->
-        <div class="sensor" style="top: 85px; left: 140px;" onclick="showText('RIGHT EYE')"></div>
-        <div class="sensor" style="top: 85px; left: 160px;" onclick="showText('LEFT EYE')"></div>
-        <div class="sensor" style="top: 55px; left: 150px;" onclick="showText('BRAIN')"></div>
-        <div class="sensor" style="top: 180px; left: 155px;" onclick="showText('HEART')"></div>
-        <div class="sensor" style="top: 175px; left: 130px;" onclick="showText('RIGHT LUNG')"></div>
-        <div class="sensor" style="top: 175px; left: 175px;" onclick="showText('LEFT LUNG')"></div>
-        <div class="sensor" style="top: 230px; left: 150px;" onclick="showText('STOMACH')"></div>
-        <div class="sensor" style="top: 300px; left: 150px;" onclick="showText('PELVIC BONES')"></div>
-    </div>
 
-    <div class="hint">
-        📌 <b>Klik area organ/mata</b> untuk melihat namanya.<br>
-        🖐️ <b>Usap/Drag area tangan</b> ke atas/bawah untuk menggerakkan lengan seperti wayang.
-    </div>
 
-    <script>
-        const infoPop = document.getElementById('infoPop');
-        const armRight = document.getElementById('armRight');
-        const armLeft = document.getElementById('armLeft');
-        const stage = document.getElementById('stage');
+<div
+  class="anatomy-container alive"
+  id="anatomy"
+>
 
-        function showText(text) {
-            infoPop.innerText = text;
-            infoPop.classList.add('show');
-            setTimeout(() => { infoPop.classList.remove('show'); }, 2000);
-        }
+  <!--
+    GANTI anatomi.jpg
+    dengan nama file gambar anatomi kamu
+  -->
 
-        // SISTEM GERAKAN WAYANG (DRAG & ROTATE BAHU)
-        let activeArm = null;
+  <img
+    src="anatomi.jpg"
+    alt="Anatomi tubuh manusia"
+  >
 
-        function startDrag(arm) { activeArm = arm; }
 
-        armRight.addEventListener('mousedown', () => startDrag(armRight));
-        armLeft.addEventListener('mousedown', () => startDrag(armLeft));
-        armRight.addEventListener('touchstart', () => startDrag(armRight));
-        armLeft.addEventListener('touchstart', () => startDrag(armLeft));
+  <!-- ========================= -->
+  <!-- KEPALA -->
+  <!-- ========================= -->
 
-        window.addEventListener('mouseup', () => activeArm = null);
-        window.addEventListener('touchend', () => activeArm = null);
+  <button
+    class="hotspot"
+    data-name="BRAIN"
+    data-info="Otak"
+    style="left:50%; top:20.5%;"
+  ></button>
 
-        stage.addEventListener('mousemove', (e) => {
-            if (!activeArm) return;
-            moveArm(e.clientY);
-        });
 
-        stage.addEventListener('touchmove', (e) => {
-            if (!activeArm) return;
-            moveArm(e.touches[0].clientY);
-        });
+  <button
+    class="hotspot"
+    data-name="RIGHT EYE"
+    data-info="Mata kanan"
+    style="left:46%; top:25.5%;"
+  ></button>
 
-        function moveArm(clientY) {
-            const rect = stage.getBoundingClientRect();
-            const relativeY = clientY - rect.top;
-            
-            let angle = (200 - relativeY) * 0.8;
 
-            if (angle > 140) angle = 140;
-            if (angle < -30) angle = -30;
+  <button
+    class="hotspot"
+    data-name="LEFT EYE"
+    data-info="Mata kiri"
+    style="left:54%; top:25.5%;"
+  ></button>
 
-            if (activeArm === armLeft) {
-                activeArm.style.transform = `rotate(${-angle}deg)`;
-            } else {
-                activeArm.style.transform = `rotate(${angle}deg)`;
-            }
-        }
-    </script>
-</body>
-</html>
+
+
+  <!-- ========================= -->
+  <!-- DADA -->
+  <!-- ========================= -->
+
+  <button
+    class="hotspot"
+    data-name="HEART"
+    data-info="Jantung"
+    style="left:50%; top:36%;"
+  ></button>
+
+
+  <button
+    class="hotspot"
+    data-name="RIGHT LUNG"
+    data-info="Paru-paru kanan"
+    style="left:44%; top:35%;"
+  ></button>
+
+
+  <button
+    class="hotspot"
+    data-name="LEFT LUNG"
+    data-info="Paru-paru kiri"
+    style="left:56%; top:35%;"
+  ></button>
+
+
+
+  <!-- ========================= -->
+  <!-- PERUT -->
+  <!-- ========================= -->
+
+  <button
+    class="hotspot"
+    data-name="LIVER"
+    data-info="Hati"
+    style="left:47%; top:40%;"
+  ></button>
+
+
+  <button
+    class="hotspot"
+    data-name="STOMACH"
+    data-info="Lambung"
+    style="left:54%; top:43%;"
+  ></button>
+
+
+  <button
+    class="hotspot"
+    data-name="PANCREAS"
+    data-info="Pankreas"
+    style="left:50%; top:44%;"
+  ></button>
+
+
+  <button
+    class="hotspot"
+    data-name="RIGHT KIDNEY"
+    data-info="Ginjal kanan"
+    style="left:45%; top:47%;"
+  ></button>
+
+
+  <button
+    class="hotspot"
+    data-name="LEFT KIDNEY"
+    data-info="Ginjal kiri"
+    style="left:55%; top:47%;"
+  ></button>
+
+
+
+  <!-- ========================= -->
+  <!-- TANGAN -->
+  <!-- ========================= -->
+
+  <button
+    class="hotspot"
+    data-name="RIGHT HAND"
+    data-info="Tangan kanan"
+    style="left:34%; top:55%;"
+  ></button>
+
+
+  <button
+    class="hotspot"
+    data-name="LEFT HAND"
+    data-info="Tangan kiri"
+    style="left:66%; top:55%;"
+  ></button>
+
+
+
+  <!-- ========================= -->
+  <!-- PAHA -->
+  <!-- ========================= -->
+
+  <button
+    class="hotspot"
+    data-name="RIGHT FEMUR"
+    data-info="Tulang paha kanan"
+    style="left:44%; top:65%;"
+  ></button>
+
+
+  <button
+    class="hotspot"
+    data-name="LEFT FEMUR"
+    data-info="Tulang paha kiri"
+    style="left:56%; top:65%;"
+  ></button>
+
+
+
+  <!-- ========================= -->
+  <!-- LUTUT -->
+  <!-- ========================= -->
+
+  <button
+    class="hotspot"
+    data-name="RIGHT PATELLA"
+    data-info="Tempurung lutut kanan"
+    style="left:45%; top:73%;"
+  ></button>
+
+
+  <button
+    class="hotspot"
+    data-name="LEFT PATELLA"
+    data-info="Tempurung lutut kiri"
+    style="left:55%; top:73%;"
+  ></button>
+
+
+
+  <!-- ========================= -->
+  <!-- TIBIA -->
+  <!-- ========================= -->
+
+  <button
+    class="hotspot"
+   
