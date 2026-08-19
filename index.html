@@ -1,462 +1,168 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>Interactive Human Anatomy</title>
-
-<style>
-* {
-  box-sizing: border-box;
-}
-
-body {
-  margin: 0;
-  background: #0b0f14;
-  color: white;
-  font-family: Arial, sans-serif;
-  min-height: 100vh;
-}
-
-/* HEADER */
-header {
-  text-align: center;
-  padding: 25px 15px 10px;
-}
-
-header h1 {
-  margin: 0;
-  font-size: 28px;
-  letter-spacing: 2px;
-}
-
-header p {
-  color: #8e99a6;
-  margin-top: 8px;
-}
-
-/* ANATOMY AREA */
-.anatomy-container {
-  position: relative;
-  width: min(700px, 95vw);
-  margin: 20px auto;
-  border-radius: 20px;
-  overflow: hidden;
-  background: white;
-  box-shadow:
-    0 0 40px rgba(0,0,0,.6);
-}
-
-/* GAMBAR */
-.anatomy-container img {
-  width: 100%;
-  display: block;
-  transition: transform .8s ease;
-}
-
-/* EFEK HIDUP */
-.anatomy-container.alive img {
-  animation: breathing 5s ease-in-out infinite;
-}
-
-@keyframes breathing {
-
-  0%,100% {
-    transform: scale(1);
-  }
-
-  50% {
-    transform: scale(1.008);
-  }
-
-}
-
-/* HOTSPOT */
-.hotspot {
-
-  position: absolute;
-
-  width: 45px;
-  height: 45px;
-
-  transform: translate(-50%, -50%);
-
-  border-radius: 50%;
-
-  background: rgba(0, 200, 255, 0);
-
-  border: 2px solid transparent;
-
-  cursor: pointer;
-
-  transition:
-    .25s ease;
-
-  z-index: 5;
-}
-
-.hotspot:hover {
-
-  background: rgba(0, 200, 255, .25);
-
-  border-color: #00d9ff;
-
-  box-shadow:
-    0 0 20px #00d9ff;
-
-}
-
-.hotspot.active {
-
-  background: rgba(0, 220, 255, .35);
-
-  border-color: #00e5ff;
-
-  box-shadow:
-    0 0 10px #00e5ff,
-    0 0 30px #00e5ff;
-
-  animation: selected .8s infinite alternate;
-
-}
-
-@keyframes selected {
-
-  from {
-    transform:
-      translate(-50%, -50%)
-      scale(1);
-  }
-
-  to {
-    transform:
-      translate(-50%, -50%)
-      scale(1.15);
-  }
-
-}
-
-/* INFO PANEL */
-
-.info {
-
-  position: fixed;
-
-  left: 50%;
-  bottom: 25px;
-
-  transform:
-    translate(-50%, 120px);
-
-  width: min(400px, 90vw);
-
-  padding: 18px;
-
-  border-radius: 15px;
-
-  background:
-    rgba(12,18,25,.95);
-
-  border:
-    1px solid #00d9ff;
-
-  box-shadow:
-    0 0 30px rgba(0,220,255,.25);
-
-  opacity: 0;
-
-  transition: .4s ease;
-
-  z-index: 100;
-
-  backdrop-filter: blur(10px);
-}
-
-.info.show {
-
-  transform:
-    translate(-50%, 0);
-
-  opacity: 1;
-
-}
-
-.info h2 {
-
-  margin: 0 0 5px;
-
-  color: #00dcff;
-
-  font-size: 20px;
-
-}
-
-.info p {
-
-  margin: 0;
-
-  color: #c6ced7;
-
-}
-
-/* BUTTON */
-
-.controls {
-
-  text-align: center;
-
-  margin: 20px;
-}
-
-button.control {
-
-  background: #151d26;
-
-  color: white;
-
-  border: 1px solid #354454;
-
-  border-radius: 10px;
-
-  padding: 10px 18px;
-
-  cursor: pointer;
-
-  margin: 5px;
-
-}
-
-button.control:hover {
-
-  border-color: #00d9ff;
-
-  box-shadow:
-    0 0 15px rgba(0,220,255,.3);
-
-}
-
-/* MOBILE */
-
-@media(max-width:600px) {
-
-  header h1 {
-    font-size: 21px;
-  }
-
-  .hotspot {
-
-    width: 35px;
-    height: 35px;
-
-  }
-
-}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anatomi Tubuh Manusia - Interactive</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; font-family: 'Segoe UI', Arial, sans-serif; }
+        
+        body {
+            background: #0f172a;
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+            overflow: hidden;
+        }
+
+        /* CONTAINER CANVAS / POSTER MEDIS */
+        .poster-container {
+            position: relative;
+            width: 360px;
+            height: 520px;
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+            overflow: hidden;
+            cursor: crosshair;
+        }
+
+        /* GAMBAR MEDIS ASLI (DARI FOTO KAMU) */
+        .medical-img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            pointer-events: none;
+        }
+
+        /* POP-UP LABEL NAMA ORGAN */
+        .info-label {
+            position: absolute;
+            top: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(15, 23, 42, 0.9);
+            color: #38bdf8;
+            border: 1.5px solid #38bdf8;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            opacity: 0;
+            transition: all 0.2s ease;
+            pointer-events: none;
+            z-index: 50;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+        .info-label.show { opacity: 1; transform: translateX(-50%) translateY(5px); }
+
+        /* SENSOR AREA ORGAN (TRANSPARAN / BERSIH) */
+        .sensor {
+            position: absolute;
+            z-index: 10;
+            cursor: pointer;
+            /* background: rgba(255, 0, 0, 0.2); <-- Buka comment ini kalau mau pas-in posisinya */
+        }
+
+        /* RIG TANGAN WAYANG (LAYER OVERLAY AGAR BISA GERAK) */
+        .arm-overlay-left {
+            position: absolute;
+            top: 200px;
+            left: 105px;
+            width: 30px;
+            height: 120px;
+            z-index: 20;
+            transform-origin: top center;
+            transition: transform 0.08s ease-out;
+            cursor: grab;
+        }
+
+        .arm-overlay-right {
+            position: absolute;
+            top: 200px;
+            right: 105px;
+            width: 30px;
+            height: 120px;
+            z-index: 20;
+            transform-origin: top center;
+            transition: transform 0.08s ease-out;
+            cursor: grab;
+        }
+    </style>
 </head>
-
-
 <body>
 
+    <div class="poster-container" id="poster">
+        <!-- POP-UP TEKS INFORMASI -->
+        <div class="info-label" id="infoLabel">ANATOMI TUBUH</div>
 
-<header>
+        <!-- GAMBAR MEDIS UTAMA -->
+        <img src="anatomi.jpg" class="medical-img" alt="Anatomi Tubuh Manusia">
 
-  <h1>ANATOMI TUBUH MANUSIA</h1>
+        <!-- SENSOR PENUNJUK ORGAN (PERSIS DIPOSISIKAN SESUAI FOTO KAMU) -->
+        <div class="sensor" data-name="BRAIN" style="top: 100px; left: 165px; width: 30px; height: 20px;"></div>
+        <div class="sensor" data-name="RIGHT EYE" style="top: 118px; left: 162px; width: 14px; height: 14px;"></div>
+        <div class="sensor" data-name="LEFT EYE" style="top: 118px; left: 184px; width: 14px; height: 14px;"></div>
+        <div class="sensor" data-name="MANDIBLE (RAHANG)" style="top: 135px; left: 168px; width: 24px; height: 15px;"></div>
+        <div class="sensor" data-name="HEART" style="top: 180px; left: 172px; width: 22px; height: 25px;"></div>
+        <div class="sensor" data-name="RIGHT LUNG" style="top: 175px; left: 148px; width: 20px; height: 35px;"></div>
+        <div class="sensor" data-name="LEFT LUNG" style="top: 175px; left: 192px; width: 20px; height: 35px;"></div>
+        <div class="sensor" data-name="LIVER (HATI)" style="top: 212px; left: 155px; width: 25px; height: 20px;"></div>
+        <div class="sensor" data-name="STOMACH (LAMBUNG)" style="top: 215px; left: 182px; width: 25px; height: 20px;"></div>
+        <div class="sensor" data-name="PELVIC BONES" style="top: 260px; left: 152px; width: 56px; height: 30px;"></div>
+        <div class="sensor" data-name="RIGHT HAND" style="top: 285px; left: 105px; width: 25px; height: 35px;"></div>
+        <div class="sensor" data-name="LEFT HAND" style="top: 285px; left: 230px; width: 25px; height: 35px;"></div>
 
-  <p>
-    Sentuh bagian tubuh untuk melihat informasinya
-  </p>
+        <!-- LAYER INTERAKTIF MEKANISME WAYANG TANGAN -->
+        <div class="arm-overlay-left" id="armLeft"></div>
+        <div class="arm-overlay-right" id="armRight"></div>
+    </div>
 
-</header>
+    <script>
+        const poster = document.getElementById('poster');
+        const infoLabel = document.getElementById('infoLabel');
+        const sensors = document.querySelectorAll('.sensor');
+        const armLeft = document.getElementById('armLeft');
+        const armRight = document.getElementById('armRight');
 
+        // 1. MUNCULKAN TEKS PAS KURSOR MENGARAH KE ORGAN
+        sensors.forEach(sensor => {
+            sensor.addEventListener('mouseenter', () => {
+                infoLabel.innerText = sensor.getAttribute('data-name');
+                infoLabel.classList.add('show');
+            });
+            sensor.addEventListener('mouseleave', () => {
+                infoLabel.classList.remove('show');
+            });
+            sensor.addEventListener('click', () => {
+                infoLabel.innerText = sensor.getAttribute('data-name');
+                infoLabel.classList.add('show');
+            });
+        });
 
+        // 2. MEKANISME DYNAMIC MOTION (MENGATUR FISIKA GERAK TANGAN KE KURSOR)
+        poster.addEventListener('mousemove', (e) => {
+            const rect = poster.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left;
+            const mouseY = e.clientY - rect.top;
 
-<div
-  class="anatomy-container alive"
-  id="anatomy"
->
+            // Rotasi fleksibel bahu kiri & kanan mengikuti gerakan kursor
+            const angleLeft = (mouseX - 120) * 0.25;
+            const angleRight = (mouseX - 240) * 0.25;
 
-  <!--
-    GANTI anatomi.jpg
-    dengan nama file gambar anatomi kamu
-  -->
+            armLeft.style.transform = `rotate(${Math.max(-30, Math.min(30, angleLeft))}deg)`;
+            armRight.style.transform = `rotate(${Math.max(-30, Math.min(30, angleRight))}deg)`;
+        });
 
-  <img
-    src="anatomi.jpg"
-    alt="Anatomi tubuh manusia"
-  >
-
-
-  <!-- ========================= -->
-  <!-- KEPALA -->
-  <!-- ========================= -->
-
-  <button
-    class="hotspot"
-    data-name="BRAIN"
-    data-info="Otak"
-    style="left:50%; top:20.5%;"
-  ></button>
-
-
-  <button
-    class="hotspot"
-    data-name="RIGHT EYE"
-    data-info="Mata kanan"
-    style="left:46%; top:25.5%;"
-  ></button>
-
-
-  <button
-    class="hotspot"
-    data-name="LEFT EYE"
-    data-info="Mata kiri"
-    style="left:54%; top:25.5%;"
-  ></button>
-
-
-
-  <!-- ========================= -->
-  <!-- DADA -->
-  <!-- ========================= -->
-
-  <button
-    class="hotspot"
-    data-name="HEART"
-    data-info="Jantung"
-    style="left:50%; top:36%;"
-  ></button>
-
-
-  <button
-    class="hotspot"
-    data-name="RIGHT LUNG"
-    data-info="Paru-paru kanan"
-    style="left:44%; top:35%;"
-  ></button>
-
-
-  <button
-    class="hotspot"
-    data-name="LEFT LUNG"
-    data-info="Paru-paru kiri"
-    style="left:56%; top:35%;"
-  ></button>
-
-
-
-  <!-- ========================= -->
-  <!-- PERUT -->
-  <!-- ========================= -->
-
-  <button
-    class="hotspot"
-    data-name="LIVER"
-    data-info="Hati"
-    style="left:47%; top:40%;"
-  ></button>
-
-
-  <button
-    class="hotspot"
-    data-name="STOMACH"
-    data-info="Lambung"
-    style="left:54%; top:43%;"
-  ></button>
-
-
-  <button
-    class="hotspot"
-    data-name="PANCREAS"
-    data-info="Pankreas"
-    style="left:50%; top:44%;"
-  ></button>
-
-
-  <button
-    class="hotspot"
-    data-name="RIGHT KIDNEY"
-    data-info="Ginjal kanan"
-    style="left:45%; top:47%;"
-  ></button>
-
-
-  <button
-    class="hotspot"
-    data-name="LEFT KIDNEY"
-    data-info="Ginjal kiri"
-    style="left:55%; top:47%;"
-  ></button>
-
-
-
-  <!-- ========================= -->
-  <!-- TANGAN -->
-  <!-- ========================= -->
-
-  <button
-    class="hotspot"
-    data-name="RIGHT HAND"
-    data-info="Tangan kanan"
-    style="left:34%; top:55%;"
-  ></button>
-
-
-  <button
-    class="hotspot"
-    data-name="LEFT HAND"
-    data-info="Tangan kiri"
-    style="left:66%; top:55%;"
-  ></button>
-
-
-
-  <!-- ========================= -->
-  <!-- PAHA -->
-  <!-- ========================= -->
-
-  <button
-    class="hotspot"
-    data-name="RIGHT FEMUR"
-    data-info="Tulang paha kanan"
-    style="left:44%; top:65%;"
-  ></button>
-
-
-  <button
-    class="hotspot"
-    data-name="LEFT FEMUR"
-    data-info="Tulang paha kiri"
-    style="left:56%; top:65%;"
-  ></button>
-
-
-
-  <!-- ========================= -->
-  <!-- LUTUT -->
-  <!-- ========================= -->
-
-  <button
-    class="hotspot"
-    data-name="RIGHT PATELLA"
-    data-info="Tempurung lutut kanan"
-    style="left:45%; top:73%;"
-  ></button>
-
-
-  <button
-    class="hotspot"
-    data-name="LEFT PATELLA"
-    data-info="Tempurung lutut kiri"
-    style="left:55%; top:73%;"
-  ></button>
-
-
-
-  <!-- ========================= -->
-  <!-- TIBIA -->
-  <!-- ========================= -->
-
-  <button
-    class="hotspot"
-   
+        poster.addEventListener('mouseleave', () => {
+            armLeft.style.transform = 'rotate(0deg)';
+            armRight.style.transform = 'rotate(0deg)';
+        });
+    </script>
+</body>
+</html>
