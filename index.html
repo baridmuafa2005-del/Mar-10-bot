@@ -2,55 +2,39 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>3D Hand AR Experience</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hand Frame Cyber Overlay</title>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body, html { width: 100%; height: 100%; overflow: hidden; background: #000; font-family: monospace; }
-        
-        #container {
-            position: relative;
-            width: 100vw;
-            height: 100vh;
-        }
-
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: #000; overflow: hidden; display: flex; justify-content: center; align-items: center; min-height: 100vh; font-family: sans-serif; }
+        .stage { position: relative; width: 100vw; height: 100vh; }
         video { display: none; }
-
-        canvas {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transform: scaleX(-1); /* Mirror camera */
-        }
-
-        .hud-overlay {
+        canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
+        .hud-ui {
             position: absolute;
             top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.6);
-            border: 1px solid #00ffcc;
-            color: #00ffcc;
-            padding: 8px 18px;
-            border-radius: 20px;
-            font-size: 14px;
-            letter-spacing: 1px;
+            right: 20px;
+            color: #00f0ff;
+            font-family: monospace;
+            border: 1px solid #00f0ff;
+            padding: 10px 15px;
+            background: rgba(0,0,0,0.5);
+            border-radius: 4px;
             pointer-events: none;
             z-index: 10;
-            text-shadow: 0 0 8px #00ffcc;
         }
     </style>
 </head>
 <body>
 
-<div id="container">
-    <div class="hud-overlay" id="hud">READY // POINT YOUR HAND</div>
+<div class="stage">
+    <div class="hud-ui">
+        <div>CAMERA NODE // 02</div>
+        <div style="font-size: 18px; font-weight: bold; margin-top: 4px;">SUBJECT DETECTION</div>
+        <div style="font-size: 10px; opacity: 0.8; margin-top: 2px;">HAND FRAME ACTIVE</div>
+    </div>
     <video id="webcam" autoplay playsinline></video>
     <canvas id="outputCanvas"></canvas>
 </div>
@@ -59,188 +43,125 @@
     const video = document.getElementById('webcam');
     const canvas = document.getElementById('outputCanvas');
     const ctx = canvas.getContext('2d');
-    const hud = document.getElementById('hud');
 
-    // --- THREE.JS SCENE SETUP ---
-    const scene = new THREE.Scene();
-    const camera3D = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
-    camera3D.position.z = 5;
+    // Variabel Smooth Tracking (Lerp)
+    let p1 = { x: 0, y: 0 }, p2 = { x: 0, y: 0 }, p3 = { x: 0, y: 0 }, p4 = { x: 0, y: 0 };
+    let targetP1 = null, targetP2 = null, targetP3 = null, targetP4 = null;
+    const lerpFactor = 0.35; // Semakin besar semakin responsif, semakin kecil semakin mulus
 
-    const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, powerPreference: "high-performance" });
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-
-    // Group Objek 3D & Bounding Box
-    const group3D = new THREE.Group();
-    scene.add(group3D);
-
-    // VFX Wireframe Bounding Box (Kotak Putih khas Video)
-    const boxGeo = new THREE.BoxGeometry(1.6, 1.6, 1.6);
-    const boxMat = new THREE.MeshBasicMaterial({ color: 0xffffff, wireframe: true, transparent: true, opacity: 0.6 });
-    const boundingBox = new THREE.Mesh(boxGeo, boxMat);
-    group3D.add(boundingBox);
-
-    let activeMesh = null;
-    let currentObject = "";
-
-    // DYNAMIC OBJECT BUILDER (Model Lebih Detail & Berbentuk)
-    function build3DModel(type) {
-        if (activeMesh) group3D.remove(activeMesh);
-        
-        const subGroup = new THREE.Group();
-
-        if (type === 'POHON') {
-            // Batang
-            const trunkGeo = new THREE.CylinderGeometry(0.08, 0.15, 0.8, 12);
-            const trunkMat = new THREE.MeshBasicMaterial({ color: 0x8B4513, wireframe: true });
-            const trunk = new THREE.Mesh(trunkGeo, trunkMat);
-            trunk.position.y = -0.3;
-            subGroup.add(trunk);
-
-            // Dedaunan
-            const leafGeo = new THREE.DodecahedronGeometry(0.5, 1);
-            const leafMat = new THREE.MeshBasicMaterial({ color: 0x00ff66, wireframe: true });
-            const leaf = new THREE.Mesh(leafGeo, leafMat);
-            leaf.position.y = 0.3;
-            subGroup.add(leaf);
-
-        } else if (type === 'BUNGA') {
-            // Kelopak Bunga (Torus Knot Glow)
-            const flowerGeo = new THREE.TorusKnotGeometry(0.35, 0.1, 64, 8, 2, 5);
-            const flowerMat = new THREE.MeshBasicMaterial({ color: 0xff1493, wireframe: true });
-            const flower = new THREE.Mesh(flowerGeo, flowerMat);
-            
-            // Tangkai
-            const stemGeo = new THREE.CylinderGeometry(0.03, 0.03, 0.7, 8);
-            const stemMat = new THREE.MeshBasicMaterial({ color: 0x00ff44 });
-            const stem = new THREE.Mesh(stemGeo, stemMat);
-            stem.position.y = -0.4;
-            
-            subGroup.add(flower);
-            subGroup.add(stem);
-
-        } else if (type === 'NAGA') {
-            // Naga (Struktur Sayap & Kepala Wireframe)
-            const bodyGeo = new THREE.ConeGeometry(0.3, 1.0, 5);
-            const bodyMat = new THREE.MeshBasicMaterial({ color: 0xff3300, wireframe: true });
-            const body = new THREE.Mesh(bodyGeo, bodyMat);
-            body.rotation.z = Math.PI / 2;
-
-            const wingGeo = new THREE.TetrahedronGeometry(0.6, 1);
-            const wingMat = new THREE.MeshBasicMaterial({ color: 0xff6600, wireframe: true });
-            const wing1 = new THREE.Mesh(wingGeo, wingMat);
-            wing1.position.set(0, 0.3, 0.2);
-            
-            subGroup.add(body);
-            subGroup.add(wing1);
-
-        } else if (type === 'RUMAH') {
-            // Dinding
-            const wallGeo = new THREE.BoxGeometry(0.7, 0.6, 0.7);
-            const wallMat = new THREE.MeshBasicMaterial({ color: 0x00ccff, wireframe: true });
-            const wall = new THREE.Mesh(wallGeo, wallMat);
-            wall.position.y = -0.2;
-
-            // Atap Limas
-            const roofGeo = new THREE.ConeGeometry(0.65, 0.5, 4);
-            const roofMat = new THREE.MeshBasicMaterial({ color: 0xffff00, wireframe: true });
-            const roof = new THREE.Mesh(roofGeo, roofMat);
-            roof.position.y = 0.35;
-            roof.rotation.y = Math.PI / 4;
-
-            subGroup.add(wall);
-            subGroup.add(roof);
-        }
-
-        activeMesh = subGroup;
-        group3D.add(activeMesh);
+    function lerp(start, end, amt) {
+        return start + (end - start) * amt;
     }
 
-    // --- RESPONSIVE / AUTO LANDSCAPE & PORTRAIT ---
-    function onWindowResize() {
-        const width = window.innerWidth;
-        const height = window.innerHeight;
-        
-        camera3D.aspect = width / height;
-        camera3D.updateProjectionMatrix();
-        
-        renderer.setSize(width, height);
-    }
-    window.addEventListener('resize', onWindowResize);
-
-    // --- MEDIAPIPE HAND TRACKING ---
     function onResults(results) {
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
 
         ctx.save();
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        
-        // Render video jernih penuh layar
+
+        // 1. Gambar Video Utama (Normal HD)
         ctx.drawImage(results.image, 0, 0, canvas.width, canvas.height);
 
-        if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
-            const lm = results.multiHandLandmarks[0];
+        if (results.multiHandLandmarks && results.multiHandLandmarks.length >= 2) {
+            // Deteksi 2 Tangan
+            const hand1 = results.multiHandLandmarks[0];
+            const hand2 = results.multiHandLandmarks[1];
 
-            // Posisi Ujung Telunjuk (Landmark 8) untuk Koordinat Objek
-            const rawX = (1 - lm[8].x) * 2 - 1;
-            const rawY = -(lm[8].y * 2 - 1);
+            // Tentukan tangan kiri dan kanan berdasarkan posisi X
+            const h1Index = hand1[8], h1Thumb = hand1[4];
+            const h2Index = hand2[8], h2Thumb = hand2[4];
 
-            // Smooth Movement
-            group3D.position.x = rawX * (camera3D.aspect * 2);
-            group3D.position.y = rawY * 2;
-            group3D.rotation.y += 0.03; // Animasi putar melayang
-            group3D.visible = true;
-
-            // Logika Gestur Jari
-            const isThumb = lm[4].y < lm[3].y;
-            const isIndex = lm[8].y < lm[6].y;
-            const isMiddle = lm[12].y < lm[10].y;
-            const isRing = lm[16].y < lm[14].y;
-            const isPinky = lm[20].y < lm[18].y;
-
-            let detectedObj = "";
-
-            if (isThumb && !isIndex && !isMiddle && !isRing && !isPinky) {
-                detectedObj = "BUNGA";
-            } else if (isIndex && isMiddle && !isRing && !isPinky) {
-                detectedObj = "NAGA";
-            } else if (isIndex && isPinky && isThumb) {
-                detectedObj = "POHON";
-            } else if (isIndex && !isMiddle && !isRing && !isPinky) {
-                detectedObj = "RUMAH";
+            // Pasangkan titik sudut frame
+            if (h1Index.x < h2Index.x) {
+                targetP1 = { x: h1Index.x * canvas.width, y: h1Index.y * canvas.height };
+                targetP2 = { x: h2Index.x * canvas.width, y: h2Index.y * canvas.height };
+                targetP3 = { x: h2Thumb.x * canvas.width, y: h2Thumb.y * canvas.height };
+                targetP4 = { x: h1Thumb.x * canvas.width, y: h1Thumb.y * canvas.height };
+            } else {
+                targetP1 = { x: h2Index.x * canvas.width, y: h2Index.y * canvas.height };
+                targetP2 = { x: h1Index.x * canvas.width, y: h1Index.y * canvas.height };
+                targetP3 = { x: h1Thumb.x * canvas.width, y: h1Thumb.y * canvas.height };
+                targetP4 = { x: h2Thumb.x * canvas.width, y: h2Thumb.y * canvas.height };
             }
 
-            if (detectedObj && detectedObj !== currentObject) {
-                currentObject = detectedObj;
-                hud.innerText = `OBJECT: [ ${currentObject} ]`;
-                build3DModel(currentObject);
+            // Smooth Interpolation
+            p1.x = lerp(p1.x || targetP1.x, targetP1.x, lerpFactor);
+            p1.y = lerp(p1.y || targetP1.y, targetP1.y, lerpFactor);
+            p2.x = lerp(p2.x || targetP2.x, targetP2.x, lerpFactor);
+            p2.y = lerp(p2.y || targetP2.y, targetP2.y, lerpFactor);
+            p3.x = lerp(p3.x || targetP3.x, targetP3.x, lerpFactor);
+            p3.y = lerp(p3.y || targetP3.y, targetP3.y, lerpFactor);
+            p4.x = lerp(p4.x || targetP4.x, targetP4.x, lerpFactor);
+            p4.y = lerp(p4.y || targetP4.y, targetP4.y, lerpFactor);
+
+            // 2. Efek Cyber / Filter di Dalam Area Frame Tangan
+            ctx.save();
+            ctx.beginPath();
+            ctx.moveTo(p1.x, p1.y);
+            ctx.lineTo(p2.x, p2.y);
+            ctx.lineTo(p3.x, p3.y);
+            ctx.lineTo(p4.x, p4.y);
+            ctx.closePath();
+            ctx.clip(); // Masking area hanya di dalam tangan
+
+            // Redraw video dengan efek warna Cyber Cyan/Biru
+            ctx.drawImage(results.image, 0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = 'rgba(0, 240, 255, 0.25)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Garis-garis Scanline khas Cyberpunk
+            ctx.strokeStyle = 'rgba(0, 255, 255, 0.15)';
+            ctx.lineWidth = 2;
+            for (let y = 0; y < canvas.height; y += 8) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(canvas.width, y);
+                ctx.stroke();
             }
-        } else {
-            group3D.visible = false;
-            hud.innerText = "TUNJUKKAN GESTUR TANGAN";
-            currentObject = "";
+            ctx.restore();
+
+            // 3. Garis Frame Luar Neon Cyan & Label
+            ctx.beginPath();
+            ctx.moveTo(p1.x, p1.y);
+            ctx.lineTo(p2.x, p2.y);
+            ctx.lineTo(p3.x, p3.y);
+            ctx.lineTo(p4.x, p4.y);
+            ctx.closePath();
+            ctx.strokeStyle = '#00f0ff';
+            ctx.lineWidth = 3;
+            ctx.shadowColor = '#00f0ff';
+            ctx.shadowBlur = 10;
+            ctx.stroke();
+
+            // Teks Label Cyber Frame di Sudut Frame
+            ctx.shadowBlur = 0;
+            ctx.fillStyle = '#00f0ff';
+            ctx.font = '12px monospace';
+            ctx.fillText("CYBER FRAME // ACTIVE", p1.x + 10, p1.y + 20);
         }
 
-        // Composite Three.js Canvas ke Kamera
-        renderer.render(scene, camera3D);
-        ctx.drawImage(renderer.domElement, 0, 0);
         ctx.restore();
     }
 
-    const hands = new Hands({ locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}` });
+    const hands = new Hands({
+        locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
+    });
+
     hands.setOptions({
-        maxNumHands: 1,
+        maxNumHands: 2,
         modelComplexity: 1,
         minDetectionConfidence: 0.7,
         minTrackingConfidence: 0.7
     });
+
     hands.onResults(onResults);
 
+    // Set Kamera ke HD 1080p
     const camera = new Camera(video, {
         onFrame: async () => { await hands.send({ image: video }); },
-        width: 1280,
-        height: 720
+        width: 1920,
+        height: 1080
     });
     camera.start();
 </script>
