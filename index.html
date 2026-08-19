@@ -2,25 +2,55 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3D Hand Tracking - VFX</title>
-    <!-- MediaPipe & Three.js Libraries -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>3D Hand AR Experience</title>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { background: #050505; color: #fff; display: flex; justify-content: center; align-items: center; min-height: 100vh; overflow: hidden; font-family: sans-serif; }
-        .stage { position: relative; width: 640px; height: 480px; border-radius: 12px; overflow: hidden; box-shadow: 0 0 40px rgba(0,255,200,0.2); }
+        body, html { width: 100%; height: 100%; overflow: hidden; background: #000; font-family: monospace; }
+        
+        #container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+
         video { display: none; }
-        canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; transform: scaleX(-1); }
-        .hud { position: absolute; top: 15px; left: 15px; font-size: 12px; font-family: monospace; color: #00ffcc; text-shadow: 0 0 5px #00ffcc; pointer-events: none; }
+
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transform: scaleX(-1); /* Mirror camera */
+        }
+
+        .hud-overlay {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid #00ffcc;
+            color: #00ffcc;
+            padding: 8px 18px;
+            border-radius: 20px;
+            font-size: 14px;
+            letter-spacing: 1px;
+            pointer-events: none;
+            z-index: 10;
+            text-shadow: 0 0 8px #00ffcc;
+        }
     </style>
 </head>
 <body>
 
-<div class="stage">
-    <div class="hud" id="hud">SYSTEM READY // WAITING FOR HAND GESTURE...</div>
+<div id="container">
+    <div class="hud-overlay" id="hud">READY // POINT YOUR HAND</div>
     <video id="webcam" autoplay playsinline></video>
     <canvas id="outputCanvas"></canvas>
 </div>
@@ -31,115 +61,186 @@
     const ctx = canvas.getContext('2d');
     const hud = document.getElementById('hud');
 
-    // --- THREE.JS 3D SCENE SETUP ---
+    // --- THREE.JS SCENE SETUP ---
     const scene = new THREE.Scene();
-    const camera3D = new THREE.PerspectiveCamera(45, 640 / 480, 0.1, 1000);
+    const camera3D = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
     camera3D.position.z = 5;
 
-    const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
-    renderer.setSize(640, 480);
-    
-    // Group Objek 3D + Bounding Box Wireframe
+    const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, powerPreference: "high-performance" });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+    // Group Objek 3D & Bounding Box
     const group3D = new THREE.Group();
     scene.add(group3D);
 
-    // Bounding Box (Box Kawat khas VFX VFX)
-    const boxGeo = new THREE.BoxGeometry(1.5, 1.5, 1.5);
-    const boxMat = new THREE.MeshBasicMaterial({ color: 0xffffff, wireframe: true, transparent: true, opacity: 0.5 });
-    const wireframeBox = new THREE.Mesh(boxGeo, boxMat);
-    group3D.add(wireframeBox);
+    // VFX Wireframe Bounding Box (Kotak Putih khas Video)
+    const boxGeo = new THREE.BoxGeometry(1.6, 1.6, 1.6);
+    const boxMat = new THREE.MeshBasicMaterial({ color: 0xffffff, wireframe: true, transparent: true, opacity: 0.6 });
+    const boundingBox = new THREE.Mesh(boxGeo, boxMat);
+    group3D.add(boundingBox);
 
-    // Mesh Placeholder Objek 3D (Bisa diganti loader file .GLTF/.GLB nanti)
-    let currentMesh = null;
-    const light = new THREE.DirectionalLight(0xffffff, 1);
-    light.position.set(1, 1, 2);
-    scene.add(light);
-    scene.add(new THREE.AmbientLight(0x404040));
+    let activeMesh = null;
+    let currentObject = "";
 
-    function set3DObject(type) {
-        if(currentMesh) group3D.remove(currentMesh);
+    // DYNAMIC OBJECT BUILDER (Model Lebih Detail & Berbentuk)
+    function build3DModel(type) {
+        if (activeMesh) group3D.remove(activeMesh);
+        
+        const subGroup = new THREE.Group();
 
-        let geo, mat;
-        if(type === 'POHON') {
-            geo = new THREE.CylinderGeometry(0.1, 0.6, 1.2, 8);
-            mat = new THREE.MeshPhongMaterial({ color: 0x228b22, flatShading: true });
-        } else if(type === 'BUNGA') {
-            geo = new THREE.TorusKnotGeometry(0.4, 0.15, 100, 16);
-            mat = new THREE.MeshPhongMaterial({ color: 0xff69b4 });
-        } else if(type === 'NAGA') {
-            geo = new THREE.OctahedronGeometry(0.6, 2);
-            mat = new THREE.MeshPhongMaterial({ color: 0xff0000, wireframe: true });
-        } else if(type === 'RUMAH') {
-            geo = new THREE.BoxGeometry(0.8, 0.8, 0.8);
-            mat = new THREE.MeshPhongMaterial({ color: 0x38bdf8 });
+        if (type === 'POHON') {
+            // Batang
+            const trunkGeo = new THREE.CylinderGeometry(0.08, 0.15, 0.8, 12);
+            const trunkMat = new THREE.MeshBasicMaterial({ color: 0x8B4513, wireframe: true });
+            const trunk = new THREE.Mesh(trunkGeo, trunkMat);
+            trunk.position.y = -0.3;
+            subGroup.add(trunk);
+
+            // Dedaunan
+            const leafGeo = new THREE.DodecahedronGeometry(0.5, 1);
+            const leafMat = new THREE.MeshBasicMaterial({ color: 0x00ff66, wireframe: true });
+            const leaf = new THREE.Mesh(leafGeo, leafMat);
+            leaf.position.y = 0.3;
+            subGroup.add(leaf);
+
+        } else if (type === 'BUNGA') {
+            // Kelopak Bunga (Torus Knot Glow)
+            const flowerGeo = new THREE.TorusKnotGeometry(0.35, 0.1, 64, 8, 2, 5);
+            const flowerMat = new THREE.MeshBasicMaterial({ color: 0xff1493, wireframe: true });
+            const flower = new THREE.Mesh(flowerGeo, flowerMat);
+            
+            // Tangkai
+            const stemGeo = new THREE.CylinderGeometry(0.03, 0.03, 0.7, 8);
+            const stemMat = new THREE.MeshBasicMaterial({ color: 0x00ff44 });
+            const stem = new THREE.Mesh(stemGeo, stemMat);
+            stem.position.y = -0.4;
+            
+            subGroup.add(flower);
+            subGroup.add(stem);
+
+        } else if (type === 'NAGA') {
+            // Naga (Struktur Sayap & Kepala Wireframe)
+            const bodyGeo = new THREE.ConeGeometry(0.3, 1.0, 5);
+            const bodyMat = new THREE.MeshBasicMaterial({ color: 0xff3300, wireframe: true });
+            const body = new THREE.Mesh(bodyGeo, bodyMat);
+            body.rotation.z = Math.PI / 2;
+
+            const wingGeo = new THREE.TetrahedronGeometry(0.6, 1);
+            const wingMat = new THREE.MeshBasicMaterial({ color: 0xff6600, wireframe: true });
+            const wing1 = new THREE.Mesh(wingGeo, wingMat);
+            wing1.position.set(0, 0.3, 0.2);
+            
+            subGroup.add(body);
+            subGroup.add(wing1);
+
+        } else if (type === 'RUMAH') {
+            // Dinding
+            const wallGeo = new THREE.BoxGeometry(0.7, 0.6, 0.7);
+            const wallMat = new THREE.MeshBasicMaterial({ color: 0x00ccff, wireframe: true });
+            const wall = new THREE.Mesh(wallGeo, wallMat);
+            wall.position.y = -0.2;
+
+            // Atap Limas
+            const roofGeo = new THREE.ConeGeometry(0.65, 0.5, 4);
+            const roofMat = new THREE.MeshBasicMaterial({ color: 0xffff00, wireframe: true });
+            const roof = new THREE.Mesh(roofGeo, roofMat);
+            roof.position.y = 0.35;
+            roof.rotation.y = Math.PI / 4;
+
+            subGroup.add(wall);
+            subGroup.add(roof);
         }
 
-        if(geo) {
-            currentMesh = new THREE.Mesh(geo, mat);
-            group3D.add(currentMesh);
-        }
+        activeMesh = subGroup;
+        group3D.add(activeMesh);
     }
 
-    // --- HAND TRACKING & LOGIC ---
+    // --- RESPONSIVE / AUTO LANDSCAPE & PORTRAIT ---
+    function onWindowResize() {
+        const width = window.innerWidth;
+        const height = window.innerHeight;
+        
+        camera3D.aspect = width / height;
+        camera3D.updateProjectionMatrix();
+        
+        renderer.setSize(width, height);
+    }
+    window.addEventListener('resize', onWindowResize);
+
+    // --- MEDIAPIPE HAND TRACKING ---
     function onResults(results) {
-        canvas.width = video.videoWidth || 640;
-        canvas.height = video.videoHeight || 480;
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
 
         ctx.save();
         ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        // Render video jernih penuh layar
         ctx.drawImage(results.image, 0, 0, canvas.width, canvas.height);
 
         if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
             const lm = results.multiHandLandmarks[0];
 
-            // Posisi Telunjuk (Landmark 8)
-            const x = (1 - lm[8].x) * 2 - 1; 
-            const y = -(lm[8].y * 2 - 1);
+            // Posisi Ujung Telunjuk (Landmark 8) untuk Koordinat Objek
+            const rawX = (1 - lm[8].x) * 2 - 1;
+            const rawY = -(lm[8].y * 2 - 1);
 
-            group3D.position.set(x * 2, y * 1.5, 0);
-            group3D.rotation.y += 0.05; // Rotasi melayang
+            // Smooth Movement
+            group3D.position.x = rawX * (camera3D.aspect * 2);
+            group3D.position.y = rawY * 2;
+            group3D.rotation.y += 0.03; // Animasi putar melayang
             group3D.visible = true;
 
-            // Deteksi Jari
+            // Logika Gestur Jari
+            const isThumb = lm[4].y < lm[3].y;
             const isIndex = lm[8].y < lm[6].y;
             const isMiddle = lm[12].y < lm[10].y;
             const isRing = lm[16].y < lm[14].y;
             const isPinky = lm[20].y < lm[18].y;
-            const isThumb = lm[4].x < lm[3].x;
 
-            let objType = "";
+            let detectedObj = "";
+
             if (isThumb && !isIndex && !isMiddle && !isRing && !isPinky) {
-                objType = "BUNGA";
+                detectedObj = "BUNGA";
             } else if (isIndex && isMiddle && !isRing && !isPinky) {
-                objType = "NAGA";
+                detectedObj = "NAGA";
             } else if (isIndex && isPinky && isThumb) {
-                objType = "POHON";
+                detectedObj = "POHON";
             } else if (isIndex && !isMiddle && !isRing && !isPinky) {
-                objType = "RUMAH";
+                detectedObj = "RUMAH";
             }
 
-            if(objType) {
-                hud.innerText = `GESTURE DETECTED: [ ${objType} ]`;
-                set3DObject(objType);
+            if (detectedObj && detectedObj !== currentObject) {
+                currentObject = detectedObj;
+                hud.innerText = `OBJECT: [ ${currentObject} ]`;
+                build3DModel(currentObject);
             }
         } else {
             group3D.visible = false;
-            hud.innerText = "SEARCHING HAND...";
+            hud.innerText = "TUNJUKKAN GESTUR TANGAN";
+            currentObject = "";
         }
 
-        // Render 3D Overlay di atas Canvas Video
+        // Composite Three.js Canvas ke Kamera
         renderer.render(scene, camera3D);
         ctx.drawImage(renderer.domElement, 0, 0);
         ctx.restore();
     }
 
     const hands = new Hands({ locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}` });
-    hands.setOptions({ maxNumHands: 1, modelComplexity: 1, minDetectionConfidence: 0.6 });
+    hands.setOptions({
+        maxNumHands: 1,
+        modelComplexity: 1,
+        minDetectionConfidence: 0.7,
+        minTrackingConfidence: 0.7
+    });
     hands.onResults(onResults);
 
     const camera = new Camera(video, {
         onFrame: async () => { await hands.send({ image: video }); },
-        width: 640, height: 480
+        width: 1280,
+        height: 720
     });
     camera.start();
 </script>
