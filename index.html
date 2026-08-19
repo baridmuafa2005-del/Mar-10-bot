@@ -14,16 +14,17 @@
         canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
         .hud-ui {
             position: absolute;
-            top: 20px;
-            right: 20px;
+            top: 30px;
+            right: 30px;
             color: #00f0ff;
             font-family: monospace;
             border: 1px solid #00f0ff;
-            padding: 10px 15px;
-            background: rgba(0,0,0,0.5);
+            padding: 12px 18px;
+            background: rgba(0,0,0,0.6);
             border-radius: 4px;
             pointer-events: none;
             z-index: 10;
+            box-shadow: 0 0 10px rgba(0,240,255,0.3);
         }
     </style>
 </head>
@@ -31,9 +32,9 @@
 
 <div class="stage">
     <div class="hud-ui">
-        <div>CAMERA NODE // 02</div>
+        <div style="font-size: 11px; opacity: 0.8;">CAMERA NODE // 02</div>
         <div style="font-size: 18px; font-weight: bold; margin-top: 4px;">SUBJECT DETECTION</div>
-        <div style="font-size: 10px; opacity: 0.8; margin-top: 2px;">HAND FRAME ACTIVE</div>
+        <div style="font-size: 10px; opacity: 0.7; margin-top: 4px;">HAND FRAME ACTIVE</div>
     </div>
     <video id="webcam" autoplay playsinline></video>
     <canvas id="outputCanvas"></canvas>
@@ -44,10 +45,9 @@
     const canvas = document.getElementById('outputCanvas');
     const ctx = canvas.getContext('2d');
 
-    // Variabel Smooth Tracking (Lerp)
+    // Smooth Tracking Variables (Penghalus Gerakan)
     let p1 = { x: 0, y: 0 }, p2 = { x: 0, y: 0 }, p3 = { x: 0, y: 0 }, p4 = { x: 0, y: 0 };
-    let targetP1 = null, targetP2 = null, targetP3 = null, targetP4 = null;
-    const lerpFactor = 0.35; // Semakin besar semakin responsif, semakin kecil semakin mulus
+    const lerpFactor = 0.35; // Mengontrol kehalusan pergerakan frame
 
     function lerp(start, end, amt) {
         return start + (end - start) * amt;
@@ -60,19 +60,20 @@
         ctx.save();
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        // 1. Gambar Video Utama (Normal HD)
+        // 1. Gambar Video Kamera HD
         ctx.drawImage(results.image, 0, 0, canvas.width, canvas.height);
 
         if (results.multiHandLandmarks && results.multiHandLandmarks.length >= 2) {
-            // Deteksi 2 Tangan
             const hand1 = results.multiHandLandmarks[0];
             const hand2 = results.multiHandLandmarks[1];
 
-            // Tentukan tangan kiri dan kanan berdasarkan posisi X
+            // Deteksi Ujung Telunjuk (Landmark 8) & Jempol (Landmark 4) dari kedua tangan
             const h1Index = hand1[8], h1Thumb = hand1[4];
             const h2Index = hand2[8], h2Thumb = hand2[4];
 
-            // Pasangkan titik sudut frame
+            let targetP1, targetP2, targetP3, targetP4;
+
+            // Memetakan 4 Sudut Kotak
             if (h1Index.x < h2Index.x) {
                 targetP1 = { x: h1Index.x * canvas.width, y: h1Index.y * canvas.height };
                 targetP2 = { x: h2Index.x * canvas.width, y: h2Index.y * canvas.height };
@@ -85,7 +86,7 @@
                 targetP4 = { x: h2Thumb.x * canvas.width, y: h2Thumb.y * canvas.height };
             }
 
-            // Smooth Interpolation
+            // Menerapkan Interpolasi Linear (Lerp) agar tidak patah-patah
             p1.x = lerp(p1.x || targetP1.x, targetP1.x, lerpFactor);
             p1.y = lerp(p1.y || targetP1.y, targetP1.y, lerpFactor);
             p2.x = lerp(p2.x || targetP2.x, targetP2.x, lerpFactor);
@@ -95,7 +96,7 @@
             p4.x = lerp(p4.x || targetP4.x, targetP4.x, lerpFactor);
             p4.y = lerp(p4.y || targetP4.y, targetP4.y, lerpFactor);
 
-            // 2. Efek Cyber / Filter di Dalam Area Frame Tangan
+            // 2. Filter & Scanline khusus DI DALAM Kotak Tangan (Masking)
             ctx.save();
             ctx.beginPath();
             ctx.moveTo(p1.x, p1.y);
@@ -103,15 +104,15 @@
             ctx.lineTo(p3.x, p3.y);
             ctx.lineTo(p4.x, p4.y);
             ctx.closePath();
-            ctx.clip(); // Masking area hanya di dalam tangan
+            ctx.clip(); 
 
-            // Redraw video dengan efek warna Cyber Cyan/Biru
+            // Efek Tint Warna Cyan
             ctx.drawImage(results.image, 0, 0, canvas.width, canvas.height);
-            ctx.fillStyle = 'rgba(0, 240, 255, 0.25)';
+            ctx.fillStyle = 'rgba(0, 240, 255, 0.22)';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // Garis-garis Scanline khas Cyberpunk
-            ctx.strokeStyle = 'rgba(0, 255, 255, 0.15)';
+            // Garis-Garis Horizontal (Scanlines)
+            ctx.strokeStyle = 'rgba(0, 255, 255, 0.2)';
             ctx.lineWidth = 2;
             for (let y = 0; y < canvas.height; y += 8) {
                 ctx.beginPath();
@@ -121,7 +122,7 @@
             }
             ctx.restore();
 
-            // 3. Garis Frame Luar Neon Cyan & Label
+            // 3. Garis Bingkai Neon Cyan
             ctx.beginPath();
             ctx.moveTo(p1.x, p1.y);
             ctx.lineTo(p2.x, p2.y);
@@ -131,14 +132,14 @@
             ctx.strokeStyle = '#00f0ff';
             ctx.lineWidth = 3;
             ctx.shadowColor = '#00f0ff';
-            ctx.shadowBlur = 10;
+            ctx.shadowBlur = 12;
             ctx.stroke();
 
-            // Teks Label Cyber Frame di Sudut Frame
+            // Teks Status kecil di pojok kiri atas bingkai tangan
             ctx.shadowBlur = 0;
             ctx.fillStyle = '#00f0ff';
             ctx.font = '12px monospace';
-            ctx.fillText("CYBER FRAME // ACTIVE", p1.x + 10, p1.y + 20);
+            ctx.fillText("CYBER FRAME // ACTIVE", p1.x + 8, p1.y + 18);
         }
 
         ctx.restore();
@@ -151,13 +152,13 @@
     hands.setOptions({
         maxNumHands: 2,
         modelComplexity: 1,
-        minDetectionConfidence: 0.7,
-        minTrackingConfidence: 0.7
+        minDetectionConfidence: 0.75,
+        minTrackingConfidence: 0.75
     });
 
     hands.onResults(onResults);
 
-    // Set Kamera ke HD 1080p
+    // Kualitas Kamera HD (1080p)
     const camera = new Camera(video, {
         onFrame: async () => { await hands.send({ image: video }); },
         width: 1920,
