@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Anatomi Interactive & Wayang Motion</title>
+    <title>Anatomi Tubuh Realistis - Wayang Interactive</title>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, sans-serif; user-select: none; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, sans-serif; user-select: none; }
         
         body {
             background: #0f172a;
@@ -14,223 +14,199 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 20px 10px;
-            overflow-x: hidden;
+            padding: 15px 10px;
         }
 
-        h1 { font-size: 20px; color: #38bdf8; margin-bottom: 5px; text-align: center; }
-        p.subtitle { font-size: 12px; color: #94a3b8; margin-bottom: 15px; text-align: center; }
+        h1 { font-size: 18px; color: #38bdf8; margin-bottom: 4px; text-align: center; }
+        p.subtitle { font-size: 11px; color: #94a3b8; margin-bottom: 12px; text-align: center; }
 
-        /* AREA CANVAS / SVG ANATOMI */
-        .anatomy-container {
+        /* AREA KERTAS / CANVAS ANATOMI */
+        .stage {
             position: relative;
             width: 320px;
-            height: 480px;
-            background: rgba(30, 41, 59, 0.7);
-            border: 2px solid rgba(56, 189, 248, 0.3);
-            border-radius: 16px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            height: 520px;
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            overflow: hidden;
             display: flex;
             justify-content: center;
-            align-items: center;
         }
 
-        svg {
+        /* GAMBAR ANATOMI MEDIS ASLI (BACKGROUND BADAN) */
+        .body-medical {
+            position: absolute;
+            top: 10px;
+            height: 500px;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        /* TANGAN KANAN WAYANG (INTERAKTIF) */
+        .arm-container-right {
+            position: absolute;
+            top: 125px;
+            left: 55px;
+            width: 50px;
+            height: 200px;
+            z-index: 2;
+            transform-origin: 25px 15px; /* Pivot Bahu Kanan */
+            cursor: grab;
+            transition: transform 0.05s ease-out;
+        }
+
+        /* TANGAN KIRI WAYANG (INTERAKTIF) */
+        .arm-container-left {
+            position: absolute;
+            top: 125px;
+            right: 55px;
+            width: 50px;
+            height: 200px;
+            z-index: 2;
+            transform-origin: 25px 15px; /* Pivot Bahu Kiri */
+            cursor: grab;
+            transition: transform 0.05s ease-out;
+        }
+
+        .arm-img {
             width: 100%;
             height: 100%;
+            object-fit: contain;
         }
 
-        /* ANATOMI ORGAN - KLIKABLE */
-        .organ {
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-        .organ:hover {
-            filter: drop-shadow(0 0 8px #38bdf8);
-            opacity: 0.8;
-        }
-
-        /* SENDI TANGAN WAYANG */
-        .arm-group {
-            cursor: grab;
-            transform-origin: 110px 140px; /* Pivot bahu kanan */
-            transition: transform 0.05s ease-out;
-        }
-        .arm-group-left {
-            cursor: grab;
-            transform-origin: 210px 140px; /* Pivot bahu kiri */
-            transition: transform 0.05s ease-out;
-        }
-        .arm-group:active, .arm-group-left:active {
-            cursor: grabbing;
-        }
-
-        /* POP-UP BOX INFO */
-        .info-box {
+        /* POP-UP TEKS NAMA ORGAN */
+        .info-pop {
             position: absolute;
             top: 15px;
-            background: rgba(15, 23, 42, 0.95);
-            border: 1px solid #38bdf8;
-            color: #e2e8f0;
-            padding: 10px 15px;
-            border-radius: 10px;
+            background: rgba(15, 23, 42, 0.9);
+            border: 2px solid #38bdf8;
+            color: #fff;
+            padding: 8px 16px;
+            border-radius: 20px;
             font-size: 12px;
             font-weight: bold;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
-            pointer-events: none;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
             opacity: 0;
-            transition: opacity 0.3s ease, transform 0.3s ease;
             transform: translateY(-10px);
-            z-index: 100;
+            transition: all 0.3s ease;
+            z-index: 20;
+            pointer-events: none;
+        }
+        .info-pop.show { opacity: 1; transform: translateY(0); }
+
+        /* TITIK SENSOR ORGAN (CLICK DETECTOR) */
+        .sensor {
+            position: absolute;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: rgba(56, 189, 248, 0.3);
+            border: 1px stroke #0284c7;
+            z-index: 10;
+            cursor: pointer;
+        }
+        .sensor:hover { background: rgba(244, 63, 94, 0.6); }
+
+        .hint {
+            margin-top: 12px;
+            background: rgba(255,255,255,0.05);
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 11px;
+            color: #94a3b8;
+            width: 320px;
             text-align: center;
         }
-        .info-box.show {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
-        .instructions {
-            margin-top: 15px;
-            background: rgba(255,255,255,0.05);
-            padding: 10px 15px;
-            border-radius: 10px;
-            font-size: 11px;
-            color: #cbd5e1;
-            max-width: 320px;
-            line-height: 1.4;
-        }
-        .instructions span { color: #38bdf8; font-weight: bold; }
     </style>
 </head>
 <body>
 
-    <h1>Anatomi Tubuh Interaktif 🧬</h1>
-    <p class="subtitle">Sistem Wayang Motion & Point Detector</p>
+    <h1>Anatomi Tubuh Manusia 🧬</h1>
+    <p class="subtitle">Klik Organ & Drag Tangan (Wayang Motion)</p>
 
-    <div class="anatomy-container">
-        <!-- Pop-up Label Info Organ -->
-        <div class="info-box" id="infoBox">Klik organ tubuh!</div>
+    <div class="stage" id="stage">
+        <div class="info-pop" id="infoPop">Klik bagian tubuh!</div>
 
-        <!-- SVG ANATOMI MANUSIA -->
-        <svg viewBox="0 0 320 480" id="svgAnatomy">
-            <!-- Kepala & Leher -->
-            <path d="M160,40 C135,40 135,85 145,95 C145,110 175,110 175,95 C185,85 185,40 160,40 Z" fill="#e2e8f0" stroke="#64748b" stroke-width="2"/>
-            
-            <!-- Brain / Otak -->
-            <path class="organ" data-name="BRAIN (Otak Besar)" fill="#f472b6" d="M148,48 C150,42 170,42 172,48 C178,55 175,65 160,68 C145,65 142,55 148,48 Z"/>
-            
-            <!-- Right Eye & Left Eye -->
-            <circle class="organ" data-name="RIGHT EYE (Mata Kanan)" cx="152" cy="72" r="4" fill="#0284c7"/>
-            <circle class="organ" data-name="LEFT EYE (Mata Kiri)" cx="168" cy="72" r="4" fill="#0284c7"/>
+        <!-- GAMBAR ANATOMI MEDIS (BADAN UTAMA) -->
+        <img src="https://upload.wikimedia.org/wikipedia/commons/e/e1/Full_human_skeleton_front_no_labels.svg" class="body-medical" alt="Anatomi Medis">
 
-            <!-- Mandible / Rahang -->
-            <path class="organ" data-name="MANDIBLE (Rahang Bawah)" d="M150,88 Q160,96 170,88" stroke="#334155" stroke-width="3" fill="none"/>
+        <!-- TANGAN KANAN WAYANG -->
+        <div class="arm-container-right" id="armRight">
+            <svg viewBox="0 0 40 200" class="arm-img">
+                <path d="M20,10 Q10,100 15,190" stroke="#d1d5db" stroke-width="12" stroke-linecap="round" fill="none"/>
+                <circle cx="15" cy="190" r="10" fill="#fca5a5"/>
+            </svg>
+        </div>
 
-            <!-- Torso / Badan Utama -->
-            <path d="M125,130 L195,130 L185,280 L135,280 Z" fill="#cbd5e1" stroke="#64748b" stroke-width="2"/>
+        <!-- TANGAN KIRI WAYANG -->
+        <div class="arm-container-left" id="armLeft">
+            <svg viewBox="0 0 40 200" class="arm-img">
+                <path d="M20,10 Q30,100 25,190" stroke="#d1d5db" stroke-width="12" stroke-linecap="round" fill="none"/>
+                <circle cx="25" cy="190" r="10" fill="#fca5a5"/>
+            </svg>
+        </div>
 
-            <!-- Paru-Paru (Lungs) -->
-            <path class="organ" data-name="RIGHT LUNG (Paru Kanan)" fill="#fb7185" d="M135,145 C130,170 140,200 152,195 C155,170 150,145 135,145 Z"/>
-            <path class="organ" data-name="LEFT LUNG (Paru Kiri)" fill="#fb7185" d="M185,145 C190,170 180,200 168,195 C165,170 170,145 185,145 Z"/>
-
-            <!-- Heart / Jantung -->
-            <path class="organ" data-name="HEART (Jantung)" fill="#ef4444" d="M157,165 C153,158 147,165 157,175 C167,165 161,158 157,165 Z"/>
-
-            <!-- Stomach / Lambung & Hati -->
-            <path class="organ" data-name="LIVER & STOMACH (Hati & Lambung)" fill="#f59e0b" d="M140,205 C140,225 180,225 180,205 Z"/>
-
-            <!-- Intestines / Usus -->
-            <rect class="organ" data-name="INTESTINES (Usus Halus & Besar)" x="142" y="230" width="36" height="35" rx="8" fill="#10b981"/>
-
-            <!-- Kaki Kanan & Kiri -->
-            <rect x="140" y="280" width="16" height="150" rx="8" fill="#94a3b8"/>
-            <rect x="164" y="280" width="16" height="150" rx="8" fill="#94a3b8"/>
-
-            <!-- TANGAN KANAN (SISTEM WAYANG DRAG) -->
-            <g class="arm-group" id="rightArm">
-                <!-- Lengan Upper & Lower + Jari -->
-                <rect x="100" y="135" width="14" height="75" rx="6" fill="#38bdf8"/>
-                <rect x="98" y="205" width="12" height="70" rx="5" fill="#0284c7"/>
-                <circle class="organ" data-name="RIGHT HAND (Tangan Kanan)" cx="104" cy="280" r="10" fill="#f43f5e"/>
-            </g>
-
-            <!-- TANGAN KIRI (SISTEM WAYANG DRAG) -->
-            <g class="arm-group-left" id="leftArm">
-                <rect x="206" y="135" width="14" height="75" rx="6" fill="#38bdf8"/>
-                <rect x="210" y="205" width="12" height="70" rx="5" fill="#0284c7"/>
-                <circle class="organ" data-name="LEFT HAND (Tangan Kiri)" cx="216" cy="280" r="10" fill="#f43f5e"/>
-            </g>
-        </svg>
+        <!-- TITIK DETEKSI KLIK ORGAN -->
+        <div class="sensor" style="top: 85px; left: 140px;" onclick="showText('RIGHT EYE')"></div>
+        <div class="sensor" style="top: 85px; left: 160px;" onclick="showText('LEFT EYE')"></div>
+        <div class="sensor" style="top: 55px; left: 150px;" onclick="showText('BRAIN')"></div>
+        <div class="sensor" style="top: 180px; left: 155px;" onclick="showText('HEART')"></div>
+        <div class="sensor" style="top: 175px; left: 130px;" onclick="showText('RIGHT LUNG')"></div>
+        <div class="sensor" style="top: 175px; left: 175px;" onclick="showText('LEFT LUNG')"></div>
+        <div class="sensor" style="top: 230px; left: 150px;" onclick="showText('STOMACH')"></div>
+        <div class="sensor" style="top: 300px; left: 150px;" onclick="showText('PELVIC BONES')"></div>
     </div>
 
-    <div class="instructions">
-        💡 <span>Fitur Interaktif:</span><br>
-        1. <b>Klik/Sentuh</b> bagian organ (mata, otak, jantung, dll) untuk memunculkan namanya.<br>
-        2. <b>Geser / Usap Kursor</b> di area tangan ke atas/bawah untuk menggerakkan tangannya seperti wayang.
+    <div class="hint">
+        📌 <b>Klik area organ/mata</b> untuk melihat namanya.<br>
+        🖐️ <b>Usap/Drag area tangan</b> ke atas/bawah untuk menggerakkan lengan seperti wayang.
     </div>
 
     <script>
-        const infoBox = document.getElementById('infoBox');
-        const organs = document.querySelectorAll('.organ');
-        const rightArm = document.getElementById('rightArm');
-        const leftArm = document.getElementById('leftArm');
-        const container = document.querySelector('.anatomy-container');
+        const infoPop = document.getElementById('infoPop');
+        const armRight = document.getElementById('armRight');
+        const armLeft = document.getElementById('armLeft');
+        const stage = document.getElementById('stage');
 
-        // 1. EVENT KLIK BAGIAN ORGAN
-        organs.forEach(organ => {
-            organ.addEventListener('click', (e) => {
-                e.stopPropagation();
-                const name = organ.getAttribute('data-name');
-                infoBox.innerText = name;
-                infoBox.classList.add('show');
-
-                setTimeout(() => {
-                    infoBox.classList.remove('show');
-                }, 2500);
-            });
-        });
-
-        // 2. GERAKAN TANGAN ALA WAYANG (KURSOR / TOUCH SLIDE)
-        let isDragging = false;
-        let activeArm = null;
-
-        function handleStart(arm) {
-            isDragging = true;
-            activeArm = arm;
+        function showText(text) {
+            infoPop.innerText = text;
+            infoPop.classList.add('show');
+            setTimeout(() => { infoPop.classList.remove('show'); }, 2000);
         }
 
-        rightArm.addEventListener('mousedown', () => handleStart(rightArm));
-        leftArm.addEventListener('mousedown', () => handleStart(leftArm));
+        // SISTEM GERAKAN WAYANG (DRAG & ROTATE BAHU)
+        let activeArm = null;
 
-        rightArm.addEventListener('touchstart', () => handleStart(rightArm));
-        leftArm.addEventListener('touchstart', () => handleStart(leftArm));
+        function startDrag(arm) { activeArm = arm; }
 
-        window.addEventListener('mouseup', () => isDragging = false);
-        window.addEventListener('touchend', () => isDragging = false);
+        armRight.addEventListener('mousedown', () => startDrag(armRight));
+        armLeft.addEventListener('mousedown', () => startDrag(armLeft));
+        armRight.addEventListener('touchstart', () => startDrag(armRight));
+        armLeft.addEventListener('touchstart', () => startDrag(armLeft));
 
-        container.addEventListener('mousemove', (e) => {
-            if (!isDragging || !activeArm) return;
-            rotateArm(e.clientY);
+        window.addEventListener('mouseup', () => activeArm = null);
+        window.addEventListener('touchend', () => activeArm = null);
+
+        stage.addEventListener('mousemove', (e) => {
+            if (!activeArm) return;
+            moveArm(e.clientY);
         });
 
-        container.addEventListener('touchmove', (e) => {
-            if (!isDragging || !activeArm) return;
-            rotateArm(e.touches[0].clientY);
+        stage.addEventListener('touchmove', (e) => {
+            if (!activeArm) return;
+            moveArm(e.touches[0].clientY);
         });
 
-        function rotateArm(clientY) {
-            const rect = container.getBoundingClientRect();
+        function moveArm(clientY) {
+            const rect = stage.getBoundingClientRect();
             const relativeY = clientY - rect.top;
             
-            // Kalkulasi sudut putar sendi bahu berdasarkan posisi kursor atas/bawah
-            let angle = (150 - relativeY) * 0.8; 
+            let angle = (200 - relativeY) * 0.8;
 
-            // Batasi sudut rotasi tangan agar tidak patah
-            if (angle > 120) angle = 120;
-            if (angle < -40) angle = -40;
+            if (angle > 140) angle = 140;
+            if (angle < -30) angle = -30;
 
-            // Jika tangan kiri, balikkan arah sudut rotasinya
-            if (activeArm === leftArm) {
+            if (activeArm === armLeft) {
                 activeArm.style.transform = `rotate(${-angle}deg)`;
             } else {
                 activeArm.style.transform = `rotate(${angle}deg)`;
@@ -238,5 +214,4 @@
         }
     </script>
 </body>
-              </html>
-              
+</html>
