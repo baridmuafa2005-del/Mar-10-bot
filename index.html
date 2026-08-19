@@ -8,34 +8,29 @@
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { background: #000; overflow: hidden; display: flex; justify-content: center; align-items: center; min-height: 100vh; font-family: sans-serif; }
+        body { background: #000; overflow: hidden; display: flex; justify-content: center; align-items: center; min-height: 100vh; font-family: monospace; }
         .stage { position: relative; width: 100vw; height: 100vh; }
         video { display: none; }
         canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
         .hud-ui {
             position: absolute;
-            top: 30px;
-            right: 30px;
+            top: 20px;
+            right: 20px;
             color: #00f0ff;
-            font-family: monospace;
-            border: 1px solid #00f0ff;
-            padding: 12px 18px;
-            background: rgba(0,0,0,0.6);
-            border-radius: 4px;
+            font-size: 12px;
+            letter-spacing: 1px;
+            padding: 4px 8px;
+            border: 1px solid rgba(0, 240, 255, 0.4);
+            background: rgba(0, 0, 0, 0.4);
             pointer-events: none;
             z-index: 10;
-            box-shadow: 0 0 10px rgba(0,240,255,0.3);
         }
     </style>
 </head>
 <body>
 
 <div class="stage">
-    <div class="hud-ui">
-        <div style="font-size: 11px; opacity: 0.8;">CAMERA NODE // 02</div>
-        <div style="font-size: 18px; font-weight: bold; margin-top: 4px;">SUBJECT DETECTION</div>
-        <div style="font-size: 10px; opacity: 0.7; margin-top: 4px;">HAND FRAME ACTIVE</div>
-    </div>
+    <div class="hud-ui">HELLO</div>
     <video id="webcam" autoplay playsinline></video>
     <canvas id="outputCanvas"></canvas>
 </div>
@@ -43,37 +38,40 @@
 <script>
     const video = document.getElementById('webcam');
     const canvas = document.getElementById('outputCanvas');
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext('2d', { alpha: false });
 
-    // Smooth Tracking Variables (Penghalus Gerakan)
+    // Paskan ukuran canvas sekali saat awal / resize agar ringan
+    function resizeCanvas() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    // Variable Interpolasi (Smoothing)
     let p1 = { x: 0, y: 0 }, p2 = { x: 0, y: 0 }, p3 = { x: 0, y: 0 }, p4 = { x: 0, y: 0 };
-    const lerpFactor = 0.35; // Mengontrol kehalusan pergerakan frame
+    const lerpFactor = 0.4; // Tingkat kehalusan responsif
 
     function lerp(start, end, amt) {
         return start + (end - start) * amt;
     }
 
     function onResults(results) {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-
         ctx.save();
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        // 1. Gambar Video Kamera HD
+        // 1. Render Video HD Jernih
         ctx.drawImage(results.image, 0, 0, canvas.width, canvas.height);
 
         if (results.multiHandLandmarks && results.multiHandLandmarks.length >= 2) {
             const hand1 = results.multiHandLandmarks[0];
             const hand2 = results.multiHandLandmarks[1];
 
-            // Deteksi Ujung Telunjuk (Landmark 8) & Jempol (Landmark 4) dari kedua tangan
             const h1Index = hand1[8], h1Thumb = hand1[4];
             const h2Index = hand2[8], h2Thumb = hand2[4];
 
             let targetP1, targetP2, targetP3, targetP4;
 
-            // Memetakan 4 Sudut Kotak
             if (h1Index.x < h2Index.x) {
                 targetP1 = { x: h1Index.x * canvas.width, y: h1Index.y * canvas.height };
                 targetP2 = { x: h2Index.x * canvas.width, y: h2Index.y * canvas.height };
@@ -86,7 +84,7 @@
                 targetP4 = { x: h2Thumb.x * canvas.width, y: h2Thumb.y * canvas.height };
             }
 
-            // Menerapkan Interpolasi Linear (Lerp) agar tidak patah-patah
+            // Smoothing posisi
             p1.x = lerp(p1.x || targetP1.x, targetP1.x, lerpFactor);
             p1.y = lerp(p1.y || targetP1.y, targetP1.y, lerpFactor);
             p2.x = lerp(p2.x || targetP2.x, targetP2.x, lerpFactor);
@@ -96,7 +94,7 @@
             p4.x = lerp(p4.x || targetP4.x, targetP4.x, lerpFactor);
             p4.y = lerp(p4.y || targetP4.y, targetP4.y, lerpFactor);
 
-            // 2. Filter & Scanline khusus DI DALAM Kotak Tangan (Masking)
+            // 2. Filter Cyan & Scanline khusus area dalam frame tangan
             ctx.save();
             ctx.beginPath();
             ctx.moveTo(p1.x, p1.y);
@@ -106,15 +104,14 @@
             ctx.closePath();
             ctx.clip(); 
 
-            // Efek Tint Warna Cyan
             ctx.drawImage(results.image, 0, 0, canvas.width, canvas.height);
-            ctx.fillStyle = 'rgba(0, 240, 255, 0.22)';
+            ctx.fillStyle = 'rgba(0, 240, 255, 0.25)';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // Garis-Garis Horizontal (Scanlines)
-            ctx.strokeStyle = 'rgba(0, 255, 255, 0.2)';
+            // Garis Scanline
+            ctx.strokeStyle = 'rgba(0, 255, 255, 0.25)';
             ctx.lineWidth = 2;
-            for (let y = 0; y < canvas.height; y += 8) {
+            for (let y = 0; y < canvas.height; y += 10) {
                 ctx.beginPath();
                 ctx.moveTo(0, y);
                 ctx.lineTo(canvas.width, y);
@@ -132,14 +129,8 @@
             ctx.strokeStyle = '#00f0ff';
             ctx.lineWidth = 3;
             ctx.shadowColor = '#00f0ff';
-            ctx.shadowBlur = 12;
+            ctx.shadowBlur = 8;
             ctx.stroke();
-
-            // Teks Status kecil di pojok kiri atas bingkai tangan
-            ctx.shadowBlur = 0;
-            ctx.fillStyle = '#00f0ff';
-            ctx.font = '12px monospace';
-            ctx.fillText("CYBER FRAME // ACTIVE", p1.x + 8, p1.y + 18);
         }
 
         ctx.restore();
@@ -149,20 +140,21 @@
         locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
     });
 
+    // Menggunakan modelLite (modelComplexity: 0) agar deteksi sangat cepat tanpa patah-patah
     hands.setOptions({
         maxNumHands: 2,
-        modelComplexity: 1,
-        minDetectionConfidence: 0.75,
-        minTrackingConfidence: 0.75
+        modelComplexity: 0,
+        minDetectionConfidence: 0.6,
+        minTrackingConfidence: 0.6
     });
 
     hands.onResults(onResults);
 
-    // Kualitas Kamera HD (1080p)
+    // Resolusi kamera diset ke 1280x720 untuk beban kerja seimbang antara ketajaman & performa
     const camera = new Camera(video, {
         onFrame: async () => { await hands.send({ image: video }); },
-        width: 1920,
-        height: 1080
+        width: 1280,
+        height: 720
     });
     camera.start();
 </script>
