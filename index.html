@@ -3,34 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hand Frame Cyber Overlay</title>
+    <title>Iron Man WebAR Experience</title>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { background: #000; overflow: hidden; display: flex; justify-content: center; align-items: center; min-height: 100vh; font-family: monospace; }
-        .stage { position: relative; width: 100vw; height: 100vh; }
+        body { background: #000; overflow: hidden; font-family: monospace; }
+        #container { position: relative; width: 100vw; height: 100vh; }
         video { display: none; }
         canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
-        .hud-ui {
+        .hud-status {
             position: absolute;
-            top: 20px;
-            right: 20px;
-            color: #00f0ff;
+            top: 25px;
+            left: 25px;
+            color: #ff3300;
+            border: 1px solid #ff3300;
+            padding: 8px 14px;
+            background: rgba(15, 0, 0, 0.6);
+            border-radius: 4px;
             font-size: 12px;
             letter-spacing: 1px;
-            padding: 4px 8px;
-            border: 1px solid rgba(0, 240, 255, 0.4);
-            background: rgba(0, 0, 0, 0.4);
             pointer-events: none;
             z-index: 10;
+            box-shadow: 0 0 10px rgba(255, 51, 0, 0.4);
         }
     </style>
 </head>
 <body>
 
-<div class="stage">
-    <div class="hud-ui">HELLO</div>
+<div id="container">
+    <div class="hud-status" id="hud">MARK VII // INITIALIZING JARVIS...</div>
     <video id="webcam" autoplay playsinline></video>
     <canvas id="outputCanvas"></canvas>
 </div>
@@ -39,8 +43,8 @@
     const video = document.getElementById('webcam');
     const canvas = document.getElementById('outputCanvas');
     const ctx = canvas.getContext('2d', { alpha: false });
+    const hud = document.getElementById('hud');
 
-    // Paskan ukuran canvas sekali saat awal / resize agar ringan
     function resizeCanvas() {
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
@@ -48,111 +52,146 @@
     window.addEventListener('resize', resizeCanvas);
     resizeCanvas();
 
-    // Variable Interpolasi (Smoothing)
-    let p1 = { x: 0, y: 0 }, p2 = { x: 0, y: 0 }, p3 = { x: 0, y: 0 }, p4 = { x: 0, y: 0 };
-    const lerpFactor = 0.4; // Tingkat kehalusan responsif
+    // --- THREE.JS SETUP ---
+    const scene = new THREE.Scene();
+    const camera3D = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera3D.position.z = 5;
 
-    function lerp(start, end, amt) {
-        return start + (end - start) * amt;
-    }
+    const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
 
-    function onResults(results) {
+    // Group Helm Iron Man (Wajah)
+    const helmetGroup = new THREE.Group();
+    scene.add(helmetGroup);
+
+    // Model Helm 3D Geometri (Glow Gold & Red)
+    const maskGeo = new THREE.BoxGeometry(1.2, 1.4, 0.8);
+    const maskMat = new THREE.MeshBasicMaterial({ color: 0xff0000, wireframe: true });
+    const maskMesh = new THREE.Mesh(maskGeo, maskMat);
+    
+    const visorGeo = new THREE.BoxGeometry(0.9, 0.2, 0.85);
+    const visorMat = new THREE.MeshBasicMaterial({ color: 0x00f0ff });
+    const visorMesh = new THREE.Mesh(visorGeo, visorMat);
+    visorMesh.position.set(0, 0.15, 0.05);
+
+    helmetGroup.add(maskMesh);
+    helmetGroup.add(visorMesh);
+
+    // Group Arc Reactor (Tangan)
+    const handGroup = new THREE.Group();
+    scene.add(handGroup);
+
+    const reactorGeo = new THREE.RingGeometry(0.1, 0.35, 32);
+    const reactorMat = new THREE.MeshBasicMaterial({ color: 0x00ffff, side: THREE.DoubleSide });
+    const reactorMesh = new THREE.Mesh(reactorGeo, reactorMat);
+    
+    const coreGeo = new THREE.CircleGeometry(0.18, 32);
+    const coreMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+    const coreMesh = new THREE.Mesh(coreGeo, coreMat);
+    
+    handGroup.add(reactorMesh);
+    handGroup.add(coreMesh);
+
+    // Interpolasi Smooth
+    let facePos = { x: 0, y: 0 };
+    let handPos = { x: 0, y: 0 };
+
+    function lerp(a, b, n) { return (1 - n) * a + n * b; }
+
+    let isHandActive = false;
+    let isFaceActive = false;
+
+    // Process Frame
+    function renderLoop(faceResults, handResults) {
         ctx.save();
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        // 1. Render Video HD Jernih
-        ctx.drawImage(results.image, 0, 0, canvas.width, canvas.height);
-
-        if (results.multiHandLandmarks && results.multiHandLandmarks.length >= 2) {
-            const hand1 = results.multiHandLandmarks[0];
-            const hand2 = results.multiHandLandmarks[1];
-
-            const h1Index = hand1[8], h1Thumb = hand1[4];
-            const h2Index = hand2[8], h2Thumb = hand2[4];
-
-            let targetP1, targetP2, targetP3, targetP4;
-
-            if (h1Index.x < h2Index.x) {
-                targetP1 = { x: h1Index.x * canvas.width, y: h1Index.y * canvas.height };
-                targetP2 = { x: h2Index.x * canvas.width, y: h2Index.y * canvas.height };
-                targetP3 = { x: h2Thumb.x * canvas.width, y: h2Thumb.y * canvas.height };
-                targetP4 = { x: h1Thumb.x * canvas.width, y: h1Thumb.y * canvas.height };
-            } else {
-                targetP1 = { x: h2Index.x * canvas.width, y: h2Index.y * canvas.height };
-                targetP2 = { x: h1Index.x * canvas.width, y: h1Index.y * canvas.height };
-                targetP3 = { x: h1Thumb.x * canvas.width, y: h1Thumb.y * canvas.height };
-                targetP4 = { x: h2Thumb.x * canvas.width, y: h2Thumb.y * canvas.height };
-            }
-
-            // Smoothing posisi
-            p1.x = lerp(p1.x || targetP1.x, targetP1.x, lerpFactor);
-            p1.y = lerp(p1.y || targetP1.y, targetP1.y, lerpFactor);
-            p2.x = lerp(p2.x || targetP2.x, targetP2.x, lerpFactor);
-            p2.y = lerp(p2.y || targetP2.y, targetP2.y, lerpFactor);
-            p3.x = lerp(p3.x || targetP3.x, targetP3.x, lerpFactor);
-            p3.y = lerp(p3.y || targetP3.y, targetP3.y, lerpFactor);
-            p4.x = lerp(p4.x || targetP4.x, targetP4.x, lerpFactor);
-            p4.y = lerp(p4.y || targetP4.y, targetP4.y, lerpFactor);
-
-            // 2. Filter Cyan & Scanline khusus area dalam frame tangan
-            ctx.save();
-            ctx.beginPath();
-            ctx.moveTo(p1.x, p1.y);
-            ctx.lineTo(p2.x, p2.y);
-            ctx.lineTo(p3.x, p3.y);
-            ctx.lineTo(p4.x, p4.y);
-            ctx.closePath();
-            ctx.clip(); 
-
-            ctx.drawImage(results.image, 0, 0, canvas.width, canvas.height);
-            ctx.fillStyle = 'rgba(0, 240, 255, 0.25)';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            // Garis Scanline
-            ctx.strokeStyle = 'rgba(0, 255, 255, 0.25)';
-            ctx.lineWidth = 2;
-            for (let y = 0; y < canvas.height; y += 10) {
-                ctx.beginPath();
-                ctx.moveTo(0, y);
-                ctx.lineTo(canvas.width, y);
-                ctx.stroke();
-            }
-            ctx.restore();
-
-            // 3. Garis Bingkai Neon Cyan
-            ctx.beginPath();
-            ctx.moveTo(p1.x, p1.y);
-            ctx.lineTo(p2.x, p2.y);
-            ctx.lineTo(p3.x, p3.y);
-            ctx.lineTo(p4.x, p4.y);
-            ctx.closePath();
-            ctx.strokeStyle = '#00f0ff';
-            ctx.lineWidth = 3;
-            ctx.shadowColor = '#00f0ff';
-            ctx.shadowBlur = 8;
-            ctx.stroke();
+        // 1. Gambar Kamera HD
+        if(video.readyState === 4) {
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
         }
 
+        // 2. Process Face Tracking
+        if (faceResults && faceResults.multiFaceLandmarks && faceResults.multiFaceLandmarks.length > 0) {
+            isFaceActive = true;
+            const face = faceResults.multiFaceLandmarks[0];
+            const nose = face[1]; // Hidung
+
+            const targetX = (1 - nose.x) * (camera3D.aspect * 2.2) - (camera3D.aspect * 1.1);
+            const targetY = -(nose.y * 2 - 1) * 1.5;
+
+            facePos.x = lerp(facePos.x, targetX, 0.3);
+            facePos.y = lerp(facePos.y, targetY, 0.3);
+
+            helmetGroup.position.set(facePos.x, facePos.y, 0);
+            helmetGroup.visible = true;
+        } else {
+            isFaceActive = false;
+            helmetGroup.visible = false;
+        }
+
+        // 3. Process Hand Tracking
+        if (handResults && handResults.multiHandLandmarks && handResults.multiHandLandmarks.length > 0) {
+            isHandActive = true;
+            const hand = handResults.multiHandLandmarks[0];
+            const palmCenter = hand[9]; // Tengah Telapak Tangan
+
+            const targetX = (1 - palmCenter.x) * (camera3D.aspect * 2.2) - (camera3D.aspect * 1.1);
+            const targetY = -(palmCenter.y * 2 - 1) * 1.5;
+
+            handPos.x = lerp(handPos.x, targetX, 0.4);
+            handPos.y = lerp(handPos.y, targetY, 0.4);
+
+            handGroup.position.set(handPos.x, handPos.y, 0);
+            handGroup.rotation.z += 0.05; // Putaran Arc Reactor
+            handGroup.visible = true;
+
+            // Deteksi Kepalan Tangan vs Buka Tangan
+            const isFist = hand[8].y > hand[6].y && hand[12].y > hand[10].y;
+            if (isFist) {
+                visorMat.color.setHex(0xff0000); // Mode Merah saat kepal
+                hud.innerText = "MARK VII // SUIT LOCKED (FIST DETECTED)";
+            } else {
+                visorMat.color.setHex(0x00f0ff); // Cyan Normal
+                hud.innerText = "MARK VII // REPULSOR ONLINE (OPEN PALM)";
+            }
+        } else {
+            isHandActive = false;
+            handGroup.visible = false;
+            if(isFaceActive) {
+                hud.innerText = "MARK VII // TARGET LOCKED (FACE DETECTED)";
+            } else {
+                hud.innerText = "MARK VII // SEARCHING TARGET...";
+            }
+        }
+
+        // Render Three.js Overlay
+        renderer.render(scene, camera3D);
+        ctx.drawImage(renderer.domElement, 0, 0);
         ctx.restore();
     }
 
-    const hands = new Hands({
-        locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
+    // AI Setup
+    const faceMesh = new FaceMesh({ locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}` });
+    faceMesh.setOptions({ maxNumFaces: 1, refineLandmarks: false, minDetectionConfidence: 0.6 });
+
+    const hands = new Hands({ locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}` });
+    hands.setOptions({ maxNumHands: 1, modelComplexity: 0, minDetectionConfidence: 0.6 });
+
+    let latestFaceResults = null;
+    let latestHandResults = null;
+
+    faceMesh.onResults((results) => { latestFaceResults = results; });
+    hands.onResults((results) => { 
+        latestHandResults = results;
+        renderLoop(latestFaceResults, latestHandResults);
     });
 
-    // Menggunakan modelLite (modelComplexity: 0) agar deteksi sangat cepat tanpa patah-patah
-    hands.setOptions({
-        maxNumHands: 2,
-        modelComplexity: 0,
-        minDetectionConfidence: 0.6,
-        minTrackingConfidence: 0.6
-    });
-
-    hands.onResults(onResults);
-
-    // Resolusi kamera diset ke 1280x720 untuk beban kerja seimbang antara ketajaman & performa
     const camera = new Camera(video, {
-        onFrame: async () => { await hands.send({ image: video }); },
+        onFrame: async () => {
+            await faceMesh.send({ image: video });
+            await hands.send({ image: video });
+        },
         width: 1280,
         height: 720
     });
