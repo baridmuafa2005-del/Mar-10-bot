@@ -6,7 +6,6 @@
     <title>Iron Man AR Experience</title>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { background: #000; overflow: hidden; font-family: monospace; }
@@ -19,13 +18,14 @@
             right: 20px;
             color: #00f0ff;
             border: 1px solid rgba(0, 240, 255, 0.5);
-            padding: 8px 12px;
-            background: rgba(0, 0, 0, 0.5);
+            padding: 8px 14px;
+            background: rgba(0, 0, 0, 0.6);
             border-radius: 4px;
             font-size: 11px;
             letter-spacing: 1px;
             pointer-events: none;
             z-index: 10;
+            box-shadow: 0 0 10px rgba(0, 240, 255, 0.3);
         }
     </style>
 </head>
@@ -50,75 +50,100 @@
     window.addEventListener('resize', resizeCanvas);
     resizeCanvas();
 
-    // --- THREE.JS SCENE SETUP ---
-    const scene = new THREE.Scene();
-    const camera3D = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
-    camera3D.position.z = 5;
-
-    const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
-    renderer.setSize(window.innerWidth, window.innerHeight);
-
-    // Group Topeng Wajah Iron Man
-    const ironHelmet = new THREE.Group();
-    scene.add(ironHelmet);
-
-    // Visor Kacamata Cyber / Iron Man HUD (Bentuk Lebih Ramping & Pas di Mata)
-    const visorGeo = new THREE.CylinderGeometry(0.6, 0.5, 0.25, 16, 1, true, 0, Math.PI);
-    const visorMat = new THREE.MeshBasicMaterial({ color: 0x00f0ff, side: THREE.DoubleSide, wireframe: true });
-    const visorMesh = new THREE.Mesh(visorGeo, visorMat);
-    visorMesh.rotation.y = Math.PI / 2;
-
-    // Mata Glowing Cyan
-    const eyeGeo = new THREE.PlaneGeometry(0.5, 0.08);
-    const eyeMat = new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide });
-    const eyeMesh = new THREE.Mesh(eyeGeo, eyeMat);
-    eyeMesh.position.set(0, 0, 0.2);
-
-    ironHelmet.add(visorMesh);
-    ironHelmet.add(eyeMesh);
-
-    // Smooth Tracking (Lerp)
-    let facePos = { x: 0, y: 0 };
-    function lerp(a, b, n) { return (1 - n) * a + n * b; }
-
-    function onFaceResults(results) {
+    function onResults(results) {
         ctx.save();
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        // Render Kamera HD
+        // 1. Gambar Video Kamera HD
         ctx.drawImage(results.image, 0, 0, canvas.width, canvas.height);
 
         if (results.multiFaceLandmarks && results.multiFaceLandmarks.length > 0) {
             const face = results.multiFaceLandmarks[0];
-            const nose = face[1]; // Posisi Hidung
+            const w = canvas.width;
+            const h = canvas.height;
 
-            // Mapping posisi hidung ke koordinat 3D
-            const targetX = (1 - nose.x) * (camera3D.aspect * 2.2) - (camera3D.aspect * 1.1);
-            const targetY = -(nose.y * 2 - 1) * 1.5;
+            // --- 2. BINGKAI VISOR TOPENG IRON MAN (MERAH / KUNING CYBER) ---
+            ctx.beginPath();
+            // Garis Luar Dahi & Pipi
+            ctx.moveTo(face[70].x * w, face[70].y * h);
+            ctx.lineTo(face[300].x * w, face[300].y * h);
+            ctx.lineTo(face[293].x * w, face[293].y * h);
+            ctx.lineTo(face[356].x * w, face[356].y * h);
+            ctx.lineTo(face[127].x * w, face[127].y * h);
+            ctx.lineTo(face[63].x * w, face[63].y * h);
+            ctx.closePath();
 
-            facePos.x = lerp(facePos.x, targetX, 0.4);
-            facePos.y = lerp(facePos.y, targetY, 0.4);
+            ctx.fillStyle = 'rgba(255, 30, 0, 0.18)';
+            ctx.fill();
+            ctx.strokeStyle = '#ff3300';
+            ctx.lineWidth = 2.5;
+            ctx.shadowColor = '#ff3300';
+            ctx.shadowBlur = 8;
+            ctx.stroke();
 
-            ironHelmet.position.set(facePos.x, facePos.y, 0);
-            ironHelmet.visible = true;
+            // --- 3. MATA IRON MAN GLOWING CYAN (MATA KIRI & KANAN) ---
+            ctx.shadowColor = '#00ffff';
+            ctx.shadowBlur = 15;
+            ctx.fillStyle = '#00ffff';
+
+            // Mata Kiri
+            ctx.beginPath();
+            ctx.moveTo(face[33].x * w, face[33].y * h);
+            ctx.lineTo(face[160].x * w, face[160].y * h);
+            ctx.lineTo(face[158].x * w, face[158].y * h);
+            ctx.lineTo(face[133].x * w, face[133].y * h);
+            ctx.lineTo(face[153].x * w, face[153].y * h);
+            ctx.lineTo(face[144].x * w, face[144].y * h);
+            ctx.closePath();
+            ctx.fill();
+
+            // Mata Kanan
+            ctx.beginPath();
+            ctx.moveTo(face[362].x * w, face[362].y * h);
+            ctx.lineTo(face[385].x * w, face[385].y * h);
+            ctx.lineTo(face[387].x * w, face[387].y * h);
+            ctx.lineTo(face[263].x * w, face[263].y * h);
+            ctx.lineTo(face[373].x * w, face[373].y * h);
+            ctx.lineTo(face[380].x * w, face[380].y * h);
+            ctx.closePath();
+            ctx.fill();
+
+            // --- 4. LINGKARAN HUD JARVIS DI DAHI ---
+            ctx.shadowBlur = 0;
+            const centerX = face[1].x * w;
+            const centerY = face[1].y * h;
+
+            ctx.beginPath();
+            ctx.arc(centerX, centerY - 50, 35, 0, Math.PI * 2);
+            ctx.strokeStyle = '#00f0ff';
+            ctx.lineWidth = 1.5;
+            ctx.setLineDash([5, 5]);
+            ctx.stroke();
+            ctx.setLineDash([]); // Reset line dash
 
             hud.innerText = "MARK VII // TARGET LOCKED";
         } else {
-            ironHelmet.visible = false;
             hud.innerText = "MARK VII // SEARCHING TARGET...";
         }
 
-        renderer.render(scene, camera3D);
-        ctx.drawImage(renderer.domElement, 0, 0);
         ctx.restore();
     }
 
-    const faceMeshAI = new FaceMesh({ locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}` });
-    faceMeshAI.setOptions({ maxNumFaces: 1, minDetectionConfidence: 0.6 });
-    faceMeshAI.onResults(onFaceResults);
+    const faceMesh = new FaceMesh({
+        locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`
+    });
+
+    faceMesh.setOptions({
+        maxNumFaces: 1,
+        refineLandmarks: true,
+        minDetectionConfidence: 0.6,
+        minTrackingConfidence: 0.6
+    });
+
+    faceMesh.onResults(onResults);
 
     const camera = new Camera(video, {
-        onFrame: async () => { await faceMeshAI.send({ image: video }); },
+        onFrame: async () => { await faceMesh.send({ image: video }); },
         width: 1280,
         height: 720
     });
