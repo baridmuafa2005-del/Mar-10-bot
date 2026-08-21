@@ -19,12 +19,12 @@
     <script>
         const video = document.getElementById('webcam');
         const canvas = document.getElementById('outputCanvas');
-        const ctx = canvas.getContext('2d', { alpha: true });
+        const ctx = canvas.getContext('3d', { alpha: true });
         
         const maskImg = new Image();
-        // --- UBAH BAGIAN DI BAWAH INI SESUAI NAMA FILE KAMU ---
+        
         maskImg.src = './1000258792-removebg-preview.png'; 
-        // ----------------------------------------------------
+        
 
         function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
         window.addEventListener('resize', resize); resize();
