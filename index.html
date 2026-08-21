@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Iron Man WebAR Experience</title>
+    <title>Iron Man AR Experience</title>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
@@ -11,30 +11,29 @@
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { background: #000; overflow: hidden; font-family: monospace; }
-        #container { position: relative; width: 100vw; height: 100vh; }
+        .stage { position: relative; width: 100vw; height: 100vh; }
         video { display: none; }
         canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
         .hud-status {
             position: absolute;
-            top: 25px;
-            left: 25px;
-            color: #ff3300;
-            border: 1px solid #ff3300;
-            padding: 8px 14px;
-            background: rgba(15, 0, 0, 0.6);
+            top: 20px;
+            right: 20px;
+            color: #00f0ff;
+            border: 1px solid rgba(0, 240, 255, 0.5);
+            padding: 8px 12px;
+            background: rgba(0, 0, 0, 0.5);
             border-radius: 4px;
-            font-size: 12px;
+            font-size: 11px;
             letter-spacing: 1px;
             pointer-events: none;
             z-index: 10;
-            box-shadow: 0 0 10px rgba(255, 51, 0, 0.4);
         }
     </style>
 </head>
 <body>
 
-<div id="container">
-    <div class="hud-status" id="hud">MARK VII // INITIALIZING JARVIS...</div>
+<div class="stage">
+    <div class="hud-status" id="hud">MARK VII // JARVIS ONLINE</div>
     <video id="webcam" autoplay playsinline></video>
     <canvas id="outputCanvas"></canvas>
 </div>
@@ -52,7 +51,7 @@
     window.addEventListener('resize', resizeCanvas);
     resizeCanvas();
 
-    // --- THREE.JS SETUP ---
+    // --- THREE.JS SCENE SETUP ---
     const scene = new THREE.Scene();
     const camera3D = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
     camera3D.position.z = 5;
@@ -60,138 +59,67 @@
     const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
 
-    // Group Helm Iron Man (Wajah)
-    const helmetGroup = new THREE.Group();
-    scene.add(helmetGroup);
+    // Group Topeng Wajah Iron Man
+    const ironHelmet = new THREE.Group();
+    scene.add(ironHelmet);
 
-    // Model Helm 3D Geometri (Glow Gold & Red)
-    const maskGeo = new THREE.BoxGeometry(1.2, 1.4, 0.8);
-    const maskMat = new THREE.MeshBasicMaterial({ color: 0xff0000, wireframe: true });
-    const maskMesh = new THREE.Mesh(maskGeo, maskMat);
-    
-    const visorGeo = new THREE.BoxGeometry(0.9, 0.2, 0.85);
-    const visorMat = new THREE.MeshBasicMaterial({ color: 0x00f0ff });
-    const visorMesh = new THREE.Mesh(visorGeo, visorMat);
-    visorMesh.position.set(0, 0.15, 0.05);
+    // Dynamic Mask Structure (Bentuk Muka + Visor Cyan Glowing)
+    const faceShape = new THREE.ConeGeometry(0.9, 1.2, 5);
+    const faceMat = new THREE.MeshBasicMaterial({ color: 0xff1100, wireframe: true, transparent: true, opacity: 0.8 });
+    const faceMesh = new THREE.Mesh(faceShape, faceMat);
+    faceMesh.rotation.x = Math.PI;
 
-    helmetGroup.add(maskMesh);
-    helmetGroup.add(visorMesh);
+    // Mata Cyan Glowing
+    const eyeGeo = new THREE.BoxGeometry(0.6, 0.08, 0.2);
+    const eyeMat = new THREE.MeshBasicMaterial({ color: 0x00ffff });
+    const eyeMesh = new THREE.Mesh(eyeGeo, eyeMat);
+    eyeMesh.position.set(0, 0.1, 0.4);
 
-    // Group Arc Reactor (Tangan)
-    const handGroup = new THREE.Group();
-    scene.add(handGroup);
+    ironHelmet.add(faceMesh);
+    ironHelmet.add(eyeMesh);
 
-    const reactorGeo = new THREE.RingGeometry(0.1, 0.35, 32);
-    const reactorMat = new THREE.MeshBasicMaterial({ color: 0x00ffff, side: THREE.DoubleSide });
-    const reactorMesh = new THREE.Mesh(reactorGeo, reactorMat);
-    
-    const coreGeo = new THREE.CircleGeometry(0.18, 32);
-    const coreMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
-    const coreMesh = new THREE.Mesh(coreGeo, coreMat);
-    
-    handGroup.add(reactorMesh);
-    handGroup.add(coreMesh);
-
-    // Interpolasi Smooth
+    // Smooth Tracking (Lerp)
     let facePos = { x: 0, y: 0 };
-    let handPos = { x: 0, y: 0 };
-
     function lerp(a, b, n) { return (1 - n) * a + n * b; }
 
-    let isHandActive = false;
-    let isFaceActive = false;
-
-    // Process Frame
-    function renderLoop(faceResults, handResults) {
+    function onFaceResults(results) {
         ctx.save();
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        // 1. Gambar Kamera HD
-        if(video.readyState === 4) {
-            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        }
+        // Render Kamera HD
+        ctx.drawImage(results.image, 0, 0, canvas.width, canvas.height);
 
-        // 2. Process Face Tracking
-        if (faceResults && faceResults.multiFaceLandmarks && faceResults.multiFaceLandmarks.length > 0) {
-            isFaceActive = true;
-            const face = faceResults.multiFaceLandmarks[0];
-            const nose = face[1]; // Hidung
+        if (results.multiFaceLandmarks && results.multiFaceLandmarks.length > 0) {
+            const face = results.multiFaceLandmarks[0];
+            const nose = face[1]; // Posisi Hidung
 
+            // Mapping posisi hidung ke koordinat 3D World
             const targetX = (1 - nose.x) * (camera3D.aspect * 2.2) - (camera3D.aspect * 1.1);
             const targetY = -(nose.y * 2 - 1) * 1.5;
 
-            facePos.x = lerp(facePos.x, targetX, 0.3);
-            facePos.y = lerp(facePos.y, targetY, 0.3);
+            facePos.x = lerp(facePos.x, targetX, 0.4);
+            facePos.y = lerp(facePos.y, targetY, 0.4);
 
-            helmetGroup.position.set(facePos.x, facePos.y, 0);
-            helmetGroup.visible = true;
+            ironHelmet.position.set(facePos.x, facePos.y, 0);
+            ironHelmet.visible = true;
+
+            hud.innerText = "MARK VII // TARGET LOCKED";
         } else {
-            isFaceActive = false;
-            helmetGroup.visible = false;
+            ironHelmet.visible = false;
+            hud.innerText = "MARK VII // SEARCHING TARGET...";
         }
 
-        // 3. Process Hand Tracking
-        if (handResults && handResults.multiHandLandmarks && handResults.multiHandLandmarks.length > 0) {
-            isHandActive = true;
-            const hand = handResults.multiHandLandmarks[0];
-            const palmCenter = hand[9]; // Tengah Telapak Tangan
-
-            const targetX = (1 - palmCenter.x) * (camera3D.aspect * 2.2) - (camera3D.aspect * 1.1);
-            const targetY = -(palmCenter.y * 2 - 1) * 1.5;
-
-            handPos.x = lerp(handPos.x, targetX, 0.4);
-            handPos.y = lerp(handPos.y, targetY, 0.4);
-
-            handGroup.position.set(handPos.x, handPos.y, 0);
-            handGroup.rotation.z += 0.05; // Putaran Arc Reactor
-            handGroup.visible = true;
-
-            // Deteksi Kepalan Tangan vs Buka Tangan
-            const isFist = hand[8].y > hand[6].y && hand[12].y > hand[10].y;
-            if (isFist) {
-                visorMat.color.setHex(0xff0000); // Mode Merah saat kepal
-                hud.innerText = "MARK VII // SUIT LOCKED (FIST DETECTED)";
-            } else {
-                visorMat.color.setHex(0x00f0ff); // Cyan Normal
-                hud.innerText = "MARK VII // REPULSOR ONLINE (OPEN PALM)";
-            }
-        } else {
-            isHandActive = false;
-            handGroup.visible = false;
-            if(isFaceActive) {
-                hud.innerText = "MARK VII // TARGET LOCKED (FACE DETECTED)";
-            } else {
-                hud.innerText = "MARK VII // SEARCHING TARGET...";
-            }
-        }
-
-        // Render Three.js Overlay
         renderer.render(scene, camera3D);
         ctx.drawImage(renderer.domElement, 0, 0);
         ctx.restore();
     }
 
-    // AI Setup
-    const faceMesh = new FaceMesh({ locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}` });
-    faceMesh.setOptions({ maxNumFaces: 1, refineLandmarks: false, minDetectionConfidence: 0.6 });
-
-    const hands = new Hands({ locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}` });
-    hands.setOptions({ maxNumHands: 1, modelComplexity: 0, minDetectionConfidence: 0.6 });
-
-    let latestFaceResults = null;
-    let latestHandResults = null;
-
-    faceMesh.onResults((results) => { latestFaceResults = results; });
-    hands.onResults((results) => { 
-        latestHandResults = results;
-        renderLoop(latestFaceResults, latestHandResults);
-    });
+    const faceMeshAI = new FaceMesh({ locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}` });
+    faceMeshAI.setOptions({ maxNumFaces: 1, minDetectionConfidence: 0.6 });
+    faceMeshAI.onResults(onFaceResults);
 
     const camera = new Camera(video, {
-        onFrame: async () => {
-            await faceMesh.send({ image: video });
-            await hands.send({ image: video });
-        },
+        onFrame: async () => { await faceMeshAI.send({ image: video }); },
         width: 1280,
         height: 720
     });
