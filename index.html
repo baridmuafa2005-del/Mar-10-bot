@@ -3,25 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cyber Headset AR Filter</title>
+    <title>Office Headset AR Filter</title>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { background: #000; overflow: hidden; font-family: monospace; }
+        body { background: #000; overflow: hidden; font-family: sans-serif; }
         video { display: none; }
         canvas { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; object-fit: cover; transform: scaleX(-1); }
         .hud {
             position: absolute; top: 15px; left: 15px; z-index: 10;
-            background: rgba(0, 0, 0, 0.7); border: 1px solid #00f0ff;
-            color: #00f0ff; padding: 8px 14px; border-radius: 4px; font-size: 12px;
-            box-shadow: 0 0 8px rgba(0, 240, 255, 0.4);
+            background: rgba(0, 0, 0, 0.6); border: 1px solid #444;
+            color: #fff; padding: 8px 14px; border-radius: 6px; font-size: 12px;
         }
     </style>
 </head>
 <body>
 
-    <div class="hud" id="status">STATUS: INITIALIZING SYSTEM...</div>
+    <div class="hud" id="status">STATUS: MENCARI WAJAH...</div>
     <video id="webcam" autoplay playsinline></video>
     <canvas id="outputCanvas"></canvas>
 
@@ -38,78 +37,104 @@
         window.addEventListener('resize', resize);
         resize();
 
-        function drawHeadset(leftEar, rightEar, chin, mouth) {
+        function drawHeadset(leftEar, rightEar, mouth) {
             const earDistance = Math.hypot(rightEar.x - leftEar.x, rightEar.y - leftEar.y);
-            const size = earDistance * 1.3;
+            const size = earDistance * 1.25;
 
-            // Titik tengah kepala
+            // Titik pusat bando
             const headCenterX = (leftEar.x + rightEar.x) / 2;
-            const headCenterY = (leftEar.y + rightEar.y) / 2 - (size * 0.25);
+            const headCenterY = (leftEar.y + rightEar.y) / 2 - (size * 0.28);
 
             ctx.save();
 
-            // 1. Bando Headset Utama (Atas)
+            // 1. Bando Headset Atas (Hitam dengan bantalan dalam)
             ctx.beginPath();
-            ctx.arc(headCenterX, headCenterY, size * 0.65, Math.PI, 0, false);
-            ctx.lineWidth = size * 0.12;
-            ctx.strokeStyle = '#111';
+            ctx.arc(headCenterX, headCenterY, size * 0.62, Math.PI * 0.95, Math.PI * 0.05, false);
+            ctx.lineWidth = size * 0.1;
+            ctx.strokeStyle = '#1a1a1a';
+            ctx.lineCap = 'round';
             ctx.stroke();
 
-            // Neon Strip Bando Atas
+            // Lapisan bantalan bawah bando
             ctx.beginPath();
-            ctx.arc(headCenterX, headCenterY, size * 0.65, Math.PI, 0, false);
-            ctx.lineWidth = size * 0.03;
-            ctx.strokeStyle = '#00f0ff';
-            ctx.shadowColor = '#00f0ff';
-            ctx.shadowBlur = 10;
+            ctx.arc(headCenterX, headCenterY, size * 0.58, Math.PI * 0.9, Math.PI * 0.1, false);
+            ctx.lineWidth = size * 0.04;
+            ctx.strokeStyle = '#333333';
             ctx.stroke();
 
-            // 2. Earcup Kiri
+            // 2. Earcup Kiri (Desain Lingkaran & Garpu Penyangga)
             ctx.save();
             ctx.translate(leftEar.x, leftEar.y);
-            ctx.fillStyle = '#111';
-            ctx.strokeStyle = '#00f0ff';
-            ctx.lineWidth = 3;
+            
+            // Garpu Luar
             ctx.beginPath();
-            ctx.roundRect(-size * 0.12, -size * 0.25, size * 0.24, size * 0.5, 10);
-            ctx.fill();
+            ctx.arc(0, 0, size * 0.2, 0, Math.PI * 2);
+            ctx.lineWidth = size * 0.04;
+            ctx.strokeStyle = '#2a2a2a';
             ctx.stroke();
-            // Lampu Earcup Kiri
-            ctx.fillStyle = '#ff0055';
-            ctx.fillRect(-size * 0.05, -size * 0.1, size * 0.1, size * 0.2);
+
+            // Busa/Earcup Dalam
+            ctx.beginPath();
+            ctx.arc(0, 0, size * 0.14, 0, Math.PI * 2);
+            ctx.fillStyle = '#111111';
+            ctx.fill();
+            ctx.lineWidth = size * 0.03;
+            ctx.strokeStyle = '#3a3a3a';
+            ctx.stroke();
+
+            // Lingkaran pusat
+            ctx.beginPath();
+            ctx.arc(0, 0, size * 0.07, 0, Math.PI * 2);
+            ctx.fillStyle = '#222222';
+            ctx.fill();
             ctx.restore();
 
             // 3. Earcup Kanan
             ctx.save();
             ctx.translate(rightEar.x, rightEar.y);
-            ctx.fillStyle = '#111';
-            ctx.strokeStyle = '#00f0ff';
-            ctx.lineWidth = 3;
+            
+            // Garpu Luar
             ctx.beginPath();
-            ctx.roundRect(-size * 0.12, -size * 0.25, size * 0.24, size * 0.5, 10);
-            ctx.fill();
+            ctx.arc(0, 0, size * 0.2, 0, Math.PI * 2);
+            ctx.lineWidth = size * 0.04;
+            ctx.strokeStyle = '#2a2a2a';
             ctx.stroke();
-            // Lampu Earcup Kanan
-            ctx.fillStyle = '#ff0055';
-            ctx.fillRect(-size * 0.05, -size * 0.1, size * 0.1, size * 0.2);
+
+            // Busa/Earcup Dalam
+            ctx.beginPath();
+            ctx.arc(0, 0, size * 0.14, 0, Math.PI * 2);
+            ctx.fillStyle = '#111111';
+            ctx.fill();
+            ctx.lineWidth = size * 0.03;
+            ctx.strokeStyle = '#3a3a3a';
+            ctx.stroke();
+
+            // Lingkaran pusat
+            ctx.beginPath();
+            ctx.arc(0, 0, size * 0.07, 0, Math.PI * 2);
+            ctx.fillStyle = '#222222';
+            ctx.fill();
             ctx.restore();
 
-            // 4. Tangkai Microphone (Samping Kiri menuju Mulut)
+            // 4. Tangkai Microphone (Melengkung dari Earcup Kiri ke Mulut)
             ctx.beginPath();
-            ctx.moveTo(leftEar.x, leftEar.y + (size * 0.1));
-            ctx.quadraticCurveTo(leftEar.x + (size * 0.1), mouth.y, mouth.x - (size * 0.08), mouth.y);
-            ctx.lineWidth = size * 0.04;
-            ctx.strokeStyle = '#00f0ff';
-            ctx.shadowBlur = 5;
+            ctx.moveTo(leftEar.x, leftEar.y + (size * 0.05));
+            ctx.quadraticCurveTo(leftEar.x + (size * 0.15), mouth.y + (size * 0.05), mouth.x - (size * 0.05), mouth.y);
+            ctx.lineWidth = size * 0.025;
+            ctx.strokeStyle = '#1a1a1a';
             ctx.stroke();
 
-            // Ujung Busa Microphone (Blink Glow)
+            // 5. Ujung Busa Microphone (Bentuk Tabung Hitam Matte)
+            ctx.save();
+            ctx.translate(mouth.x - (size * 0.05), mouth.y);
+            ctx.fillStyle = '#2b2b2b';
+            ctx.strokeStyle = '#111111';
+            ctx.lineWidth = 1;
             ctx.beginPath();
-            ctx.arc(mouth.x - (size * 0.08), mouth.y, size * 0.06, 0, 2 * Math.PI);
-            ctx.fillStyle = '#ff0055';
-            ctx.shadowColor = '#ff0055';
-            ctx.shadowBlur = 12;
+            ctx.roundRect(-size * 0.06, -size * 0.035, size * 0.09, size * 0.07, 6);
             ctx.fill();
+            ctx.stroke();
+            ctx.restore();
 
             ctx.restore();
         }
@@ -119,23 +144,19 @@
             ctx.drawImage(results.image, 0, 0, canvas.width, canvas.height);
 
             if (results.multiFaceLandmarks && results.multiFaceLandmarks.length > 0) {
-                statusHud.innerText = "STATUS: CYBER HEADSET ACTIVE";
-                statusHud.style.borderColor = "#00f0ff";
-                statusHud.style.color = "#00f0ff";
+                statusHud.innerText = "STATUS: HEADSET TERPASANG";
+                statusHud.style.color = "#00ff88";
 
                 const face = results.multiFaceLandmarks[0];
                 
-                // Mengambil titik telinga & mulut dari MediaPipe
                 const leftEar = { x: face[234].x * canvas.width, y: face[234].y * canvas.height };
                 const rightEar = { x: face[454].x * canvas.width, y: face[454].y * canvas.height };
-                const chin = { x: face[152].x * canvas.width, y: face[152].y * canvas.height };
                 const mouth = { x: face[13].x * canvas.width, y: face[13].y * canvas.height };
 
-                drawHeadset(leftEar, rightEar, chin, mouth);
+                drawHeadset(leftEar, rightEar, mouth);
             } else {
-                statusHud.innerText = "STATUS: SEARCHING FACE...";
-                statusHud.style.borderColor = "#ff0055";
-                statusHud.style.color = "#ff0055";
+                statusHud.innerText = "STATUS: MENCARI WAJAH...";
+                statusHud.style.color = "#fff";
             }
         }
 
