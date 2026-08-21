@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cyber Headset AR Filter</title>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: #000; overflow: hidden; font-family: monospace; }
+        video { display: none; }
+        canvas { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; object-fit: cover; transform: scaleX(-1); }
+        .hud {
+            position: absolute; top: 15px; left: 15px; z-index: 10;
+            background: rgba(0, 0, 0, 0.7); border: 1px solid #00f0ff;
+            color: #00f0ff; padding: 8px 14px; border-radius: 4px; font-size: 12px;
+            box-shadow: 0 0 8px rgba(0, 240, 255, 0.4);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="hud" id="status">STATUS: INITIALIZING SYSTEM...</div>
+    <video id="webcam" autoplay playsinline></video>
+    <canvas id="outputCanvas"></canvas>
+
+    <script>
+        const video = document.getElementById('webcam');
+        const canvas = document.getElementById('outputCanvas');
+        const ctx = canvas.getContext('2d');
+        const statusHud = document.getElementById('status');
+
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        function drawHeadset(leftEar, rightEar, chin, mouth) {
+            const earDistance = Math.hypot(rightEar.x - leftEar.x, rightEar.y - leftEar.y);
+            const size = earDistance * 1.3;
+
+            // Titik tengah kepala
+            const headCenterX = (leftEar.x + rightEar.x) / 2;
+            const headCenterY = (leftEar.y + rightEar.y) / 2 - (size * 0.25);
+
+            ctx.save();
+
+            // 1. Bando Headset Utama (Atas)
+            ctx.beginPath();
+            ctx.arc(headCenterX, headCenterY, size * 0.65, Math.PI, 0, false);
+            ctx.lineWidth = size * 0.12;
+            ctx.strokeStyle = '#111';
+            ctx.stroke();
+
+            // Neon Strip Bando Atas
+            ctx.beginPath();
+            ctx.arc(headCenterX, headCenterY, size * 0.65, Math.PI, 0, false);
+            ctx.lineWidth = size * 0.03;
+            ctx.strokeStyle = '#00f0ff';
+            ctx.shadowColor = '#00f0ff';
+            ctx.shadowBlur = 10;
+            ctx.stroke();
+
+            // 2. Earcup Kiri
+            ctx.save();
+            ctx.translate(leftEar.x, leftEar.y);
+            ctx.fillStyle = '#111';
+            ctx.strokeStyle = '#00f0ff';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.roundRect(-size * 0.12, -size * 0.25, size * 0.24, size * 0.5, 10);
+            ctx.fill();
+            ctx.stroke();
+            // Lampu Earcup Kiri
+            ctx.fillStyle = '#ff0055';
+            ctx.fillRect(-size * 0.05, -size * 0.1, size * 0.1, size * 0.2);
+            ctx.restore();
+
+            // 3. Earcup Kanan
+            ctx.save();
+            ctx.translate(rightEar.x, rightEar.y);
+            ctx.fillStyle = '#111';
+            ctx.strokeStyle = '#00f0ff';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.roundRect(-size * 0.12, -size * 0.25, size * 0.24, size * 0.5, 10);
+            ctx.fill();
+            ctx.stroke();
+            // Lampu Earcup Kanan
+            ctx.fillStyle = '#ff0055';
+            ctx.fillRect(-size * 0.05, -size * 0.1, size * 0.1, size * 0.2);
+            ctx.restore();
+
+            // 4. Tangkai Microphone (Samping Kiri menuju Mulut)
+            ctx.beginPath();
+            ctx.moveTo(leftEar.x, leftEar.y + (size * 0.1));
+            ctx.quadraticCurveTo(leftEar.x + (size * 0.1), mouth.y, mouth.x - (size * 0.08), mouth.y);
+            ctx.lineWidth = size * 0.04;
+            ctx.strokeStyle = '#00f0ff';
+            ctx.shadowBlur = 5;
+            ctx.stroke();
+
+            // Ujung Busa Microphone (Blink Glow)
+            ctx.beginPath();
+            ctx.arc(mouth.x - (size * 0.08), mouth.y, size * 0.06, 0, 2 * Math.PI);
+            ctx.fillStyle = '#ff0055';
+            ctx.shadowColor = '#ff0055';
+            ctx.shadowBlur = 12;
+            ctx.fill();
+
+            ctx.restore();
+        }
+
+        function onResults(results) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(results.image, 0, 0, canvas.width, canvas.height);
+
+            if (results.multiFaceLandmarks && results.multiFaceLandmarks.length > 0) {
+                statusHud.innerText = "STATUS: CYBER HEADSET ACTIVE";
+                statusHud.style.borderColor = "#00f0ff";
+                statusHud.style.color = "#00f0ff";
+
+                const face = results.multiFaceLandmarks[0];
+                
+                // Mengambil titik telinga & mulut dari MediaPipe
+                const leftEar = { x: face[234].x * canvas.width, y: face[234].y * canvas.height };
+                const rightEar = { x: face[454].x * canvas.width, y: face[454].y * canvas.height };
+                const chin = { x: face[152].x * canvas.width, y: face[152].y * canvas.height };
+                const mouth = { x: face[13].x * canvas.width, y: face[13].y * canvas.height };
+
+                drawHeadset(leftEar, rightEar, chin, mouth);
+            } else {
+                statusHud.innerText = "STATUS: SEARCHING FACE...";
+                statusHud.style.borderColor = "#ff0055";
+                statusHud.style.color = "#ff0055";
+            }
+        }
+
+        const faceMesh = new FaceMesh({
+            locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`
+        });
+        
+        faceMesh.setOptions({
+            maxNumFaces: 1,
+            refineLandmarks: true,
+            minDetectionConfidence: 0.6,
+            minTrackingConfidence: 0.6
+        });
+        faceMesh.onResults(onResults);
+
+        const camera = new Camera(video, {
+            onFrame: async () => {
+                await faceMesh.send({ image: video });
+            },
+            width: 1280,
+            height: 720
+        });
+        camera.start();
+    </script>
+</body>
+</html>
