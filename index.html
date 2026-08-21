@@ -3,162 +3,63 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TASM 2 Spider-Man AR</title>
+    <title>Spiderman AR</title>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { background: #000; overflow: hidden; font-family: monospace; }
-        .stage { position: relative; width: 100vw; height: 100vh; }
+        body { margin: 0; background: #000; overflow: hidden; }
         video { display: none; }
         canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
-        .hud-status {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            color: #00f0ff;
-            border: 1px solid rgba(0, 240, 255, 0.4);
-            padding: 8px 14px;
-            background: rgba(0, 0, 0, 0.7);
-            border-radius: 4px;
-            font-size: 11px;
-            letter-spacing: 1px;
-            pointer-events: none;
-            z-index: 10;
-        }
     </style>
 </head>
 <body>
-
-<div class="stage">
-    <div class="hud-status" id="hud">TASM 2 SUIT // INITIALIZING</div>
     <video id="webcam" autoplay playsinline></video>
     <canvas id="outputCanvas"></canvas>
-</div>
 
-<script>
-    const video = document.getElementById('webcam');
-    const canvas = document.getElementById('outputCanvas');
-    const ctx = canvas.getContext('2d', { alpha: false });
-    const hud = document.getElementById('hud');
+    <script>
+        const video = document.getElementById('webcam');
+        const canvas = document.getElementById('outputCanvas');
+        const ctx = canvas.getContext('2d', { alpha: true });
+        
+        const maskImg = new Image();
+        // --- UBAH BAGIAN DI BAWAH INI SESUAI NAMA FILE KAMU ---
+        maskImg.src = './NAMA_FILE_KAMU_DISINI.png'; 
+        // ----------------------------------------------------
 
-    // Vector Mask Spider-Man TASM 2 Dynamic Drawing
-    function resizeCanvas() {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-    }
-    window.addEventListener('resize', resizeCanvas);
-    resizeCanvas();
+        function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+        window.addEventListener('resize', resize); resize();
 
-    let lastX = 0, lastY = 0, lastW = 0, lastAngle = 0;
-    function lerp(start, end, amt) { return start + (end - start) * amt; }
+        function onResults(results) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(results.image, 0, 0, canvas.width, canvas.height);
 
-    function drawPath(points, face, w, h, close = true) {
-        ctx.beginPath();
-        points.forEach((idx, i) => {
-            const pt = face[idx];
-            if (i === 0) ctx.moveTo(pt.x * w, pt.y * h);
-            else ctx.lineTo(pt.x * w, pt.y * h);
-        });
-        if (close) ctx.closePath();
-    }
+            if (results.multiFaceLandmarks && results.multiFaceLandmarks.length > 0) {
+                const face = results.multiFaceLandmarks[0];
+                const nose = face[1];
+                const leftCheek = face[234];
+                const rightCheek = face[454];
 
-    // Index mesh
-    const FACE_OVAL = [10, 338, 297, 332, 284, 251, 389, 356, 454, 323, 361, 288, 397, 365, 379, 378, 400, 377, 152, 148, 176, 149, 150, 136, 172, 58, 132, 93, 234, 127, 162, 21, 54, 103, 67, 109];
-    const SPIDER_LEFT_EYE = [70, 63, 105, 66, 107, 55, 193, 122, 196, 3, 51, 45];
-    const SPIDER_RIGHT_EYE = [300, 293, 334, 296, 336, 285, 417, 351, 419, 248, 281, 275];
+                const w = Math.hypot((rightCheek.x - leftCheek.x) * canvas.width, (rightCheek.y - leftCheek.y) * canvas.height);
+                const maskWidth = w * 2.5; 
+                const maskHeight = maskWidth * 1.4;
 
-    function onResults(results) {
-        ctx.save();
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.save();
+                ctx.translate(nose.x * canvas.width, nose.y * canvas.height - (maskHeight * 0.1));
+                const angle = Math.atan2((rightCheek.y - leftCheek.y), (rightCheek.x - leftCheek.x));
+                ctx.rotate(angle);
 
-        // 1. Kamera
-        ctx.drawImage(results.image, 0, 0, canvas.width, canvas.height);
-
-        if (results.multiFaceLandmarks && results.multiFaceLandmarks.length > 0) {
-            const face = results.multiFaceLandmarks[0];
-            const w = canvas.width;
-            const h = canvas.height;
-
-            // Base Topeng Merah TASM 2
-            drawPath(FACE_OVAL, face, w, h);
-            ctx.fillStyle = 'rgba(190, 15, 25, 0.88)';
-            ctx.fill();
-            ctx.strokeStyle = '#600000';
-            ctx.lineWidth = 3;
-            ctx.stroke();
-
-            // Pola Garis Jaring (Radial)
-            const noseCenter = face[1];
-            ctx.strokeStyle = 'rgba(10, 10, 10, 0.6)';
-            ctx.lineWidth = 2;
-            [10, 109, 67, 103, 54, 21, 162, 127, 234, 93, 132, 172, 152, 397, 361, 323, 454, 356, 389, 251, 284, 332, 297, 338].forEach(idx => {
-                ctx.beginPath();
-                ctx.moveTo(noseCenter.x * w, noseCenter.y * h);
-                ctx.lineTo(face[idx].x * w, face[idx].y * h);
-                ctx.stroke();
-            });
-
-            // Mata Raksasa TASM 2 (Kiri)
-            drawPath(SPIDER_LEFT_EYE, face, w, h);
-            ctx.fillStyle = '#ffffff';
-            ctx.fill();
-            ctx.strokeStyle = '#050505';
-            ctx.lineWidth = 7;
-            ctx.stroke();
-
-            // Mata Raksasa TASM 2 (Kanan)
-            drawPath(SPIDER_RIGHT_EYE, face, w, h);
-            ctx.fillStyle = '#ffffff';
-            ctx.fill();
-            ctx.strokeStyle = '#050505';
-            ctx.lineWidth = 7;
-            ctx.stroke();
-
-            // Deteksi Kedip (Dynamic Lid)
-            const leftEyeTop = face[159], leftEyeBottom = face[145];
-            const rightEyeTop = face[386], rightEyeBottom = face[374];
-            const leftDist = Math.hypot((leftEyeTop.x - leftEyeBottom.x) * w, (leftEyeTop.y - leftEyeBottom.y) * h);
-            const rightDist = Math.hypot((rightEyeTop.x - rightEyeBottom.x) * w, (rightEyeTop.y - rightEyeBottom.y) * h);
-
-            if (leftDist < 9) {
-                drawPath(SPIDER_LEFT_EYE, face, w, h);
-                ctx.fillStyle = '#0a0a0a';
-                ctx.fill();
+                if(maskImg.complete) {
+                    ctx.drawImage(maskImg, -maskWidth/2, -maskHeight/2, maskWidth, maskHeight);
+                }
+                ctx.restore();
             }
-            if (rightDist < 9) {
-                drawPath(SPIDER_RIGHT_EYE, face, w, h);
-                ctx.fillStyle = '#0a0a0a';
-                ctx.fill();
-            }
-
-            hud.innerText = "TASM 2 SUIT // ONLINE";
-        } else {
-            hud.innerText = "TASM 2 SUIT // SEARCHING TARGET";
         }
 
-        ctx.restore();
-    }
+        const faceMesh = new FaceMesh({ locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}` });
+        faceMesh.setOptions({ maxNumFaces: 1, refineLandmarks: true, minDetectionConfidence: 0.7, minTrackingConfidence: 0.7 });
+        faceMesh.onResults(onResults);
 
-    const faceMesh = new FaceMesh({
-        locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`
-    });
-
-    faceMesh.setOptions({
-        maxNumFaces: 1,
-        refineLandmarks: true,
-        minDetectionConfidence: 0.65,
-        minTrackingConfidence: 0.65
-    });
-
-    faceMesh.onResults(onResults);
-
-    const camera = new Camera(video, {
-        onFrame: async () => { await faceMesh.send({ image: video }); },
-        width: 1280,
-        height: 720
-    });
-    camera.start();
-</script>
+        new Camera(video, { onFrame: async () => { await faceMesh.send({ image: video }); }, width: 1280, height: 720 }).start();
+    </script>
 </body>
 </html>
