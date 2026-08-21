@@ -3,39 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cyber Hand AR Ultimate</title>
+    <title>TASM 2 Spider-Man AR</title>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { background: #000; overflow: hidden; font-family: 'Courier New', Courier, monospace; }
+        body { background: #000; overflow: hidden; font-family: monospace; }
         .stage { position: relative; width: 100vw; height: 100vh; }
         video { display: none; }
         canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
-        .hud-overlay {
+        .hud-status {
             position: absolute;
             top: 20px;
             right: 20px;
             color: #00f0ff;
-            border: 1px solid rgba(0, 240, 255, 0.5);
-            padding: 10px 16px;
-            background: rgba(0, 10, 20, 0.6);
+            border: 1px solid rgba(0, 240, 255, 0.4);
+            padding: 8px 14px;
+            background: rgba(0, 0, 0, 0.7);
             border-radius: 4px;
-            font-size: 12px;
+            font-size: 11px;
             letter-spacing: 1px;
             pointer-events: none;
             z-index: 10;
-            box-shadow: 0 0 12px rgba(0, 240, 255, 0.3);
         }
     </style>
 </head>
 <body>
 
 <div class="stage">
-    <div class="hud-overlay" id="hud-text">
-        SYSTEM: READY<br>
-        MODE: HAND TRACKING AR
-    </div>
+    <div class="hud-status" id="hud">TASM 2 SUIT // INITIALIZING</div>
     <video id="webcam" autoplay playsinline></video>
     <canvas id="outputCanvas"></canvas>
 </div>
@@ -44,8 +40,9 @@
     const video = document.getElementById('webcam');
     const canvas = document.getElementById('outputCanvas');
     const ctx = canvas.getContext('2d', { alpha: false });
-    const hudText = document.getElementById('hud-text');
+    const hud = document.getElementById('hud');
 
+    // Vector Mask Spider-Man TASM 2 Dynamic Drawing
     function resizeCanvas() {
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
@@ -53,201 +50,111 @@
     window.addEventListener('resize', resizeCanvas);
     resizeCanvas();
 
-    // Variable Interpolasi (Smoothing)
-    let p1 = { x: 0, y: 0 }, p2 = { x: 0, y: 0 }, p3 = { x: 0, y: 0 }, p4 = { x: 0, y: 0 };
-    let palmPos = { x: 0, y: 0 };
-    let rotationAngle = 0;
-    const lerpFactor = 0.35;
+    let lastX = 0, lastY = 0, lastW = 0, lastAngle = 0;
+    function lerp(start, end, amt) { return start + (end - start) * amt; }
 
-    function lerp(start, end, amt) {
-        return start + (end - start) * amt;
+    function drawPath(points, face, w, h, close = true) {
+        ctx.beginPath();
+        points.forEach((idx, i) => {
+            const pt = face[idx];
+            if (i === 0) ctx.moveTo(pt.x * w, pt.y * h);
+            else ctx.lineTo(pt.x * w, pt.y * h);
+        });
+        if (close) ctx.closePath();
     }
 
-    // Fungsi Menggambar Sudut Siku-Siku (Bracket Cyber)
-    function drawCornerBrackets(p1, p2, p3, p4) {
-        const len = 20; // Panjang garis sudut
-        ctx.strokeStyle = '#00f0ff';
-        ctx.lineWidth = 4;
-        ctx.shadowColor = '#00f0ff';
-        ctx.shadowBlur = 10;
-
-        // Pojok Kiri Atas
-        ctx.beginPath();
-        ctx.moveTo(p1.x, p1.y + len); ctx.lineTo(p1.x, p1.y); ctx.lineTo(p1.x + len, p1.y);
-        ctx.stroke();
-
-        // Pojok Kanan Atas
-        ctx.beginPath();
-        ctx.moveTo(p2.x - len, p2.y); ctx.lineTo(p2.x, p2.y); ctx.lineTo(p2.x, p2.y + len);
-        ctx.stroke();
-
-        // Pojok Kanan Bawah
-        ctx.beginPath();
-        ctx.moveTo(p3.x, p3.y - len); ctx.lineTo(p3.x, p3.y); ctx.lineTo(p3.x - len, p3.y);
-        ctx.stroke();
-
-        // Pojok Kiri Bawah
-        ctx.beginPath();
-        ctx.moveTo(p4.x + len, p4.y); ctx.lineTo(p4.x, p4.y); ctx.lineTo(p4.x, p4.y - len);
-        ctx.stroke();
-    }
-
-    // Fungsi Menggambar Lingkaran Energi Cyber di Telapak Tangan
-    function drawPalmShield(x, y) {
-        rotationAngle += 0.03;
-        ctx.save();
-        ctx.translate(x, y);
-
-        // Outer Ring
-        ctx.beginPath();
-        ctx.arc(0, 0, 55, 0, Math.PI * 2);
-        ctx.strokeStyle = 'rgba(0, 240, 255, 0.6)';
-        ctx.lineWidth = 2;
-        ctx.shadowColor = '#00f0ff';
-        ctx.shadowBlur = 12;
-        ctx.stroke();
-
-        // Inner Rotating Segment
-        ctx.rotate(rotationAngle);
-        ctx.beginPath();
-        ctx.arc(0, 0, 40, 0, Math.PI * 1.2);
-        ctx.strokeStyle = '#ff0055';
-        ctx.lineWidth = 3;
-        ctx.stroke();
-
-        // Core Glowing Center
-        ctx.beginPath();
-        ctx.arc(0, 0, 15, 0, Math.PI * 2);
-        ctx.fillStyle = '#00f0ff';
-        ctx.fill();
-
-        ctx.restore();
-    }
+    // Index mesh
+    const FACE_OVAL = [10, 338, 297, 332, 284, 251, 389, 356, 454, 323, 361, 288, 397, 365, 379, 378, 400, 377, 152, 148, 176, 149, 150, 136, 172, 58, 132, 93, 234, 127, 162, 21, 54, 103, 67, 109];
+    const SPIDER_LEFT_EYE = [70, 63, 105, 66, 107, 55, 193, 122, 196, 3, 51, 45];
+    const SPIDER_RIGHT_EYE = [300, 293, 334, 296, 336, 285, 417, 351, 419, 248, 281, 275];
 
     function onResults(results) {
         ctx.save();
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        // 1. Gambar Video Kamera HD
+        // 1. Kamera
         ctx.drawImage(results.image, 0, 0, canvas.width, canvas.height);
 
-        const handsCount = results.multiHandLandmarks ? results.multiHandLandmarks.length : 0;
+        if (results.multiFaceLandmarks && results.multiFaceLandmarks.length > 0) {
+            const face = results.multiFaceLandmarks[0];
+            const w = canvas.width;
+            const h = canvas.height;
 
-        // --- SKENARIO A: DUA TANGAN (CYBER FRAME SCANNER) ---
-        if (handsCount >= 2) {
-            const hand1 = results.multiHandLandmarks[0];
-            const hand2 = results.multiHandLandmarks[1];
-
-            const h1Index = hand1[8], h1Thumb = hand1[4];
-            const h2Index = hand2[8], h2Thumb = hand2[4];
-
-            let targetP1, targetP2, targetP3, targetP4;
-
-            if (h1Index.x < h2Index.x) {
-                targetP1 = { x: h1Index.x * canvas.width, y: h1Index.y * canvas.height };
-                targetP2 = { x: h2Index.x * canvas.width, y: h2Index.y * canvas.height };
-                targetP3 = { x: h2Thumb.x * canvas.width, y: h2Thumb.y * canvas.height };
-                targetP4 = { x: h1Thumb.x * canvas.width, y: h1Thumb.y * canvas.height };
-            } else {
-                targetP1 = { x: h2Index.x * canvas.width, y: h2Index.y * canvas.height };
-                targetP2 = { x: h1Index.x * canvas.width, y: h1Index.y * canvas.height };
-                targetP3 = { x: h1Thumb.x * canvas.width, y: h1Thumb.y * canvas.height };
-                targetP4 = { x: h2Thumb.x * canvas.width, y: h2Thumb.y * canvas.height };
-            }
-
-            // Smoothing posisi titik
-            p1.x = lerp(p1.x || targetP1.x, targetP1.x, lerpFactor);
-            p1.y = lerp(p1.y || targetP1.y, targetP1.y, lerpFactor);
-            p2.x = lerp(p2.x || targetP2.x, targetP2.x, lerpFactor);
-            p2.y = lerp(p2.y || targetP2.y, targetP2.y, lerpFactor);
-            p3.x = lerp(p3.x || targetP3.x, targetP3.x, lerpFactor);
-            p3.y = lerp(p3.y || targetP3.y, targetP3.y, lerpFactor);
-            p4.x = lerp(p4.x || targetP4.x, targetP4.x, lerpFactor);
-            p4.y = lerp(p4.y || targetP4.y, targetP4.y, lerpFactor);
-
-            // Filter Scanline & Tint Cyan DI DALAM Frame
-            ctx.save();
-            ctx.beginPath();
-            ctx.moveTo(p1.x, p1.y);
-            ctx.lineTo(p2.x, p2.y);
-            ctx.lineTo(p3.x, p3.y);
-            ctx.lineTo(p4.x, p4.y);
-            ctx.closePath();
-            ctx.clip();
-
-            ctx.drawImage(results.image, 0, 0, canvas.width, canvas.height);
-            ctx.fillStyle = 'rgba(0, 240, 255, 0.22)';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            // Garis Scanline Horizontal
-            ctx.strokeStyle = 'rgba(0, 255, 255, 0.3)';
-            ctx.lineWidth = 1.5;
-            for (let y = 0; y < canvas.height; y += 8) {
-                ctx.beginPath();
-                ctx.moveTo(0, y);
-                ctx.lineTo(canvas.width, y);
-                ctx.stroke();
-            }
-            ctx.restore();
-
-            // Siku-Siku Neon & Garis Tepi
-            ctx.beginPath();
-            ctx.moveTo(p1.x, p1.y); ctx.lineTo(p2.x, p2.y);
-            ctx.lineTo(p3.x, p3.y); ctx.lineTo(p4.x, p4.y);
-            ctx.closePath();
-            ctx.strokeStyle = 'rgba(0, 240, 255, 0.6)';
-            ctx.lineWidth = 1.5;
+            // Base Topeng Merah TASM 2
+            drawPath(FACE_OVAL, face, w, h);
+            ctx.fillStyle = 'rgba(190, 15, 25, 0.88)';
+            ctx.fill();
+            ctx.strokeStyle = '#600000';
+            ctx.lineWidth = 3;
             ctx.stroke();
 
-            drawCornerBrackets(p1, p2, p3, p4);
+            // Pola Garis Jaring (Radial)
+            const noseCenter = face[1];
+            ctx.strokeStyle = 'rgba(10, 10, 10, 0.6)';
+            ctx.lineWidth = 2;
+            [10, 109, 67, 103, 54, 21, 162, 127, 234, 93, 132, 172, 152, 397, 361, 323, 454, 356, 389, 251, 284, 332, 297, 338].forEach(idx => {
+                ctx.beginPath();
+                ctx.moveTo(noseCenter.x * w, noseCenter.y * h);
+                ctx.lineTo(face[idx].x * w, face[idx].y * h);
+                ctx.stroke();
+            });
 
-            // Teks Label Frame
-            ctx.fillStyle = '#00f0ff';
-            ctx.font = '12px Courier New';
-            ctx.shadowBlur = 0;
-            ctx.fillText("[ FRAME SCANNER ACTIVE ]", p1.x + 10, p1.y + 20);
+            // Mata Raksasa TASM 2 (Kiri)
+            drawPath(SPIDER_LEFT_EYE, face, w, h);
+            ctx.fillStyle = '#ffffff';
+            ctx.fill();
+            ctx.strokeStyle = '#050505';
+            ctx.lineWidth = 7;
+            ctx.stroke();
 
-            hudText.innerHTML = "MODE: CYBER FRAME DUAL-HAND<br>STATUS: TARGET SCANNING";
+            // Mata Raksasa TASM 2 (Kanan)
+            drawPath(SPIDER_RIGHT_EYE, face, w, h);
+            ctx.fillStyle = '#ffffff';
+            ctx.fill();
+            ctx.strokeStyle = '#050505';
+            ctx.lineWidth = 7;
+            ctx.stroke();
 
-        } 
-        // --- SKENARIO B: SATU TANGAN (PALM SHIELD / INTERACTIVE) ---
-        else if (handsCount === 1) {
-            const hand = results.multiHandLandmarks[0];
-            const palm = hand[9]; // Tengah telapak tangan
+            // Deteksi Kedip (Dynamic Lid)
+            const leftEyeTop = face[159], leftEyeBottom = face[145];
+            const rightEyeTop = face[386], rightEyeBottom = face[374];
+            const leftDist = Math.hypot((leftEyeTop.x - leftEyeBottom.x) * w, (leftEyeTop.y - leftEyeBottom.y) * h);
+            const rightDist = Math.hypot((rightEyeTop.x - rightEyeBottom.x) * w, (rightEyeTop.y - rightEyeBottom.y) * h);
 
-            const targetX = palm.x * canvas.width;
-            const targetY = palm.y * canvas.height;
+            if (leftDist < 9) {
+                drawPath(SPIDER_LEFT_EYE, face, w, h);
+                ctx.fillStyle = '#0a0a0a';
+                ctx.fill();
+            }
+            if (rightDist < 9) {
+                drawPath(SPIDER_RIGHT_EYE, face, w, h);
+                ctx.fillStyle = '#0a0a0a';
+                ctx.fill();
+            }
 
-            palmPos.x = lerp(palmPos.x || targetX, targetX, lerpFactor);
-            palmPos.y = lerp(palmPos.y || targetY, targetY, lerpFactor);
-
-            // Gambar Shield Energi di Telapak Tangan
-            drawPalmShield(palmPos.x, palmPos.y);
-
-            hudText.innerHTML = "MODE: PALM ENERGY SHIELD<br>STATUS: SHIELD ONLINE";
-        } 
-        else {
-            hudText.innerHTML = "SYSTEM: READY<br>STATUS: SEARCHING HANDS...";
+            hud.innerText = "TASM 2 SUIT // ONLINE";
+        } else {
+            hud.innerText = "TASM 2 SUIT // SEARCHING TARGET";
         }
 
         ctx.restore();
     }
 
-    const hands = new Hands({
-        locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
+    const faceMesh = new FaceMesh({
+        locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`
     });
 
-    hands.setOptions({
-        maxNumHands: 2,
-        modelComplexity: 0, // Sangat cepat dan bebas lag
-        minDetectionConfidence: 0.7,
-        minTrackingConfidence: 0.7
+    faceMesh.setOptions({
+        maxNumFaces: 1,
+        refineLandmarks: true,
+        minDetectionConfidence: 0.65,
+        minTrackingConfidence: 0.65
     });
 
-    hands.onResults(onResults);
+    faceMesh.onResults(onResults);
 
     const camera = new Camera(video, {
-        onFrame: async () => { await hands.send({ image: video }); },
+        onFrame: async () => { await faceMesh.send({ image: video }); },
         width: 1280,
         height: 720
     });
