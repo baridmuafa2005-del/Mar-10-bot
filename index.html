@@ -6,7 +6,6 @@
     <title>Iron Man AR Experience</title>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -63,19 +62,19 @@
     const ironHelmet = new THREE.Group();
     scene.add(ironHelmet);
 
-    // Dynamic Mask Structure (Bentuk Muka + Visor Cyan Glowing)
-    const faceShape = new THREE.ConeGeometry(0.9, 1.2, 5);
-    const faceMat = new THREE.MeshBasicMaterial({ color: 0xff1100, wireframe: true, transparent: true, opacity: 0.8 });
-    const faceMesh = new THREE.Mesh(faceShape, faceMat);
-    faceMesh.rotation.x = Math.PI;
+    // Visor Kacamata Cyber / Iron Man HUD (Bentuk Lebih Ramping & Pas di Mata)
+    const visorGeo = new THREE.CylinderGeometry(0.6, 0.5, 0.25, 16, 1, true, 0, Math.PI);
+    const visorMat = new THREE.MeshBasicMaterial({ color: 0x00f0ff, side: THREE.DoubleSide, wireframe: true });
+    const visorMesh = new THREE.Mesh(visorGeo, visorMat);
+    visorMesh.rotation.y = Math.PI / 2;
 
-    // Mata Cyan Glowing
-    const eyeGeo = new THREE.BoxGeometry(0.6, 0.08, 0.2);
-    const eyeMat = new THREE.MeshBasicMaterial({ color: 0x00ffff });
+    // Mata Glowing Cyan
+    const eyeGeo = new THREE.PlaneGeometry(0.5, 0.08);
+    const eyeMat = new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide });
     const eyeMesh = new THREE.Mesh(eyeGeo, eyeMat);
-    eyeMesh.position.set(0, 0.1, 0.4);
+    eyeMesh.position.set(0, 0, 0.2);
 
-    ironHelmet.add(faceMesh);
+    ironHelmet.add(visorMesh);
     ironHelmet.add(eyeMesh);
 
     // Smooth Tracking (Lerp)
@@ -93,7 +92,7 @@
             const face = results.multiFaceLandmarks[0];
             const nose = face[1]; // Posisi Hidung
 
-            // Mapping posisi hidung ke koordinat 3D World
+            // Mapping posisi hidung ke koordinat 3D
             const targetX = (1 - nose.x) * (camera3D.aspect * 2.2) - (camera3D.aspect * 1.1);
             const targetY = -(nose.y * 2 - 1) * 1.5;
 
