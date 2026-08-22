@@ -32,51 +32,6 @@
             image-rendering: pixelated;
         }
 
-        /* Modal Nama Fix Interaksi */
-        #nameModal {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.95);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 99999;
-            pointer-events: auto;
-        }
-        #nameModal h2 {
-            color: #4ade80;
-            font-size: 14px;
-            margin-bottom: 12px;
-            text-align: center;
-        }
-        #playerNameInput {
-            padding: 12px;
-            font-size: 16px;
-            font-family: monospace;
-            background: #222;
-            color: #fff;
-            border: 2px solid #4ade80;
-            border-radius: 5px;
-            margin-bottom: 15px;
-            text-align: center;
-            outline: none;
-            width: 80%;
-            max-width: 250px;
-        }
-        #startBtn {
-            padding: 14px 28px;
-            background: #4ade80;
-            color: #000;
-            font-weight: bold;
-            font-size: 14px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            touch-action: manipulation;
-        }
-        #startBtn:active { background: #22c55e; }
-
         /* HUD Layer */
         .ui-layer {
             position: absolute;
@@ -174,18 +129,11 @@
 <body>
 
 <div id="gameContainer">
-    <!-- Modal Input Nama -->
-    <div id="nameModal">
-        <h2>MASUKKAN NAMA KARAKTER</h2>
-        <input type="text" id="playerNameInput" placeholder="Nama..." maxlength="12" autocomplete="off">
-        <button id="startBtn">MULAI BERPETUALANG</button>
-    </div>
-
     <canvas id="gameCanvas" width="800" height="450"></canvas>
 
     <div class="ui-layer">
         <div class="top-bar">
-            <div class="stats-box" id="hudStats">HP: 100/100<br>NAMA: -</div>
+            <div class="stats-box" id="hudStats">HP: 100/100<br>NAMA: Gg</div>
             <div class="inventory-box" id="hudInv">🪵 Kayu: 0<br>🍓 Berry: 0 (Klik: Heal)</div>
         </div>
     </div>
@@ -209,9 +157,9 @@
     const ctx = canvas.getContext('2d');
     ctx.imageSmoothingEnabled = false;
 
-    let gameStarted = false;
+    let gameStarted = true; // Langsung jalan tanpa modal!
     let isPaused = false;
-    let playerName = "";
+    let playerName = "Gg";
     let windAngle = 0; 
 
     let player = {
@@ -253,24 +201,6 @@
         { x: 300, y: 50, speed: 1.0 }
     ];
 
-    // FIX UTAMA: Support Event Click & Touch Langsung di Mobile
-    const startBtn = document.getElementById('startBtn');
-    
-    function triggerStart(e) {
-        if (e) e.preventDefault();
-        const input = document.getElementById('playerNameInput').value.trim();
-        if (!input) {
-            alert('Nama karakter wajib diisi!');
-            return;
-        }
-        playerName = input;
-        document.getElementById('nameModal').style.display = 'none';
-        gameStarted = true;
-    }
-
-    startBtn.addEventListener('click', triggerStart);
-    startBtn.addEventListener('touchend', triggerStart, { passive: false });
-
     document.getElementById('pauseBtn').addEventListener('click', togglePause);
     document.getElementById('pauseBtn').addEventListener('touchend', (e) => { e.preventDefault(); togglePause(); }, { passive: false });
 
@@ -281,7 +211,6 @@
     document.getElementById('hudInv').addEventListener('touchend', (e) => { e.preventDefault(); healPlayer(); }, { passive: false });
 
     function togglePause() {
-        if (!gameStarted) return;
         isPaused = !isPaused;
         document.getElementById('pauseBtn').innerText = isPaused ? "RESUME" : "PAUSE";
     }
@@ -329,7 +258,7 @@
     }
 
     function doAction() {
-        if (!gameStarted || isPaused) return;
+        if (isPaused) return;
 
         let distToDoor = Math.hypot(player.x - house.doorX, player.y - house.doorY);
         if (distToDoor < 35) {
@@ -371,7 +300,7 @@
     }
 
     function update() {
-        if (!gameStarted || isPaused) return;
+        if (isPaused) return;
 
         if (joystickData.vx !== 0 || joystickData.vy !== 0) {
             player.x += joystickData.vx * player.speed;
