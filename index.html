@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Pixel Survival RPG - Detail Art</title>
+    <title>Pixel Survival RPG</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
         body { 
@@ -11,7 +11,6 @@
             color: #fff; 
             font-family: monospace; 
             display: flex; 
-            flex-direction: column;
             justify-content: center; 
             align-items: center; 
             height: 100vh; 
@@ -25,7 +24,6 @@
             max-height: 450px;
             background: #4ade80;
             overflow: hidden;
-            box-shadow: 0 0 20px rgba(0,0,0,0.8);
         }
         canvas {
             display: block;
@@ -33,6 +31,53 @@
             height: 100%;
             image-rendering: pixelated;
         }
+
+        /* Modal Nama Fix Interaksi */
+        #nameModal {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999; /* Urutan teratas */
+            pointer-events: auto;
+        }
+        #nameModal h2 {
+            color: #4ade80;
+            font-size: 14px;
+            margin-bottom: 12px;
+            text-align: center;
+        }
+        #playerNameInput {
+            padding: 10px;
+            font-size: 16px;
+            font-family: monospace;
+            background: #222;
+            color: #fff;
+            border: 2px solid #4ade80;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            text-align: center;
+            outline: none;
+            width: 80%;
+            max-width: 250px;
+        }
+        #startBtn {
+            padding: 12px 24px;
+            background: #4ade80;
+            color: #000;
+            font-weight: bold;
+            font-size: 14px;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+            touch-action: manipulation;
+        }
+        #startBtn:active { background: #22c55e; }
+
+        /* HUD Layer */
         .ui-layer {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -41,6 +86,7 @@
             flex-direction: column;
             justify-content: space-between;
             padding: 10px;
+            z-index: 10;
         }
         .top-bar {
             display: flex;
@@ -55,38 +101,8 @@
             border-radius: 4px;
         }
         .inventory-box { text-align: right; pointer-events: auto; cursor: pointer; }
-        
-        #nameModal {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.85);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 100;
-        }
-        #nameModal input {
-            padding: 10px;
-            font-size: 16px;
-            font-family: monospace;
-            background: #222;
-            color: #fff;
-            border: 2px solid #4ade80;
-            border-radius: 5px;
-            margin-bottom: 15px;
-            text-align: center;
-        }
-        #nameModal button {
-            padding: 8px 20px;
-            background: #4ade80;
-            color: #000;
-            font-weight: bold;
-            border: none;
-            cursor: pointer;
-            border-radius: 5px;
-        }
 
+        /* Controls */
         .controls-layer {
             position: absolute;
             bottom: 0; left: 0; width: 100%; height: 100%;
@@ -95,9 +111,10 @@
             justify-content: space-between;
             align-items: flex-end;
             padding: 15px;
+            z-index: 20;
         }
         .joystick-area {
-            width: 100px; height: 100px;
+            width: 90px; height: 90px;
             background: rgba(255,255,255,0.15);
             border: 2px solid rgba(255,255,255,0.3);
             border-radius: 50%;
@@ -106,11 +123,11 @@
             touch-action: none;
         }
         .joystick-knob {
-            width: 40px; height: 40px;
+            width: 36px; height: 36px;
             background: rgba(255,255,255,0.6);
             border-radius: 50%;
             position: absolute;
-            top: 30px; left: 30px;
+            top: 27px; left: 27px;
             pointer-events: none;
         }
         .action-buttons {
@@ -119,7 +136,7 @@
             pointer-events: auto;
         }
         .btn-act {
-            width: 60px; height: 60px;
+            width: 55px; height: 55px;
             background: rgba(0, 0, 0, 0.7);
             border: 2px solid #fff;
             border-radius: 50%;
@@ -136,18 +153,18 @@
 
         .bottom-center-ctrl {
             position: absolute;
-            bottom: 15px;
+            bottom: 12px;
             left: 50%;
             transform: translateX(-50%);
             pointer-events: auto;
-            z-index: 50;
+            z-index: 30;
         }
         .btn-pause {
-            background: rgba(0,0,0,0.7);
+            background: rgba(0,0,0,0.8);
             border: 2px solid #fff;
             color: #fff;
             padding: 6px 14px;
-            font-size: 11px;
+            font-size: 10px;
             border-radius: 4px;
             cursor: pointer;
         }
@@ -158,40 +175,30 @@
 <div id="gameContainer">
     <!-- Modal Input Nama -->
     <div id="nameModal">
-        <h2 style="color: #4ade80; margin-bottom: 10px;">MASUKKAN NAMA KARAKTER</h2>
-        <input type="text" id="playerNameInput" placeholder="Nama Karakter..." maxlength="12">
-        <br>
-        <button onclick="startGame()">MULAI BERPETUALANG</button>
+        <h2>MASUKKAN NAMA KARAKTER</h2>
+        <input type="text" id="playerNameInput" placeholder="Nama..." maxlength="12">
+        <button id="startBtn">MULAI BERPETUALANG</button>
     </div>
 
     <canvas id="gameCanvas" width="800" height="450"></canvas>
 
-    <!-- UI & HUD -->
     <div class="ui-layer">
         <div class="top-bar">
-            <div class="stats-box" id="hudStats">
-                HP: 100/100<br>
-                NAMA: -
-            </div>
-            <div class="inventory-box" id="hudInv" onclick="healPlayer()">
-                🪵 Kayu: 0<br>
-                🍓 Berry: 0 (Klik: Heal)
-            </div>
+            <div class="stats-box" id="hudStats">HP: 100/100<br>NAMA: -</div>
+            <div class="inventory-box" id="hudInv">🪵 Kayu: 0<br>🍓 Berry: 0 (Klik: Heal)</div>
         </div>
     </div>
 
-    <!-- Tombol Play/Pause Tengah Bawah -->
     <div class="bottom-center-ctrl">
-        <button class="btn-pause" id="pauseBtn" onclick="togglePause()">PAUSE</button>
+        <button class="btn-pause" id="pauseBtn">PAUSE</button>
     </div>
 
-    <!-- Virtual Controller -->
     <div class="controls-layer">
         <div class="joystick-area" id="joystick">
             <div class="joystick-knob" id="joystickKnob"></div>
         </div>
         <div class="action-buttons">
-            <button class="btn-act" onclick="doAction()">AKSI</button>
+            <button class="btn-act" id="actBtn">AKSI</button>
         </div>
     </div>
 </div>
@@ -233,12 +240,8 @@
         { x: 500, y: 360, hp: 5, maxHp: 5, alive: true, attackCooldown: 0 }
     ];
     let pond = { x: 50, y: 260, w: 130, h: 90 };
-    let frogs = [
-        { x: 70, y: 290 }, { x: 130, y: 320 }
-    ];
-    let lotus = [
-        { x: 80, y: 280 }, { x: 120, y: 330 }
-    ];
+    let frogs = [{ x: 70, y: 290 }, { x: 130, y: 320 }];
+    let lotus = [{ x: 80, y: 280 }, { x: 120, y: 330 }];
     let clouds = [
         { x: 100, y: 40, speed: 0.2 },
         { x: 400, y: 60, speed: 0.15 },
@@ -249,6 +252,37 @@
         { x: 300, y: 50, speed: 1.0 }
     ];
 
+    // FIX EVENT LISTENER TOMBOL MULAI
+    document.getElementById('startBtn').addEventListener('click', startGame);
+    document.getElementById('pauseBtn').addEventListener('click', togglePause);
+    document.getElementById('actBtn').addEventListener('click', doAction);
+    document.getElementById('hudInv').addEventListener('click', healPlayer);
+
+    function startGame() {
+        const input = document.getElementById('playerNameInput').value.trim();
+        if (!input) {
+            alert('Nama karakter wajib diisi!');
+            return;
+        }
+        playerName = input;
+        document.getElementById('nameModal').style.display = 'none';
+        gameStarted = true;
+    }
+
+    function togglePause() {
+        if (!gameStarted) return;
+        isPaused = !isPaused;
+        document.getElementById('pauseBtn').innerText = isPaused ? "RESUME" : "PAUSE";
+    }
+
+    function healPlayer() {
+        if (player.berries > 0 && player.hp < player.maxHp) {
+            player.berries--;
+            player.hp = Math.min(player.maxHp, player.hp + 25);
+        }
+    }
+
+    // Joystick Handler
     let joystickData = { active: false, x: 0, y: 0, vx: 0, vy: 0 };
     const joystick = document.getElementById('joystick');
     const knob = document.getElementById('joystickKnob');
@@ -273,7 +307,7 @@
         const dx = e.clientX - centerX;
         const dy = e.clientY - centerY;
         const dist = Math.hypot(dx, dy);
-        const maxDist = 35;
+        const maxDist = 30;
         let angle = Math.atan2(dy, dx);
         let clampedDist = Math.min(dist, maxDist);
         let kx = Math.cos(angle) * clampedDist;
@@ -281,30 +315,6 @@
         knob.style.transform = `translate(${kx}px, ${ky}px)`;
         joystickData.vx = (kx / maxDist);
         joystickData.vy = (ky / maxDist);
-    }
-
-    function startGame() {
-        const input = document.getElementById('playerNameInput').value.trim();
-        if (!input) {
-            alert('Nama karakter wajib diisi!');
-            return;
-        }
-        playerName = input;
-        document.getElementById('nameModal').style.display = 'none';
-        gameStarted = true;
-    }
-
-    function togglePause() {
-        if (!gameStarted) return;
-        isPaused = !isPaused;
-        document.getElementById('pauseBtn').innerText = isPaused ? "RESUME" : "PAUSE";
-    }
-
-    function healPlayer() {
-        if (player.berries > 0 && player.hp < player.maxHp) {
-            player.berries--;
-            player.hp = Math.min(player.maxHp, player.hp + 25);
-        }
     }
 
     function doAction() {
@@ -409,25 +419,21 @@
         document.getElementById('hudInv').innerHTML = `🪵 Kayu: ${player.wood}<br>🍓 Berry: ${player.berries} (Klik: Heal)`;
     }
 
-    // === FUNGSI MENGGAMBAR DETAIL PIXEL ART ===
     function draw() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
         if (!player.isInsideHouse) {
-            // Langit & Matahari
             ctx.fillStyle = '#38bdf8';
             ctx.fillRect(0, 0, canvas.width, 120);
             ctx.fillStyle = '#fef08a';
             ctx.beginPath(); ctx.arc(710, 45, 24, 0, Math.PI * 2); ctx.fill();
 
-            // Awan
             ctx.fillStyle = 'rgba(255,255,255,0.85)';
             clouds.forEach(c => {
                 ctx.fillRect(c.x, c.y, 40, 14);
                 ctx.fillRect(c.x + 10, c.y - 6, 20, 8);
             });
 
-            // Burung
             ctx.strokeStyle = '#0f172a'; ctx.lineWidth = 2;
             birds.forEach(b => {
                 ctx.beginPath();
@@ -438,11 +444,9 @@
                 ctx.stroke();
             });
 
-            // Tanah Lapang Hijau
             ctx.fillStyle = '#4ade80';
             ctx.fillRect(0, 120, canvas.width, canvas.height - 120);
 
-            // Rumput Bergoyang
             ctx.strokeStyle = '#15803d'; ctx.lineWidth = 1.5;
             for (let i = 15; i < canvas.width; i += 25) {
                 let sway = Math.sin(windAngle + i) * 4;
@@ -451,175 +455,105 @@
                 ctx.stroke();
             }
 
-            // Kolam Air Berbentuk Organik
             ctx.fillStyle = '#0284c7';
             ctx.fillRect(pond.x, pond.y, pond.w, pond.h);
-            ctx.fillStyle = '#38bdf8'; // Kilau air dalam kolam
+            ctx.fillStyle = '#38bdf8';
             ctx.fillRect(pond.x + 10, pond.y + 10, pond.w - 20, pond.h - 20);
 
-            // Teratai Mengapung (Bentuk Bunga Air)
             lotus.forEach(l => {
-                ctx.fillStyle = '#22c55e'; ctx.fillRect(l.x, l.y, 14, 8); // Daun teratai
-                ctx.fillStyle = '#f43f5e'; ctx.fillRect(l.x + 4, l.y + 2, 6, 4); // Bunga pink
+                ctx.fillStyle = '#22c55e'; ctx.fillRect(l.x, l.y, 14, 8);
+                ctx.fillStyle = '#f43f5e'; ctx.fillRect(l.x + 4, l.y + 2, 6, 4);
             });
 
-            // Kodok (Bentuk Kodok Detail: Badan, Mata Menonjol, Kaki)
             frogs.forEach(f => {
-                ctx.fillStyle = '#16a34a'; // Badan kodok
-                ctx.fillRect(f.x, f.y + 2, 12, 8);
-                ctx.fillRect(f.x + 2, f.y, 3, 3); // Mata kiri
-                ctx.fillRect(f.x + 7, f.y, 3, 3); // Mata kanan
+                ctx.fillStyle = '#16a34a'; ctx.fillRect(f.x, f.y + 2, 12, 8);
+                ctx.fillRect(f.x + 2, f.y, 3, 3); ctx.fillRect(f.x + 7, f.y, 3, 3);
                 ctx.fillStyle = '#15803d';
-                ctx.fillRect(f.x - 2, f.y + 6, 4, 4); // Kaki belakang
-                ctx.fillRect(f.x + 10, f.y + 6, 4, 4);
+                ctx.fillRect(f.x - 2, f.y + 6, 4, 4); ctx.fillRect(f.x + 10, f.y + 6, 4, 4);
             });
 
-            // Rumah Kayu Detail (Dinding, Atap Runcing Segitiga, Pintu)
-            ctx.fillStyle = '#7c2d12'; // Atap
+            ctx.fillStyle = '#7c2d12';
             ctx.beginPath();
             ctx.moveTo(house.x - 10, house.y);
             ctx.lineTo(house.x + house.w / 2, house.y - 35);
             ctx.lineTo(house.x + house.w + 10, house.y);
             ctx.fill();
-            ctx.fillStyle = '#a16207'; // Dinding kayu
+            ctx.fillStyle = '#a16207';
             ctx.fillRect(house.x, house.y, house.w, house.h);
-            ctx.fillStyle = '#38bdf8'; // Jendela rumah
+            ctx.fillStyle = '#38bdf8';
             ctx.fillRect(house.x + 15, house.y + 20, 18, 18);
             ctx.fillRect(house.x + house.w - 33, house.y + 20, 18, 18);
-            ctx.fillStyle = '#451a03'; // Pintu
+            ctx.fillStyle = '#451a03';
             ctx.fillRect(house.doorX - 10, house.doorY - 25, 20, 35);
 
-            // Pohon (Batang Cokelat + Daun Lebat Berlapis)
             trees.forEach(t => {
                 if (!t.alive) return;
-                ctx.fillStyle = '#78350f'; // Batang
+                ctx.fillStyle = '#78350f';
                 ctx.fillRect(t.x + 12, t.y + 35, 12, 25);
-                ctx.fillStyle = '#166534'; // Lapisan daun luar
+                ctx.fillStyle = '#166534';
                 ctx.fillRect(t.x, t.y + 10, 36, 30);
-                ctx.fillStyle = '#22c55e'; // Lapisan daun dalam (highlight)
+                ctx.fillStyle = '#22c55e';
                 ctx.fillRect(t.x + 6, t.y, 24, 24);
             });
 
-            // Semak Berry (Daun hijau + buah merah terang)
             bushes.forEach(b => {
                 if (!b.alive) return;
-                ctx.fillStyle = '#15803d';
-                ctx.fillRect(b.x, b.y, 26, 20);
-                ctx.fillStyle = '#16a34a';
-                ctx.fillRect(b.x + 4, b.y - 4, 18, 14);
-                // Biji/Buah Berry
+                ctx.fillStyle = '#15803d'; ctx.fillRect(b.x, b.y, 26, 20);
+                ctx.fillStyle = '#16a34a'; ctx.fillRect(b.x + 4, b.y - 4, 18, 14);
                 ctx.fillStyle = '#dc2626';
                 ctx.fillRect(b.x + 4, b.y + 4, 4, 4);
                 ctx.fillRect(b.x + 14, b.y + 8, 4, 4);
                 ctx.fillRect(b.x + 9, b.y + 2, 4, 4);
             });
 
-            // Ular (Bentuk Badan Meliuk-liuk & Kepala Meruncing)
             snakes.forEach(s => {
                 if (!s.alive) return;
-                ctx.fillStyle = '#ca8a04';
-                ctx.fillRect(s.x, s.y + 4, 22, 6); // Badan
-                ctx.fillRect(s.x + 18, s.y, 8, 8);  // Kepala
-                ctx.fillStyle = '#000';
-                ctx.fillRect(s.x + 22, s.y + 2, 2, 2); // Mata ular
-                ctx.fillStyle = '#991b1b';
-                ctx.fillRect(s.x + 26, s.y + 3, 4, 2); // Lidah bercabang
+                ctx.fillStyle = '#ca8a04'; ctx.fillRect(s.x, s.y + 4, 22, 6);
+                ctx.fillRect(s.x + 18, s.y, 8, 8);
+                ctx.fillStyle = '#000'; ctx.fillRect(s.x + 22, s.y + 2, 2, 2);
+                ctx.fillStyle = '#991b1b'; ctx.fillRect(s.x + 26, s.y + 3, 4, 2);
             });
 
-            // Serigala (Bentuk Tubuh Depan/Belakang, Telinga Runcing, Ekor)
             wolves.forEach(w => {
                 if (!w.alive) return;
-                ctx.fillStyle = '#475569'; // Badan serigala
-                ctx.fillRect(w.x, w.y + 6, 28, 14);
-                ctx.fillRect(w.x + 20, w.y, 12, 12); // Kepala
+                ctx.fillStyle = '#475569'; ctx.fillRect(w.x, w.y + 6, 28, 14);
+                ctx.fillRect(w.x + 20, w.y, 12, 12);
                 ctx.fillStyle = '#334155';
-                ctx.fillRect(w.x + 22, w.y - 4, 3, 5); // Telinga kiri
-                ctx.fillRect(w.x + 28, w.y - 4, 3, 5); // Telinga kanan
-                ctx.fillRect(w.x - 6, w.y + 8, 6, 3);  // Ekor
-                ctx.fillStyle = '#f8fafc';
-                ctx.fillRect(w.x + 28, w.y + 4, 2, 2);  // Mata serigala
+                ctx.fillRect(w.x + 22, w.y - 4, 3, 5); ctx.fillRect(w.x + 28, w.y - 4, 3, 5);
+                ctx.fillRect(w.x - 6, w.y + 8, 6, 3);
+                ctx.fillStyle = '#f8fafc'; ctx.fillRect(w.x + 28, w.y + 4, 2, 2);
             });
 
             drawPlayerSprite();
 
         } else {
-            // === INTERIOR RUMAH (Kasur, Lemari, Meja, Sofa) ===
-            ctx.fillStyle = '#1c1917';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#1c1917'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#78350f'; ctx.fillRect(house.x, house.y, house.w, house.h);
+            ctx.strokeStyle = '#451a03'; ctx.lineWidth = 2; ctx.strokeRect(house.x, house.y, house.w, house.h);
 
-            // Lantai Kayu Interior
-            ctx.fillStyle = '#78350f';
-            ctx.fillRect(house.x, house.y, house.w, house.h);
-            ctx.strokeStyle = '#451a03'; ctx.lineWidth = 2;
-            ctx.strokeRect(house.x, house.y, house.w, house.h);
+            ctx.fillStyle = '#991b1b'; ctx.fillRect(house.x + 12, house.y + 12, 35, 22);
+            ctx.fillStyle = '#f1f5f9'; ctx.fillRect(house.x + 15, house.y + 15, 10, 8);
 
-            // Kasur Nyaman (Bantal + Selimut Merah)
-            ctx.fillStyle = '#991b1b';
-            ctx.fillRect(house.x + 12, house.y + 12, 35, 22);
-            ctx.fillStyle = '#f1f5f9'; // Bantal
-            ctx.fillRect(house.x + 15, house.y + 15, 10, 8);
+            ctx.fillStyle = '#451a03'; ctx.fillRect(house.x + house.w - 35, house.y + 12, 25, 40);
+            ctx.fillStyle = '#fbbf24'; ctx.fillRect(house.x + house.w - 24, house.y + 30, 2, 6);
 
-            // Lemari Besar Kayu
-            ctx.fillStyle = '#451a03';
-            ctx.fillRect(house.x + house.w - 35, house.y + 12, 25, 40);
-            ctx.fillStyle = '#fbbf24'; // Gagang lemari
-            ctx.fillRect(house.x + house.w - 24, house.y + 30, 2, 6);
-
-            // Sofa Santai
-            ctx.fillStyle = '#334155';
-            ctx.fillRect(house.x + 15, house.y + 55, 45, 20);
+            ctx.fillStyle = '#334155'; ctx.fillRect(house.x + 15, house.y + 55, 45, 20);
             ctx.fillStyle = '#475569';
-            ctx.fillRect(house.x + 12, house.y + 50, 8, 25);
-            ctx.fillRect(house.x + 55, house.y + 50, 8, 25);
+            ctx.fillRect(house.x + 12, house.y + 50, 8, 25); ctx.fillRect(house.x + 55, house.y + 50, 8, 25);
 
-            // Meja Tengah
-            ctx.fillStyle = '#b45309';
-            ctx.fillRect(house.x + 70, house.y + 40, 25, 20);
+            ctx.fillStyle = '#b45309'; ctx.fillRect(house.x + 70, house.y + 40, 25, 20);
 
             drawPlayerSprite();
         }
     }
 
-    // Karakter Cowok (Rambut, Kepala, Baju, Celana, Tangan)
     function drawPlayerSprite() {
-        // Kaki
         ctx.fillStyle = '#1e293b';
         ctx.fillRect(player.x + 4, player.y + player.h - 6, 4, 6);
         ctx.fillRect(player.x + 12, player.y + player.h - 6, 4, 6);
 
-        // Badan / Baju
         ctx.fillStyle = '#2563eb';
         ctx.fillRect(player.x + 2, player.y + 10, player.w - 4, 14);
 
-        // Kepala & Muka
         ctx.fillStyle = '#fbcfe8';
-        ctx.fillRect(player.x + 3, player.y + 2, 14, 10);
-
-        // Rambut Cowok Keren
-        ctx.fillStyle = '#b45309';
-        ctx.fillRect(player.x + 3, player.y, 14, 4);
-        ctx.fillRect(player.x + 2, player.y + 2, 3, 6);
-
-        // Mata & Detail Muka
-        ctx.fillStyle = '#0f172a';
-        if (player.dir === 'right') {
-            ctx.fillRect(player.x + 13, player.y + 5, 2, 2);
-        } else if (player.dir === 'left') {
-            ctx.fillRect(player.x + 5, player.y + 5, 2, 2);
-        } else {
-            ctx.fillRect(player.x + 6, player.y + 5, 2, 2);
-            ctx.fillRect(player.x + 12, player.y + 5, 2, 2);
-        }
-    }
-
-    function mainLoop() {
-        update();
-        draw();
-        requestAnimationFrame(mainLoop);
-    }
-
-    mainLoop();
-</script>
-</body>
-</html>
-
+        ctx.fillRect(player.x + 3, playe
