@@ -2,184 +2,606 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Office Headset AR Filter</title>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Pixel Survival RPG</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { background: #000; overflow: hidden; font-family: sans-serif; }
-        video { display: none; }
-        canvas { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; object-fit: cover; transform: scaleX(-1); }
-        .hud {
-            position: absolute; top: 15px; left: 15px; z-index: 10;
-            background: rgba(0, 0, 0, 0.6); border: 1px solid #444;
-            color: #fff; padding: 8px 14px; border-radius: 6px; font-size: 12px;
+        * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
+        body { 
+            background: #0f0f13; 
+            color: #fff; 
+            font-family: monospace; 
+            display: flex; 
+            flex-direction: column;
+            justify-content: center; 
+            align-items: center; 
+            height: 100vh; 
+            overflow: hidden;
+        }
+        #gameContainer {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            max-width: 800px;
+            max-height: 450px;
+            background: #4ade80;
+            overflow: hidden;
+            box-shadow: 0 0 20px rgba(0,0,0,0.8);
+        }
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            image-rendering: pixelated;
+        }
+        /* UI Overlay */
+        .ui-layer {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 10px;
+        }
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+        .stats-box, .inventory-box {
+            background: rgba(0, 0, 0, 0.7);
+            border: 2px solid #fff;
+            padding: 6px 10px;
+            font-size: 11px;
+            border-radius: 4px;
+        }
+        .inventory-box { text-align: right; }
+        
+        /* Modal Nama */
+        #nameModal {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+        #nameModal input {
+            padding: 10px;
+            font-size: 16px;
+            font-family: monospace;
+            background: #222;
+            color: #fff;
+            border: 2px solid #4ade80;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        #nameModal button {
+            padding: 8px 20px;
+            background: #4ade80;
+            color: #000;
+            font-weight: bold;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        /* Virtual Controls */
+        .controls-layer {
+            position: absolute;
+            bottom: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            padding: 15px;
+        }
+        .joystick-area {
+            width: 100px; height: 100px;
+            background: rgba(255,255,255,0.15);
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            position: relative;
+            pointer-events: auto;
+            touch-action: none;
+        }
+        .joystick-knob {
+            width: 40px; height: 40px;
+            background: rgba(255,255,255,0.6);
+            border-radius: 50%;
+            position: absolute;
+            top: 30px; left: 30px;
+            pointer-events: none;
+        }
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            pointer-events: auto;
+        }
+        .btn-act {
+            width: 55px; height: 55px;
+            background: rgba(0, 0, 0, 0.6);
+            border: 2px solid #fff;
+            border-radius: 50%;
+            color: #fff;
+            font-size: 10px;
+            font-weight: bold;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            touch-action: none;
+        }
+        .btn-act:active { background: rgba(255,255,255,0.4); }
+
+        /* Pause / Play Center Bottom */
+        .bottom-center-ctrl {
+            position: absolute;
+            bottom: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            pointer-events: auto;
+            z-index: 50;
+        }
+        .btn-pause {
+            background: rgba(0,0,0,0.7);
+            border: 2px solid #fff;
+            color: #fff;
+            padding: 6px 14px;
+            font-size: 11px;
+            border-radius: 4px;
+            cursor: pointer;
         }
     </style>
 </head>
 <body>
 
-    <div class="hud" id="status">STATUS: MENCARI WAJAH...</div>
-    <video id="webcam" autoplay playsinline></video>
-    <canvas id="outputCanvas"></canvas>
+<div id="gameContainer">
+    <!-- Modal Input Nama -->
+    <div id="nameModal">
+        <h2 style="color: #4ade80; margin-bottom: 10px;">MASUKKAN NAMA KARAKTER</h2>
+        <input type="text" id="playerNameInput" placeholder="Nama Karakter..." maxlength="12">
+        <br>
+        <button onclick="startGame()">MULAI BERPETUALANG</button>
+    </div>
 
-    <script>
-        const video = document.getElementById('webcam');
-        const canvas = document.getElementById('outputCanvas');
-        const ctx = canvas.getContext('2d');
-        const statusHud = document.getElementById('status');
+    <canvas id="gameCanvas" width="800" height="450"></canvas>
 
-        function resize() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
+    <!-- UI & HUD -->
+    <div class="ui-layer">
+        <div class="top-bar">
+            <div class="stats-box" id="hudStats">
+                HP: 100/100<br>
+                NAMA: -
+            </div>
+            <div class="inventory-box" id="hudInv">
+                🪵 Kayu: 0<br>
+                🍓 Berry: 0 (Klik untuk Heal)
+            </div>
+        </div>
+    </div>
+
+    <!-- Tombol Play/Pause Tengah Bawah -->
+    <div class="bottom-center-ctrl">
+        <button class="btn-pause" id="pauseBtn" onclick="togglePause()">PAUSE</button>
+    </div>
+
+    <!-- Virtual Controller -->
+    <div class="controls-layer">
+        <div class="joystick-area" id="joystick">
+            <div class="joystick-knob" id="joystickKnob"></div>
+        </div>
+        <div class="action-buttons">
+            <button class="btn-act" onclick="doAction()">AKSI</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    ctx.imageSmoothingEnabled = false;
+
+    let gameStarted = false;
+    let isPaused = false;
+    let playerName = "";
+    let windAngle = 0; // Untuk animasi rumput bergoyang
+
+    // State Karakter
+    let player = {
+        x: 400, y: 225, w: 16, h: 24,
+        speed: 2, hp: 100, maxHp: 100,
+        dir: 'down', isInsideHouse: false,
+        wood: 0, berries: 0
+    };
+
+    // Dunia & Objek
+    let house = { x: 360, y: 160, w: 80, h: 70, doorX: 390, doorY: 220 };
+    let trees = [
+        { x: 150, y: 100, hp: 4, maxHp: 4, alive: true },
+        { x: 650, y: 120, hp: 4, maxHp: 4, alive: true },
+        { x: 200, y: 350, hp: 4, maxHp: 4, alive: true },
+        { x: 600, y: 320, hp: 4, maxHp: 4, alive: true }
+    ];
+    let bushes = [
+        { x: 280, y: 120, hp: 2, maxHp: 2, alive: true },
+        { x: 500, y: 140, hp: 2, maxHp: 2, alive: true },
+        { x: 250, y: 300, hp: 2, maxHp: 2, alive: true }
+    ];
+    let snakes = [
+        { x: 100, y: 200, hp: 5, maxHp: 5, alive: true, attackCooldown: 0 },
+        { x: 700, y: 250, hp: 5, maxHp: 5, alive: true, attackCooldown: 0 }
+    ];
+    let wolves = [
+        { x: 500, y: 350, hp: 5, maxHp: 5, alive: true, attackCooldown: 0 }
+    ];
+    let pond = { x: 80, y: 280, w: 120, h: 80 };
+    let frogs = [
+        { x: 100, y: 300, jumpTimer: 0 },
+        { x: 150, y: 330, jumpTimer: 40 }
+    ];
+    let lotus = [
+        { x: 100, y: 300 }, { x: 140, y: 340 }, { x: 115, y: 320 }
+    ];
+    let clouds = [
+        { x: 100, y: 40, speed: 0.2 },
+        { x: 400, y: 60, speed: 0.15 },
+        { x: 650, y: 30, speed: 0.25 }
+    ];
+    let birds = [
+        { x: 50, y: 80, speed: 0.8 },
+        { x: 300, y: 50, speed: 1.0 }
+    ];
+
+    // Joystick Logic
+    let joystickData = { active: false, x: 0, y: 0, vx: 0, vy: 0 };
+    const joystick = document.getElementById('joystick');
+    const knob = document.getElementById('joystickKnob');
+
+    joystick.addEventListener('pointerdown', (e) => {
+        joystickData.active = true;
+        updateJoystick(e);
+    });
+    window.addEventListener('pointermove', (e) => {
+        if (joystickData.active) updateJoystick(e);
+    });
+    window.addEventListener('pointerup', () => {
+        joystickData.active = false;
+        joystickData.vx = 0; joystickData.vy = 0;
+        knob.style.transform = `translate(0px, 0px)`;
+    });
+
+    function updateJoystick(e) {
+        const rect = joystick.getBoundingClientRect();
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top + rect.height / 2;
+        const dx = e.clientX - centerX;
+        const dy = e.clientY - centerY;
+        const dist = Math.hypot(dx, dy);
+        const maxDist = 35;
+
+        let angle = Math.atan2(dy, dx);
+        let clampedDist = Math.min(dist, maxDist);
+
+        let kx = Math.cos(angle) * clampedDist;
+        let ky = Math.sin(angle) * clampedDist;
+        knob.style.transform = `translate(${kx}px, ${ky}px)`;
+
+        joystickData.vx = (kx / maxDist);
+        joystickData.vy = (ky / maxDist);
+    }
+
+    function startGame() {
+        const input = document.getElementById('playerNameInput').value.trim();
+        if (!input) {
+            alert('Nama karakter wajib diisi!');
+            return;
         }
-        window.addEventListener('resize', resize);
-        resize();
+        playerName = input;
+        document.getElementById('nameModal').style.display = 'none';
+        gameStarted = true;
+    }
 
-        function drawHeadset(leftEar, rightEar, mouth) {
-            const earDistance = Math.hypot(rightEar.x - leftEar.x, rightEar.y - leftEar.y);
-            const size = earDistance * 1.25;
+    function togglePause() {
+        if (!gameStarted) return;
+        isPaused = !isPaused;
+        document.getElementById('pauseBtn').innerText = isPaused ? "RESUME" : "PAUSE";
+    }
 
-            // Titik pusat bando
-            const headCenterX = (leftEar.x + rightEar.x) / 2;
-            const headCenterY = (leftEar.y + rightEar.y) / 2 - (size * 0.28);
+    // Aksi Pemain (Memukul Pohon/Semak/Musuh atau Masuk Rumah)
+    function doAction() {
+        if (!gameStarted || isPaused) return;
 
-            ctx.save();
-
-            // 1. Bando Headset Atas (Hitam dengan bantalan dalam)
-            ctx.beginPath();
-            ctx.arc(headCenterX, headCenterY, size * 0.62, Math.PI * 0.95, Math.PI * 0.05, false);
-            ctx.lineWidth = size * 0.1;
-            ctx.strokeStyle = '#1a1a1a';
-            ctx.lineCap = 'round';
-            ctx.stroke();
-
-            // Lapisan bantalan bawah bando
-            ctx.beginPath();
-            ctx.arc(headCenterX, headCenterY, size * 0.58, Math.PI * 0.9, Math.PI * 0.1, false);
-            ctx.lineWidth = size * 0.04;
-            ctx.strokeStyle = '#333333';
-            ctx.stroke();
-
-            // 2. Earcup Kiri (Desain Lingkaran & Garpu Penyangga)
-            ctx.save();
-            ctx.translate(leftEar.x, leftEar.y);
-            
-            // Garpu Luar
-            ctx.beginPath();
-            ctx.arc(0, 0, size * 0.2, 0, Math.PI * 2);
-            ctx.lineWidth = size * 0.04;
-            ctx.strokeStyle = '#2a2a2a';
-            ctx.stroke();
-
-            // Busa/Earcup Dalam
-            ctx.beginPath();
-            ctx.arc(0, 0, size * 0.14, 0, Math.PI * 2);
-            ctx.fillStyle = '#111111';
-            ctx.fill();
-            ctx.lineWidth = size * 0.03;
-            ctx.strokeStyle = '#3a3a3a';
-            ctx.stroke();
-
-            // Lingkaran pusat
-            ctx.beginPath();
-            ctx.arc(0, 0, size * 0.07, 0, Math.PI * 2);
-            ctx.fillStyle = '#222222';
-            ctx.fill();
-            ctx.restore();
-
-            // 3. Earcup Kanan
-            ctx.save();
-            ctx.translate(rightEar.x, rightEar.y);
-            
-            // Garpu Luar
-            ctx.beginPath();
-            ctx.arc(0, 0, size * 0.2, 0, Math.PI * 2);
-            ctx.lineWidth = size * 0.04;
-            ctx.strokeStyle = '#2a2a2a';
-            ctx.stroke();
-
-            // Busa/Earcup Dalam
-            ctx.beginPath();
-            ctx.arc(0, 0, size * 0.14, 0, Math.PI * 2);
-            ctx.fillStyle = '#111111';
-            ctx.fill();
-            ctx.lineWidth = size * 0.03;
-            ctx.strokeStyle = '#3a3a3a';
-            ctx.stroke();
-
-            // Lingkaran pusat
-            ctx.beginPath();
-            ctx.arc(0, 0, size * 0.07, 0, Math.PI * 2);
-            ctx.fillStyle = '#222222';
-            ctx.fill();
-            ctx.restore();
-
-            // 4. Tangkai Microphone (Melengkung dari Earcup Kiri ke Mulut)
-            ctx.beginPath();
-            ctx.moveTo(leftEar.x, leftEar.y + (size * 0.05));
-            ctx.quadraticCurveTo(leftEar.x + (size * 0.15), mouth.y + (size * 0.05), mouth.x - (size * 0.05), mouth.y);
-            ctx.lineWidth = size * 0.025;
-            ctx.strokeStyle = '#1a1a1a';
-            ctx.stroke();
-
-            // 5. Ujung Busa Microphone (Bentuk Tabung Hitam Matte)
-            ctx.save();
-            ctx.translate(mouth.x - (size * 0.05), mouth.y);
-            ctx.fillStyle = '#2b2b2b';
-            ctx.strokeStyle = '#111111';
-            ctx.lineWidth = 1;
-            ctx.beginPath();
-            ctx.roundRect(-size * 0.06, -size * 0.035, size * 0.09, size * 0.07, 6);
-            ctx.fill();
-            ctx.stroke();
-            ctx.restore();
-
-            ctx.restore();
+        // Cek interaksi pintu rumah
+        let distToDoor = Math.hypot(player.x - house.doorX, player.y - house.doorY);
+        if (distToDoor < 30) {
+            player.isInsideHouse = !player.isInsideHouse;
+            player.x = house.doorX;
+            player.y = player.isInsideHouse ? house.doorY + 15 : house.doorY - 15;
+            return;
         }
 
-        function onResults(results) {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.drawImage(results.image, 0, 0, canvas.width, canvas.height);
+        if (player.isInsideHouse) return; // Tidak bisa aksi di dalam rumah
 
-            if (results.multiFaceLandmarks && results.multiFaceLandmarks.length > 0) {
-                statusHud.innerText = "STATUS: HEADSET TERPASANG";
-                statusHud.style.color = "#00ff88";
+        // Serang pohon terdekat
+        trees.forEach(t => {
+            if (t.alive && Math.hypot(player.x - t.x, player.y - t.y) < 35) {
+                t.hp--;
+                if (t.hp <= 0) {
+                    t.alive = false;
+                    player.wood += 2;
+                }
+            }
+        });
 
-                const face = results.multiFaceLandmarks[0];
-                
-                const leftEar = { x: face[234].x * canvas.width, y: face[234].y * canvas.height };
-                const rightEar = { x: face[454].x * canvas.width, y: face[454].y * canvas.height };
-                const mouth = { x: face[13].x * canvas.width, y: face[13].y * canvas.height };
+        // Serang semak berry terdekat
+        bushes.forEach(b => {
+            if (b.alive && Math.hypot(player.x - b.x, player.y - b.y) < 30) {
+                b.hp--;
+                if (b.hp <= 0) {
+                    b.alive = false;
+                    player.berries += 3;
+                }
+            }
+        });
 
-                drawHeadset(leftEar, rightEar, mouth);
+        // Serang ular terdekat
+        snakes.forEach(s => {
+            if (s.alive && Math.hypot(player.x - s.x, player.y - s.y) < 30) {
+                s.hp--;
+                if (s.hp <= 0) s.alive = false;
+            }
+        });
+
+        // Serang serigala terdekat
+        wolves.forEach(w => {
+            if (w.alive && Math.hypot(player.x - w.x, player.y - w.y) < 35) {
+                w.hp--;
+                if (w.hp <= 0) w.alive = false;
+            }
+        });
+    }
+
+    // Klik hud berry untuk heal
+    document.getElementById('hudInv').addEventListener('click', () => {
+        if (player.berries > 0 && player.hp < player.maxHp) {
+            player.berries--;
+            player.hp = Math.min(player.maxHp, player.hp + 25);
+        }
+    });
+
+    // Update Game Loop
+    function update() {
+        if (!gameStarted || isPaused) return;
+
+        // Gerak Player
+        if (joystickData.vx !== 0 || joystickData.vy !== 0) {
+            player.x += joystickData.vx * player.speed;
+            player.y += joystickData.vy * player.speed;
+
+            if (Math.abs(joystickData.vx) > Math.abs(joystickData.vy)) {
+                player.dir = joystickData.vx > 0 ? 'right' : 'left';
             } else {
-                statusHud.innerText = "STATUS: MENCARI WAJAH...";
-                statusHud.style.color = "#fff";
+                player.dir = joystickData.vy > 0 ? 'down' : 'up';
             }
         }
 
-        const faceMesh = new FaceMesh({
-            locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`
-        });
-        
-        faceMesh.setOptions({
-            maxNumFaces: 1,
-            refineLandmarks: true,
-            minDetectionConfidence: 0.6,
-            minTrackingConfidence: 0.6
-        });
-        faceMesh.onResults(onResults);
+        // Batas Layar Dunia Luar
+        if (!player.isInsideHouse) {
+            player.x = Math.max(10, Math.min(canvas.width - 10, player.x));
+            player.y = Math.max(120, Math.min(canvas.height - 10, player.y));
+        } else {
+            // Batas dalam rumah
+            player.x = Math.max(house.x + 15, Math.min(house.x + house.w - 15, player.x));
+            player.y = Math.max(house.y + 25, Math.min(house.y + house.h - 10, player.y));
+        }
 
-        const camera = new Camera(video, {
-            onFrame: async () => {
-                await faceMesh.send({ image: video });
-            },
-            width: 1280,
-            height: 720
+        // Animasi Lingkungan
+        windAngle += 0.05;
+        clouds.forEach(c => {
+            c.x += c.speed;
+            if (c.x > canvas.width + 50) c.x = -50;
         });
-        camera.start();
-    </script>
+        birds.forEach(b => {
+            b.x += b.speed;
+            if (b.x > canvas.width + 20) b.x = -20;
+        });
+
+        // Pergerakan Musuh & Serangan ke Player
+        snakes.forEach(s => {
+            if (!s.alive) return;
+            // Kejar player perlahan jika dekat
+            let dist = Math.hypot(player.x - s.x, player.y - s.y);
+            if (dist < 100 && !player.isInsideHouse) {
+                s.x += (player.x > s.x ? 0.5 : -0.5);
+                s.y += (player.y > s.y ? 0.5 : -0.5);
+                if (dist < 20) {
+                    s.attackCooldown++;
+                    if (s.attackCooldown > 60) {
+                        player.hp -= 15; // total 7 kali serang mati (15*7 = 105)
+                        s.attackCooldown = 0;
+                    }
+                }
+            }
+        });
+
+        wolves.forEach(w => {
+            if (!w.alive) return;
+            let dist = Math.hypot(player.x - w.x, player.y - w.y);
+            if (dist < 120 && !player.isInsideHouse) {
+                w.x += (player.x > w.x ? 0.8 : -0.8);
+                w.y += (player.y > w.y ? 0.8 : -0.8);
+                if (dist < 25) {
+                    w.attackCooldown++;
+                    if (w.attackCooldown > 50) {
+                        player.hp -= 15;
+                        w.attackCooldown = 0;
+                    }
+                }
+            }
+        });
+
+        if (player.hp <= 0) {
+            alert("Karaktermu kehabisan darah dan mati! Game Over.");
+            window.location.reload();
+        }
+
+        // Update UI
+        document.getElementById('hudStats').innerHTML = `HP: ${player.hp}/${player.maxHp}<br>NAMA: ${playerName}`;
+        document.getElementById('hudInv').innerHTML = `🪵 Kayu: ${player.wood}<br>🍓 Berry: ${player.berries} (Klik: Heal)`;
+    }
+
+    // Render Game
+    function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        if (!player.isInsideHouse) {
+            // === LANGIT & LATAR LUAR ===
+            ctx.fillStyle = '#60a5fa';
+            ctx.fillRect(0, 0, canvas.width, 120);
+
+            // Matahari Cerah
+            ctx.fillStyle = '#fde047';
+            ctx.beginPath();
+            ctx.arc(700, 40, 22, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Awan
+            ctx.fillStyle = 'rgba(255,255,255,0.8)';
+            clouds.forEach(c => {
+                ctx.fillRect(c.x, c.y, 35, 12);
+                ctx.fillRect(c.x + 10, c.y - 6, 20, 10);
+            });
+
+            // Burung Melintas
+            ctx.strokeStyle = '#1e293b';
+            ctx.lineWidth = 1.5;
+            birds.forEach(b => {
+                ctx.beginPath();
+                let wingOffset = Math.sin(Date.now() * 0.01) * 4;
+                ctx.moveTo(b.x, b.y);
+                ctx.quadraticCurveTo(b.x + 6, b.y - 8 + wingOffset, b.x + 12, b.y);
+                ctx.quadraticCurveTo(b.x + 18, b.y - 8 + wingOffset, b.x + 24, b.y);
+                ctx.stroke();
+            });
+
+            // Tanah / Rumput Hijau
+            ctx.fillStyle = '#4ade80';
+            ctx.fillRect(0, 120, canvas.width, canvas.height - 120);
+
+            // Detail Rumput Bergoyang Angin
+            ctx.strokeStyle = '#16a34a';
+            ctx.lineWidth = 1;
+            for (let i = 20; i < canvas.width; i += 30) {
+                let sway = Math.sin(windAngle + i) * 3;
+                ctx.beginPath();
+                ctx.moveTo(i, 420);
+                ctx.quadraticCurveTo(i + sway, 410, i + sway * 1.5, 405);
+                ctx.stroke();
+            }
+
+            // Kolam Air
+            ctx.fillStyle = '#38bdf8';
+            ctx.fillRect(pond.x, pond.y, pond.w, pond.h);
+            // Teratai Mengapung
+            ctx.fillStyle = '#f472b6';
+            lotus.forEach(l => {
+                ctx.fillRect(l.x, l.y, 8, 5);
+            });
+            // Kodok di Kolam
+            ctx.fillStyle = '#15803d';
+            frogs.forEach(f => {
+                ctx.fillRect(f.x, f.y, 6, 5);
+            });
+
+            // Rumah Kayu di Tengah
+            ctx.fillStyle = '#9a3412';
+            ctx.fillRect(house.x, house.y, house.w, house.h);
+            ctx.fillStyle = '#7c2d12';
+            ctx.fillRect(house.doorX - 6, house.doorY - 15, 16, 25); // Pintu
+
+            // Pohon-Pohon
+            trees.forEach(t => {
+                if (!t.alive) return;
+                ctx.fillStyle = '#78350f'; // Batang
+                ctx.fillRect(t.x + 6, t.y + 15, 8, 15);
+                ctx.fillStyle = '#14532d'; // Daun
+                ctx.fillRect(t.x, t.y, 20, 20);
+            });
+
+            // Semak Berry
+            bushes.forEach(b => {
+                if (!b.alive) return;
+                ctx.fillStyle = '#166534';
+                ctx.fillRect(b.x, b.y, 16, 14);
+                ctx.fillStyle = '#ef4444'; // Buah Berry merah
+                ctx.fillRect(b.x + 3, b.y + 3, 3, 3);
+                ctx.fillRect(b.x + 10, b.y + 8, 3, 3);
+            });
+
+            // Ular
+            snakes.forEach(s => {
+                if (!s.alive) return;
+                ctx.fillStyle = '#ca8a04';
+                ctx.fillRect(s.x, s.y, 14, 8);
+            });
+
+            // Serigala
+            wolves.forEach(w => {
+                if (!w.alive) return;
+                ctx.fillStyle = '#64748b';
+                ctx.fillRect(w.x, w.y, 18, 12);
+            });
+
+            // Karakter Cowok (Di Luar)
+            drawPlayerSprite();
+
+        } else {
+            // === DALAM RUMAH KASUR, LEMARI, SOFA, MEJA ===
+            ctx.fillStyle = '#292524';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Lantai Kayu Interior
+            ctx.fillStyle = '#78350f';
+            ctx.fillRect(house.x, house.y, house.w, house.h);
+
+            // Properti: Kasur
+            ctx.fillStyle = '#ef4444';
+            ctx.fillRect(house.x + 10, house.y + 10, 20, 12);
+            // Properti: Lemari
+            ctx.fillStyle = '#451a03';
+            ctx.fillRect(house.x + house.w - 20, house.y + 10, 12, 20);
+            // Properti: Meja & Sofa
+            ctx.fillStyle = '#57534e';
+            ctx.fillRect(house.x + 35, house.y + 40, 18, 12); // Sofa
+            ctx.fillStyle = '#713f12';
+            ctx.fillRect(house.x + 25, house.y + 20, 14, 10); // Meja
+
+            // Karakter Cowok (Di Dalam Rumah)
+            drawPlayerSprite();
+        }
+    }
+
+    function drawPlayerSprite() {
+        // Badan Cowok Pixel Art
+        ctx.fillStyle = '#3b82f6'; // Baju biru
+        ctx.fillRect(player.x, player.y, player.w, player.h);
+        ctx.fillStyle = '#fde047'; // Rambut
+        ctx.fillRect(player.x, player.y - 4, player.w, 5);
+        ctx.fillStyle = '#fca5a5'; // Muka
+        ctx.fillRect(player.x + 3, player.y + 2, 10, 6);
+    }
+
+    function mainLoop() {
+        update();
+        draw();
+        requestAnimationFrame(mainLoop);
+    }
+
+    mainLoop();
+</script>
 </body>
 </html>
