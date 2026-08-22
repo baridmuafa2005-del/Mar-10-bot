@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Pixel Survival RPG - Ultra Enhanced</title>
+    <title>Pixel Survival RPG - Fixed Edition</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
         body { 
@@ -87,7 +87,7 @@
             background: rgba(255,255,255,0.75);
             border-radius: 50%;
             position: absolute;
-            top: 30.5px; left: 30.5px;
+            top: 32.5px; left: 32.5px;
             pointer-events: none;
             box-shadow: 0 3px 6px rgba(0,0,0,0.4);
         }
@@ -179,7 +179,6 @@
 
     let house = { x: 310, y: 130, w: 180, h: 110, doorX: 400, doorY: 235 };
     
-    // Objek Dunia Lebih Padat & Variatif
     let trees = [
         { x: 60, y: 60, hp: 4, maxHp: 4, alive: true },
         { x: 130, y: 50, hp: 4, maxHp: 4, alive: true },
@@ -207,20 +206,20 @@
     ];
 
     let flowers = [
-        { x: 90, y: 130, color: '#f43f5e', type: 1 }, { x: 130, y: 150, color: '#eab308', type: 2 },
-        { x: 630, y: 140, color: '#a855f7', type: 1 }, { x: 670, y: 170, color: '#f43f5e', type: 2 },
-        { x: 230, y: 320, color: '#38bdf8', type: 1 }, { x: 500, y: 350, color: '#eab308', type: 2 },
-        { x: 380, y: 80, color: '#f43f5e', type: 1 }, { x: 420, y: 90, color: '#38bdf8', type: 2 }
+        { x: 90, y: 130, color: '#f43f5e' }, { x: 130, y: 150, color: '#eab308' },
+        { x: 630, y: 140, color: '#a855f7' }, { x: 670, y: 170, color: '#f43f5e' },
+        { x: 230, y: 320, color: '#38bdf8' }, { x: 500, y: 350, color: '#eab308' },
+        { x: 380, y: 80, color: '#f43f5e' }, { x: 420, y: 90, color: '#38bdf8' }
     ];
 
     let snakes = [
-        { x: 110, y: 160, hp: 5, maxHp: 5, alive: true, attackCooldown: 0, anim: 0 },
-        { x: 650, y: 260, hp: 5, maxHp: 5, alive: true, attackCooldown: 0, anim: 0 }
+        { x: 110, y: 160, hp: 5, maxHp: 5, alive: true, attackCooldown: 0 },
+        { x: 650, y: 260, hp: 5, maxHp: 5, alive: true, attackCooldown: 0 }
     ];
 
     let wolves = [
-        { x: 460, y: 390, hp: 5, maxHp: 5, alive: true, attackCooldown: 0, anim: 0 },
-        { x: 160, y: 390, hp: 5, maxHp: 5, alive: true, attackCooldown: 0, anim: 0 }
+        { x: 460, y: 390, hp: 5, maxHp: 5, alive: true, attackCooldown: 0 },
+        { x: 160, y: 390, hp: 5, maxHp: 5, alive: true, attackCooldown: 0 }
     ];
 
     let pond = { x: 30, y: 210, w: 120, h: 90 };
@@ -367,7 +366,6 @@
 
         snakes.forEach(s => {
             if (!s.alive) return;
-            s.anim += 0.1;
             let dist = Math.hypot(player.x - s.x, player.y - s.y);
             if (dist < 130 && !player.isInsideHouse) {
                 s.x += (player.x > s.x ? 0.75 : -0.75);
@@ -381,7 +379,6 @@
 
         wolves.forEach(w => {
             if (!w.alive) return;
-            w.anim += 0.12;
             let dist = Math.hypot(player.x - w.x, player.y - w.y);
             if (dist < 150 && !player.isInsideHouse) {
                 w.x += (player.x > w.x ? 1.05 : -1.05);
@@ -406,22 +403,22 @@
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
         if (!player.isInsideHouse) {
-            // Langit Senja/Cerah Estetik
+            // Langit
             ctx.fillStyle = '#0284c7';
             ctx.fillRect(0, 0, canvas.width, 120);
-            ctx.fillStyle = '#fde047'; // Matahari Bersinar
+            ctx.fillStyle = '#fde047';
             ctx.beginPath(); ctx.arc(710, 45, 24, 0, Math.PI * 2); ctx.fill();
             ctx.fillStyle = 'rgba(253, 224, 71, 0.25)';
             ctx.beginPath(); ctx.arc(710, 45, 36, 0, Math.PI * 2); ctx.fill();
 
-            // Awan Piksel Rapi
+            // Awan
             ctx.fillStyle = 'rgba(255,255,255,0.92)';
             clouds.forEach(c => {
                 ctx.fillRect(c.x, c.y, 50, 14);
                 ctx.fillRect(c.x + 10, c.y - 6, 30, 8);
             });
 
-            // Burung di Langit
+            // Burung
             ctx.strokeStyle = '#0f172a'; ctx.lineWidth = 2;
             birds.forEach(b => {
                 ctx.beginPath();
@@ -432,23 +429,21 @@
                 ctx.stroke();
             });
 
-            // Tanah Dasar (Rumput Hijau Segar RPG)
+            // Tanah Utama
             ctx.fillStyle = '#15803d';
             ctx.fillRect(0, 120, canvas.width, canvas.height - 120);
-            
-            // Tekstur Gradasi Tanah/Kontur Halus
             ctx.fillStyle = '#166534';
             ctx.fillRect(0, 120, canvas.width, 8);
 
-            // Kolam Air Bentuk Organik & Estetik
-            ctx.fillStyle = '#065f46'; // Pinggiran Air / Tanah Basah
-            ctx.beginPath(); ctx.roundRect(pond.x - 6, pond.y - 6, pond.w + 12, pond.h + 12, 16); ctx.fill();
-            ctx.fillStyle = '#0284c7'; // Air Utama
-            ctx.beginPath(); ctx.roundRect(pond.x, pond.y, pond.w, pond.h, 12); ctx.fill();
-            ctx.fillStyle = '#38bdf8'; // Pantulan Air
-            ctx.beginPath(); ctx.roundRect(pond.x + 10, pond.y + 10, pond.w - 20, pond.h - 20, 8); ctx.fill();
+            // Kolam Air (Sudah diperbaiki dengan rect standar)
+            ctx.fillStyle = '#065f46';
+            ctx.fillRect(pond.x - 6, pond.y - 6, pond.w + 12, pond.h + 12);
+            ctx.fillStyle = '#0284c7';
+            ctx.fillRect(pond.x, pond.y, pond.w, pond.h);
+            ctx.fillStyle = '#38bdf8';
+            ctx.fillRect(pond.x + 10, pond.y + 10, pond.w - 20, pond.h - 20);
 
-            // Teratai & Katak Detail
+            // Teratai & Katak
             lotus.forEach(l => {
                 ctx.fillStyle = '#14532d'; ctx.beginPath(); ctx.arc(l.x + 8, l.y + 6, 8, 0, Math.PI * 2); ctx.fill();
                 ctx.fillStyle = '#f43f5e'; ctx.fillRect(l.x + 5, l.y + 3, 6, 5);
@@ -458,14 +453,14 @@
                 ctx.fillStyle = '#000'; ctx.fillRect(f.x + 2, f.y + 2, 2, 2); ctx.fillRect(f.x + 8, f.y + 2, 2, 2);
             });
 
-            // Bebatuan Alami Berbentuk Bulat-Kotak Piksel Keren
+            // Bebatuan
             rocks.forEach(r => {
                 ctx.fillStyle = '#334155'; ctx.fillRect(r.x, r.y + 8, 24, 12);
                 ctx.fillStyle = '#64748b'; ctx.fillRect(r.x + 3, r.y + 2, 18, 9);
                 ctx.fillStyle = '#94a3b8'; ctx.fillRect(r.x + 6, r.y, 8, 4);
             });
 
-            // Bunga-bunga Berwarna Cantik
+            // Bunga
             flowers.forEach(fl => {
                 ctx.fillStyle = '#166534'; ctx.fillRect(fl.x + 2, fl.y + 4, 2, 6);
                 ctx.fillStyle = fl.color;
@@ -474,7 +469,7 @@
                 ctx.fillStyle = '#fef08a'; ctx.fillRect(fl.x + 2, fl.y, 2, 2);
             });
 
-            // Rumput Liar Melambai Dinamis
+            // Rumput Liar
             ctx.strokeStyle = '#16a34a'; ctx.lineWidth = 1.5;
             grassTufts.forEach(g => {
                 let sway = Math.sin(globalTimer * 0.08 + g.x) * 3;
@@ -483,12 +478,10 @@
                 ctx.stroke();
             });
 
-            // Rumah Kayu Bergaya Klasik RPG (Detail Atap & Dinding Profesional)
-            // Bayangan Rumah
+            // Rumah
             ctx.fillStyle = 'rgba(0,0,0,0.35)';
             ctx.fillRect(house.x - 5, house.y + house.h - 5, house.w + 10, 15);
 
-            // Atap Rumah (Segitiga Bertingkat Estetik)
             ctx.fillStyle = '#7c2d12'; 
             ctx.beginPath();
             ctx.moveTo(house.x - 20, house.y + 10);
@@ -497,23 +490,36 @@
             ctx.fill();
             ctx.strokeStyle = '#451a03'; ctx.lineWidth = 3; ctx.stroke();
 
-            // Tekstur Garis Atap
             ctx.strokeStyle = '#9a3412'; ctx.lineWidth = 2;
             ctx.beginPath();
             ctx.moveTo(house.x + house.w/2 - 15, house.y - 25); ctx.lineTo(house.x + house.w/2 + 15, house.y - 25);
             ctx.stroke();
 
-            // Dinding Kayu Utama
             ctx.fillStyle = '#b45309'; 
             ctx.fillRect(house.x, house.y + 10, house.w, house.h - 10);
             ctx.strokeStyle = '#78350f'; ctx.lineWidth = 3; ctx.strokeRect(house.x, house.y + 10, house.w, house.h - 10);
 
-            // Jendela Kiri & Kanan Berbingkai
+            // Jendela
             ctx.fillStyle = '#38bdf8';
             ctx.fillRect(house.x + 22, house.y + 30, 26, 26);
             ctx.fillRect(house.x + house.w - 48, house.y + 30, 26, 26);
             ctx.strokeStyle = '#451a03'; ctx.lineWidth = 2;
             ctx.strokeRect(house.x + 22, house.y + 30, 26, 26);
             ctx.strokeRect(house.x + house.w - 48, house.y + 30, 26, 26);
-            // Salib Jendela
-          
+
+            ctx.beginPath();
+            ctx.moveTo(house.x + 35, house.y + 30); ctx.lineTo(house.x + 35, house.y + 56);
+            ctx.moveTo(house.x + 22, house.y + 43); ctx.lineTo(house.x + 48, house.y + 43);
+            ctx.moveTo(house.x + house.w - 35, house.y + 30); ctx.lineTo(house.x + house.w - 35, house.y + 56);
+            ctx.moveTo(house.x + house.w - 48, house.y + 43); ctx.lineTo(house.x + house.w - 22, house.y + 43);
+            ctx.stroke();
+
+            // Pintu
+            ctx.fillStyle = '#451a03';
+            ctx.fillRect(house.doorX - house.x - 14, house.doorY - house.y - 38, 28, 48);
+            ctx.fillStyle = '#f59e0b'; ctx.fillRect(house.doorX - house.x + 5, house.doorY - house.y - 16, 4, 6);
+
+            // Pohon
+            trees.forEach(t => {
+                if (!t.alive) return;
+                ctx.fillStyle = 'rgba(0,0,0,0.
