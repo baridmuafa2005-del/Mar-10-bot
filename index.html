@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Pixel Survival RPG</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
+        * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
         body { 
             background: #0f0f13; 
             color: #fff; 
@@ -36,12 +36,12 @@
         #nameModal {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.9);
+            background: rgba(0,0,0,0.95);
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            z-index: 9999; /* Urutan teratas */
+            z-index: 99999;
             pointer-events: auto;
         }
         #nameModal h2 {
@@ -51,7 +51,7 @@
             text-align: center;
         }
         #playerNameInput {
-            padding: 10px;
+            padding: 12px;
             font-size: 16px;
             font-family: monospace;
             background: #222;
@@ -65,14 +65,14 @@
             max-width: 250px;
         }
         #startBtn {
-            padding: 12px 24px;
+            padding: 14px 28px;
             background: #4ade80;
             color: #000;
             font-weight: bold;
             font-size: 14px;
             border: none;
-            cursor: pointer;
             border-radius: 5px;
+            cursor: pointer;
             touch-action: manipulation;
         }
         #startBtn:active { background: #22c55e; }
@@ -147,7 +147,7 @@
             justify-content: center;
             align-items: center;
             cursor: pointer;
-            touch-action: none;
+            touch-action: manipulation;
         }
         .btn-act:active { background: rgba(255,255,255,0.4); }
 
@@ -167,6 +167,7 @@
             font-size: 10px;
             border-radius: 4px;
             cursor: pointer;
+            touch-action: manipulation;
         }
     </style>
 </head>
@@ -176,7 +177,7 @@
     <!-- Modal Input Nama -->
     <div id="nameModal">
         <h2>MASUKKAN NAMA KARAKTER</h2>
-        <input type="text" id="playerNameInput" placeholder="Nama..." maxlength="12">
+        <input type="text" id="playerNameInput" placeholder="Nama..." maxlength="12" autocomplete="off">
         <button id="startBtn">MULAI BERPETUALANG</button>
     </div>
 
@@ -252,13 +253,11 @@
         { x: 300, y: 50, speed: 1.0 }
     ];
 
-    // FIX EVENT LISTENER TOMBOL MULAI
-    document.getElementById('startBtn').addEventListener('click', startGame);
-    document.getElementById('pauseBtn').addEventListener('click', togglePause);
-    document.getElementById('actBtn').addEventListener('click', doAction);
-    document.getElementById('hudInv').addEventListener('click', healPlayer);
-
-    function startGame() {
+    // FIX UTAMA: Support Event Click & Touch Langsung di Mobile
+    const startBtn = document.getElementById('startBtn');
+    
+    function triggerStart(e) {
+        if (e) e.preventDefault();
         const input = document.getElementById('playerNameInput').value.trim();
         if (!input) {
             alert('Nama karakter wajib diisi!');
@@ -268,6 +267,18 @@
         document.getElementById('nameModal').style.display = 'none';
         gameStarted = true;
     }
+
+    startBtn.addEventListener('click', triggerStart);
+    startBtn.addEventListener('touchend', triggerStart, { passive: false });
+
+    document.getElementById('pauseBtn').addEventListener('click', togglePause);
+    document.getElementById('pauseBtn').addEventListener('touchend', (e) => { e.preventDefault(); togglePause(); }, { passive: false });
+
+    document.getElementById('actBtn').addEventListener('click', doAction);
+    document.getElementById('actBtn').addEventListener('touchend', (e) => { e.preventDefault(); doAction(); }, { passive: false });
+
+    document.getElementById('hudInv').addEventListener('click', healPlayer);
+    document.getElementById('hudInv').addEventListener('touchend', (e) => { e.preventDefault(); healPlayer(); }, { passive: false });
 
     function togglePause() {
         if (!gameStarted) return;
@@ -537,23 +548,4 @@
             ctx.fillStyle = '#451a03'; ctx.fillRect(house.x + house.w - 35, house.y + 12, 25, 40);
             ctx.fillStyle = '#fbbf24'; ctx.fillRect(house.x + house.w - 24, house.y + 30, 2, 6);
 
-            ctx.fillStyle = '#334155'; ctx.fillRect(house.x + 15, house.y + 55, 45, 20);
-            ctx.fillStyle = '#475569';
-            ctx.fillRect(house.x + 12, house.y + 50, 8, 25); ctx.fillRect(house.x + 55, house.y + 50, 8, 25);
-
-            ctx.fillStyle = '#b45309'; ctx.fillRect(house.x + 70, house.y + 40, 25, 20);
-
-            drawPlayerSprite();
-        }
-    }
-
-    function drawPlayerSprite() {
-        ctx.fillStyle = '#1e293b';
-        ctx.fillRect(player.x + 4, player.y + player.h - 6, 4, 6);
-        ctx.fillRect(player.x + 12, player.y + player.h - 6, 4, 6);
-
-        ctx.fillStyle = '#2563eb';
-        ctx.fillRect(player.x + 2, player.y + 10, player.w - 4, 14);
-
-        ctx.fillStyle = '#fbcfe8';
-        ctx.fillRect(player.x + 3, playe
+            ctx.fillStyle = '#334155'; ctx.fillRect(house.x + 15, house.y + 55, 45, 20
