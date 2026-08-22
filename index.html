@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Pixel Survival RPG</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
+        body { 
+            background: #0f0f13; 
+            color: #fff; 
+            font-family: monospace; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            height: 100vh; 
+            overflow: hidden;
+        }
+        #gameContainer {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            max-width: 800px;
+            max-height: 450px;
+            background: #4ade80;
+            overflow: hidden;
+        }
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            image-rendering: pixelated;
+        }
+
+        /* Modal Nama Fix Interaksi */
+        #nameModal {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.95);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 99999;
+            pointer-events: auto;
+        }
+        #nameModal h2 {
+            color: #4ade80;
+            font-size: 14px;
+            margin-bottom: 12px;
+            text-align: center;
+        }
+        #playerNameInput {
+            padding: 12px;
+            font-size: 16px;
+            font-family: monospace;
+            background: #222;
+            color: #fff;
+            border: 2px solid #4ade80;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            text-align: center;
+            outline: none;
+            width: 80%;
+            max-width: 250px;
+        }
+        #startBtn {
+            padding: 14px 28px;
+            background: #4ade80;
+            color: #000;
+            font-weight: bold;
+            font-size: 14px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            touch-action: manipulation;
+        }
+        #startBtn:active { background: #22c55e; }
+
+        /* HUD Layer */
+        .ui-layer {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 10px;
+            z-index: 10;
+        }
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+        .stats-box, .inventory-box {
+            background: rgba(0, 0, 0, 0.75);
+            border: 2px solid #fff;
+            padding: 6px 10px;
+            font-size: 11px;
+            border-radius: 4px;
+        }
+        .inventory-box { text-align: right; pointer-events: auto; cursor: pointer; }
+
+        /* Controls */
+        .controls-layer {
+            position: absolute;
+            bottom: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            padding: 15px;
+            z-index: 20;
+        }
+        .joystick-area {
+            width: 90px; height: 90px;
+            background: rgba(255,255,255,0.15);
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            position: relative;
+            pointer-events: auto;
+            touch-action: none;
+        }
+        .joystick-knob {
+            width: 36px; height: 36px;
+            background: rgba(255,255,255,0.6);
+            border-radius: 50%;
+            position: absolute;
+            top: 27px; left: 27px;
+            pointer-events: none;
+        }
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            pointer-events: auto;
+        }
+        .btn-act {
+            width: 55px; height: 55px;
+            background: rgba(0, 0, 0, 0.7);
+            border: 2px solid #fff;
+            border-radius: 50%;
+            color: #fff;
+            font-size: 10px;
+            font-weight: bold;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            touch-action: manipulation;
+        }
+        .btn-act:active { background: rgba(255,255,255,0.4); }
+
+        .bottom-center-ctrl {
+            position: absolute;
+            bottom: 12px;
+            left: 50%;
+            transform: translateX(-50%);
+            pointer-events: auto;
+            z-index: 30;
+        }
+        .btn-pause {
+            background: rgba(0,0,0,0.8);
+            border: 2px solid #fff;
+            color: #fff;
+            padding: 6px 14px;
+            font-size: 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            touch-action: manipulation;
+        }
+    </style>
+</head>
+<body>
+
+<div id="gameContainer">
+    <!-- Modal Input Nama -->
+    <div id="nameModal">
+        <h2>MASUKKAN NAMA KARAKTER</h2>
+        <input type="text" id="playerNameInput" placeholder="Nama..." maxlength="12" autocomplete="off">
+        <button id="startBtn">MULAI BERPETUALANG</button>
+    </div>
+
+    <canvas id="gameCanvas" width="800" height="450"></canvas>
+
+    <div class="ui-layer">
+        <div class="top-bar">
+            <div class="stats-box" id="hudStats">HP: 100/100<br>NAMA: -</div>
+            <div class="inventory-box" id="hudInv">🪵 Kayu: 0<br>🍓 Berry: 0 (Klik: Heal)</div>
+        </div>
+    </div>
+
+    <div class="bottom-center-ctrl">
+        <button class="btn-pause" id="pauseBtn">PAUSE</button>
+    </div>
+
+    <div class="controls-layer">
+        <div class="joystick-area" id="joystick">
+            <div class="joystick-knob" id="joystickKnob"></div>
+        </div>
+        <div class="action-buttons">
+            <button class="btn-act" id="actBtn">AKSI</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    ctx.imageSmoothingEnabled = false;
+
+    let gameStarted = false;
+    let isPaused = false;
+    let playerName = "";
+    let windAngle = 0; 
+
+    let player = {
+        x: 400, y: 240, w: 20, h: 28,
+        speed: 2.2, hp: 100, maxHp: 100,
+        dir: 'down', isInsideHouse: false,
+        wood: 0, berries: 0
+    };
+
+    let house = { x: 340, y: 150, w: 120, h: 90, doorX: 390, doorY: 230 };
+    let trees = [
+        { x: 120, y: 90, hp: 4, maxHp: 4, alive: true },
+        { x: 650, y: 110, hp: 4, maxHp: 4, alive: true },
+        { x: 150, y: 330, hp: 4, maxHp: 4, alive: true },
+        { x: 620, y: 340, hp: 4, maxHp: 4, alive: true }
+    ];
+    let bushes = [
+        { x: 250, y: 110, hp: 2, maxHp: 2, alive: true },
+        { x: 520, y: 130, hp: 2, maxHp: 2, alive: true },
+        { x: 230, y: 280, hp: 2, maxHp: 2, alive: true }
+    ];
+    let snakes = [
+        { x: 100, y: 200, hp: 5, maxHp: 5, alive: true, attackCooldown: 0 },
+        { x: 700, y: 250, hp: 5, maxHp: 5, alive: true, attackCooldown: 0 }
+    ];
+    let wolves = [
+        { x: 500, y: 360, hp: 5, maxHp: 5, alive: true, attackCooldown: 0 }
+    ];
+    let pond = { x: 50, y: 260, w: 130, h: 90 };
+    let frogs = [{ x: 70, y: 290 }, { x: 130, y: 320 }];
+    let lotus = [{ x: 80, y: 280 }, { x: 120, y: 330 }];
+    let clouds = [
+        { x: 100, y: 40, speed: 0.2 },
+        { x: 400, y: 60, speed: 0.15 },
+        { x: 650, y: 30, speed: 0.25 }
+    ];
+    let birds = [
+        { x: 50, y: 80, speed: 0.8 },
+        { x: 300, y: 50, speed: 1.0 }
+    ];
+
+    // FIX UTAMA: Support Event Click & Touch Langsung di Mobile
+    const startBtn = document.getElementById('startBtn');
+    
+    function triggerStart(e) {
+        if (e) e.preventDefault();
+        const input = document.getElementById('playerNameInput').value.trim();
+        if (!input) {
+            alert('Nama karakter wajib diisi!');
+            return;
+        }
+        playerName = input;
+        document.getElementById('nameModal').style.display = 'none';
+        gameStarted = true;
+    }
+
+    startBtn.addEventListener('click', triggerStart);
+    startBtn.addEventListener('touchend', triggerStart, { passive: false });
+
+    document.getElementById('pauseBtn').addEventListener('click', togglePause);
+    document.getElementById('pauseBtn').addEventListener('touchend', (e) => { e.preventDefault(); togglePause(); }, { passive: false });
+
+    document.getElementById('actBtn').addEventListener('click', doAction);
+    document.getElementById('actBtn').addEventListener('touchend', (e) => { e.preventDefault(); doAction(); }, { passive: false });
+
+    document.getElementById('hudInv').addEventListener('click', healPlayer);
+    document.getElementById('hudInv').addEventListener('touchend', (e) => { e.preventDefault(); healPlayer(); }, { passive: false });
+
+    function togglePause() {
+        if (!gameStarted) return;
+        isPaused = !isPaused;
+        document.getElementById('pauseBtn').innerText = isPaused ? "RESUME" : "PAUSE";
+    }
+
+    function healPlayer() {
+        if (player.berries > 0 && player.hp < player.maxHp) {
+            player.berries--;
+            player.hp = Math.min(player.maxHp, player.hp + 25);
+        }
+    }
+
+    // Joystick Handler
+    let joystickData = { active: false, x: 0, y: 0, vx: 0, vy: 0 };
+    const joystick = document.getElementById('joystick');
+    const knob = document.getElementById('joystickKnob');
+
+    joystick.addEventListener('pointerdown', (e) => {
+        joystickData.active = true;
+        updateJoystick(e);
+    });
+    window.addEventListener('pointermove', (e) => {
+        if (joystickData.active) updateJoystick(e);
+    });
+    window.addEventListener('pointerup', () => {
+        joystickData.active = false;
+        joystickData.vx = 0; joystickData.vy = 0;
+        knob.style.transform = `translate(0px, 0px)`;
+    });
+
+    function updateJoystick(e) {
+        const rect = joystick.getBoundingClientRect();
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top + rect.height / 2;
+        const dx = e.clientX - centerX;
+        const dy = e.clientY - centerY;
+        const dist = Math.hypot(dx, dy);
+        const maxDist = 30;
+        let angle = Math.atan2(dy, dx);
+        let clampedDist = Math.min(dist, maxDist);
+        let kx = Math.cos(angle) * clampedDist;
+        let ky = Math.sin(angle) * clampedDist;
+        knob.style.transform = `translate(${kx}px, ${ky}px)`;
+        joystickData.vx = (kx / maxDist);
+        joystickData.vy = (ky / maxDist);
+    }
+
+    function doAction() {
+        if (!gameStarted || isPaused) return;
+
+        let distToDoor = Math.hypot(player.x - house.doorX, player.y - house.doorY);
+        if (distToDoor < 35) {
+            player.isInsideHouse = !player.isInsideHouse;
+            player.x = house.doorX;
+            player.y = player.isInsideHouse ? house.doorY + 15 : house.doorY - 15;
+            return;
+        }
+
+        if (player.isInsideHouse) return;
+
+        trees.forEach(t => {
+            if (t.alive && Math.hypot(player.x - t.x, player.y - t.y) < 45) {
+                t.hp--;
+                if (t.hp <= 0) { t.alive = false; player.wood += 2; }
+            }
+        });
+
+        bushes.forEach(b => {
+            if (b.alive && Math.hypot(player.x - b.x, player.y - b.y) < 35) {
+                b.hp--;
+                if (b.hp <= 0) { b.alive = false; player.berries += 3; }
+            }
+        });
+
+        snakes.forEach(s => {
+            if (s.alive && Math.hypot(player.x - s.x, player.y - s.y) < 35) {
+                s.hp--;
+                if (s.hp <= 0) s.alive = false;
+            }
+        });
+
+        wolves.forEach(w => {
+            if (w.alive && Math.hypot(player.x - w.x, player.y - w.y) < 40) {
+                w.hp--;
+                if (w.hp <= 0) w.alive = false;
+            }
+        });
+    }
+
+    function update() {
+        if (!gameStarted || isPaused) return;
+
+        if (joystickData.vx !== 0 || joystickData.vy !== 0) {
+            player.x += joystickData.vx * player.speed;
+            player.y += joystickData.vy * player.speed;
+            if (Math.abs(joystickData.vx) > Math.abs(joystickData.vy)) {
+                player.dir = joystickData.vx > 0 ? 'right' : 'left';
+            } else {
+                player.dir = joystickData.vy > 0 ? 'down' : 'up';
+            }
+        }
+
+        if (!player.isInsideHouse) {
+            player.x = Math.max(15, Math.min(canvas.width - 15, player.x));
+            player.y = Math.max(120, Math.min(canvas.height - 15, player.y));
+        } else {
+            player.x = Math.max(house.x + 15, Math.min(house.x + house.w - 15, player.x));
+            player.y = Math.max(house.y + 30, Math.min(house.y + house.h - 10, player.y));
+        }
+
+        windAngle += 0.05;
+        clouds.forEach(c => { c.x += c.speed; if (c.x > canvas.width + 50) c.x = -50; });
+        birds.forEach(b => { b.x += b.speed; if (b.x > canvas.width + 20) b.x = -20; });
+
+        snakes.forEach(s => {
+            if (!s.alive) return;
+            let dist = Math.hypot(player.x - s.x, player.y - s.y);
+            if (dist < 110 && !player.isInsideHouse) {
+                s.x += (player.x > s.x ? 0.6 : -0.6);
+                s.y += (player.y > s.y ? 0.6 : -0.6);
+                if (dist < 20) {
+                    s.attackCooldown++;
+                    if (s.attackCooldown > 50) { player.hp -= 15; s.attackCooldown = 0; }
+                }
+            }
+        });
+
+        wolves.forEach(w => {
+            if (!w.alive) return;
+            let dist = Math.hypot(player.x - w.x, player.y - w.y);
+            if (dist < 130 && !player.isInsideHouse) {
+                w.x += (player.x > w.x ? 0.9 : -0.9);
+                w.y += (player.y > w.y ? 0.9 : -0.9);
+                if (dist < 25) {
+                    w.attackCooldown++;
+                    if (w.attackCooldown > 45) { player.hp -= 15; w.attackCooldown = 0; }
+                }
+            }
+        });
+
+        if (player.hp <= 0) {
+            alert("Karaktermu kehabisan darah dan mati! Game Over.");
+            window.location.reload();
+        }
+
+        document.getElementById('hudStats').innerHTML = `HP: ${player.hp}/${player.maxHp}<br>NAMA: ${playerName}`;
+        document.getElementById('hudInv').innerHTML = `🪵 Kayu: ${player.wood}<br>🍓 Berry: ${player.berries} (Klik: Heal)`;
+    }
+
+    function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        if (!player.isInsideHouse) {
+            ctx.fillStyle = '#38bdf8';
+            ctx.fillRect(0, 0, canvas.width, 120);
+            ctx.fillStyle = '#fef08a';
+            ctx.beginPath(); ctx.arc(710, 45, 24, 0, Math.PI * 2); ctx.fill();
+
+            ctx.fillStyle = 'rgba(255,255,255,0.85)';
+            clouds.forEach(c => {
+                ctx.fillRect(c.x, c.y, 40, 14);
+                ctx.fillRect(c.x + 10, c.y - 6, 20, 8);
+            });
+
+            ctx.strokeStyle = '#0f172a'; ctx.lineWidth = 2;
+            birds.forEach(b => {
+                ctx.beginPath();
+                let wing = Math.sin(Date.now() * 0.01) * 5;
+                ctx.moveTo(b.x, b.y);
+                ctx.quadraticCurveTo(b.x + 8, b.y - 10 + wing, b.x + 16, b.y);
+                ctx.quadraticCurveTo(b.x + 24, b.y - 10 + wing, b.x + 32, b.y);
+                ctx.stroke();
+            });
+
+            ctx.fillStyle = '#4ade80';
+            ctx.fillRect(0, 120, canvas.width, canvas.height - 120);
+
+            ctx.strokeStyle = '#15803d'; ctx.lineWidth = 1.5;
+            for (let i = 15; i < canvas.width; i += 25) {
+                let sway = Math.sin(windAngle + i) * 4;
+                ctx.beginPath(); ctx.moveTo(i, 440);
+                ctx.quadraticCurveTo(i + sway, 425, i + sway * 1.5, 415);
+                ctx.stroke();
+            }
+
+            ctx.fillStyle = '#0284c7';
+            ctx.fillRect(pond.x, pond.y, pond.w, pond.h);
+            ctx.fillStyle = '#38bdf8';
+            ctx.fillRect(pond.x + 10, pond.y + 10, pond.w - 20, pond.h - 20);
+
+            lotus.forEach(l => {
+                ctx.fillStyle = '#22c55e'; ctx.fillRect(l.x, l.y, 14, 8);
+                ctx.fillStyle = '#f43f5e'; ctx.fillRect(l.x + 4, l.y + 2, 6, 4);
+            });
+
+            frogs.forEach(f => {
+                ctx.fillStyle = '#16a34a'; ctx.fillRect(f.x, f.y + 2, 12, 8);
+                ctx.fillRect(f.x + 2, f.y, 3, 3); ctx.fillRect(f.x + 7, f.y, 3, 3);
+                ctx.fillStyle = '#15803d';
+                ctx.fillRect(f.x - 2, f.y + 6, 4, 4); ctx.fillRect(f.x + 10, f.y + 6, 4, 4);
+            });
+
+            ctx.fillStyle = '#7c2d12';
+            ctx.beginPath();
+            ctx.moveTo(house.x - 10, house.y);
+            ctx.lineTo(house.x + house.w / 2, house.y - 35);
+            ctx.lineTo(house.x + house.w + 10, house.y);
+            ctx.fill();
+            ctx.fillStyle = '#a16207';
+            ctx.fillRect(house.x, house.y, house.w, house.h);
+            ctx.fillStyle = '#38bdf8';
+            ctx.fillRect(house.x + 15, house.y + 20, 18, 18);
+            ctx.fillRect(house.x + house.w - 33, house.y + 20, 18, 18);
+            ctx.fillStyle = '#451a03';
+            ctx.fillRect(house.doorX - 10, house.doorY - 25, 20, 35);
+
+            trees.forEach(t => {
+                if (!t.alive) return;
+                ctx.fillStyle = '#78350f';
+                ctx.fillRect(t.x + 12, t.y + 35, 12, 25);
+                ctx.fillStyle = '#166534';
+                ctx.fillRect(t.x, t.y + 10, 36, 30);
+                ctx.fillStyle = '#22c55e';
+                ctx.fillRect(t.x + 6, t.y, 24, 24);
+            });
+
+            bushes.forEach(b => {
+                if (!b.alive) return;
+                ctx.fillStyle = '#15803d'; ctx.fillRect(b.x, b.y, 26, 20);
+                ctx.fillStyle = '#16a34a'; ctx.fillRect(b.x + 4, b.y - 4, 18, 14);
+                ctx.fillStyle = '#dc2626';
+                ctx.fillRect(b.x + 4, b.y + 4, 4, 4);
+                ctx.fillRect(b.x + 14, b.y + 8, 4, 4);
+                ctx.fillRect(b.x + 9, b.y + 2, 4, 4);
+            });
+
+            snakes.forEach(s => {
+                if (!s.alive) return;
+                ctx.fillStyle = '#ca8a04'; ctx.fillRect(s.x, s.y + 4, 22, 6);
+                ctx.fillRect(s.x + 18, s.y, 8, 8);
+                ctx.fillStyle = '#000'; ctx.fillRect(s.x + 22, s.y + 2, 2, 2);
+                ctx.fillStyle = '#991b1b'; ctx.fillRect(s.x + 26, s.y + 3, 4, 2);
+            });
+
+            wolves.forEach(w => {
+                if (!w.alive) return;
+                ctx.fillStyle = '#475569'; ctx.fillRect(w.x, w.y + 6, 28, 14);
+                ctx.fillRect(w.x + 20, w.y, 12, 12);
+                ctx.fillStyle = '#334155';
+                ctx.fillRect(w.x + 22, w.y - 4, 3, 5); ctx.fillRect(w.x + 28, w.y - 4, 3, 5);
+                ctx.fillRect(w.x - 6, w.y + 8, 6, 3);
+                ctx.fillStyle = '#f8fafc'; ctx.fillRect(w.x + 28, w.y + 4, 2, 2);
+            });
+
+            drawPlayerSprite();
+
+        } else {
+            ctx.fillStyle = '#1c1917'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#78350f'; ctx.fillRect(house.x, house.y, house.w, house.h);
+            ctx.strokeStyle = '#451a03'; ctx.lineWidth = 2; ctx.strokeRect(house.x, house.y, house.w, house.h);
+
+            ctx.fillStyle = '#991b1b'; ctx.fillRect(house.x + 12, house.y + 12, 35, 22);
+            ctx.fillStyle = '#f1f5f9'; ctx.fillRect(house.x + 15, house.y + 15, 10, 8);
+
+            ctx.fillStyle = '#451a03'; ctx.fillRect(house.x + house.w - 35, house.y + 12, 25, 40);
+            ctx.fillStyle = '#fbbf24'; ctx.fillRect(house.x + house.w - 24, house.y + 30, 2, 6);
+
+            ctx.fillStyle = '#334155'; ctx.fillRect(house.x + 15, house.y + 55, 45, 20);
+            ctx.fillStyle = '#475569';
+            ctx.fillRect(house.x + 12, house.y + 50, 8, 25); ctx.fillRect(house.x + 55, house.y + 50, 8, 25);
+
+            ctx.fillStyle = '#b45309'; ctx.fillRect(house.x + 70, house.y + 40, 25, 20);
+
+            drawPlayerSprite();
+        }
+    }
+
+    function drawPlayerSprite() {
+        ctx.fillStyle = '#1e293b';
+        ctx.fillRect(player.x + 4, player.y + player.h - 6, 4, 6);
+        ctx.fillRect(player.x + 12, player.y + player.h - 6, 4, 6);
+
+        ctx.fillStyle = '#2563eb';
+        ctx.fillRect(player.x + 2, player.y + 10, player.w - 4, 14);
+
+        ctx.fillStyle = '#fbcfe8';
+        ctx.fillRect(player.x + 3, player.y + 2, 14, 10);
+
+        ctx.fillStyle = '#b45309';
+        ctx.fillRect(player.x + 3, player.y, 14, 4);
+        ctx.fillRect(player.x + 2, player.y + 2, 3, 6);
+
+        ctx.fillStyle = '#0f172a';
+        if (player.dir === 'right') {
+            ctx.fillRect(player.x + 13, player.y + 5, 2, 2);
+        } else if (player.dir === 'left') {
+            ctx.fillRect(player.x + 5, player.y + 5, 2, 2);
+        } else {
+            ctx.fillRect(player.x + 6, player.y + 5, 2, 2);
+            ctx.fillRect(player.x + 12, player.y + 5, 2, 2);
+        }
+    }
+
+    function mainLoop() {
+        update();
+        draw();
+        requestAnimationFrame(mainLoop);
+    }
+
+    mainLoop();
+</script>
+</body>
+</html>
