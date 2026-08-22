@@ -556,4 +556,70 @@
             // Kasur Nyaman (Bantal + Selimut Merah)
             ctx.fillStyle = '#991b1b';
             ctx.fillRect(house.x + 12, house.y + 12, 35, 22);
-            ctx.fillStyle =
+            ctx.fillStyle = '#f1f5f9'; // Bantal
+            ctx.fillRect(house.x + 15, house.y + 15, 10, 8);
+
+            // Lemari Besar Kayu
+            ctx.fillStyle = '#451a03';
+            ctx.fillRect(house.x + house.w - 35, house.y + 12, 25, 40);
+            ctx.fillStyle = '#fbbf24'; // Gagang lemari
+            ctx.fillRect(house.x + house.w - 24, house.y + 30, 2, 6);
+
+            // Sofa Santai
+            ctx.fillStyle = '#334155';
+            ctx.fillRect(house.x + 15, house.y + 55, 45, 20);
+            ctx.fillStyle = '#475569';
+            ctx.fillRect(house.x + 12, house.y + 50, 8, 25);
+            ctx.fillRect(house.x + 55, house.y + 50, 8, 25);
+
+            // Meja Tengah
+            ctx.fillStyle = '#b45309';
+            ctx.fillRect(house.x + 70, house.y + 40, 25, 20);
+
+            drawPlayerSprite();
+        }
+    }
+
+    // Karakter Cowok (Rambut, Kepala, Baju, Celana, Tangan)
+    function drawPlayerSprite() {
+        // Kaki
+        ctx.fillStyle = '#1e293b';
+        ctx.fillRect(player.x + 4, player.y + player.h - 6, 4, 6);
+        ctx.fillRect(player.x + 12, player.y + player.h - 6, 4, 6);
+
+        // Badan / Baju
+        ctx.fillStyle = '#2563eb';
+        ctx.fillRect(player.x + 2, player.y + 10, player.w - 4, 14);
+
+        // Kepala & Muka
+        ctx.fillStyle = '#fbcfe8';
+        ctx.fillRect(player.x + 3, player.y + 2, 14, 10);
+
+        // Rambut Cowok Keren
+        ctx.fillStyle = '#b45309';
+        ctx.fillRect(player.x + 3, player.y, 14, 4);
+        ctx.fillRect(player.x + 2, player.y + 2, 3, 6);
+
+        // Mata & Detail Muka
+        ctx.fillStyle = '#0f172a';
+        if (player.dir === 'right') {
+            ctx.fillRect(player.x + 13, player.y + 5, 2, 2);
+        } else if (player.dir === 'left') {
+            ctx.fillRect(player.x + 5, player.y + 5, 2, 2);
+        } else {
+            ctx.fillRect(player.x + 6, player.y + 5, 2, 2);
+            ctx.fillRect(player.x + 12, player.y + 5, 2, 2);
+        }
+    }
+
+    function mainLoop() {
+        update();
+        draw();
+        requestAnimationFrame(mainLoop);
+    }
+
+    mainLoop();
+</script>
+</body>
+</html>
+
