@@ -2,524 +2,295 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Pixel Survival RPG - Fixed Edition</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Custom Music Rhythm Tiles</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
-        body { 
-            background: #09090b; 
-            color: #fff; 
-            font-family: monospace; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            height: 100vh; 
-            overflow: hidden;
-        }
-        #gameContainer {
-            position: relative;
-            width: 100vw;
-            height: 100vh;
-            max-width: 800px;
-            max-height: 450px;
-            background: #15803d;
-            overflow: hidden;
-            box-shadow: 0 0 25px rgba(0,0,0,0.9);
-            border: 4px solid #1e293b;
-        }
-        canvas {
-            display: block;
-            width: 100%;
-            height: 100%;
-            image-rendering: pixelated;
-        }
-
-        /* HUD Layer */
-        .ui-layer {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            pointer-events: none;
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #0f172a;
+            color: #fff;
+            font-family: sans-serif;
             display: flex;
             flex-direction: column;
-            justify-content: space-between;
-            padding: 12px;
-            z-index: 10;
-        }
-        .top-bar {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-        }
-        .stats-box, .inventory-box {
-            background: rgba(15, 23, 42, 0.9);
-            border: 2px solid #38bdf8;
-            padding: 8px 12px;
-            font-size: 11px;
-            border-radius: 6px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.4);
-            text-shadow: 1px 1px #000;
-        }
-        .inventory-box { text-align: right; pointer-events: auto; cursor: pointer; }
-        .inventory-box:active { background: rgba(30, 41, 59, 0.95); transform: scale(0.98); }
-
-        /* Controls */
-        .controls-layer {
-            position: absolute;
-            bottom: 0; left: 0; width: 100%; height: 100%;
-            pointer-events: none;
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-end;
-            padding: 15px;
-            z-index: 20;
-        }
-        .joystick-area {
-            width: 110px; height: 110px;
-            background: rgba(255,255,255,0.08);
-            border: 2px solid rgba(255,255,255,0.25);
-            border-radius: 50%;
-            position: relative;
-            pointer-events: auto;
-            touch-action: none;
-        }
-        .joystick-knob {
-            width: 45px; height: 45px;
-            background: rgba(255,255,255,0.75);
-            border-radius: 50%;
-            position: absolute;
-            top: 32.5px; left: 32.5px;
-            pointer-events: none;
-            box-shadow: 0 3px 6px rgba(0,0,0,0.4);
-        }
-        .action-buttons {
-            display: flex;
-            gap: 12px;
-            pointer-events: auto;
-        }
-        .btn-act {
-            width: 65px; height: 65px;
-            background: rgba(15, 23, 42, 0.85);
-            border: 2px solid #4ade80;
-            border-radius: 50%;
-            color: #fff;
-            font-size: 11px;
-            font-weight: bold;
-            display: flex;
-            justify-content: center;
             align-items: center;
-            cursor: pointer;
-            touch-action: manipulation;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.4);
-            text-shadow: 1px 1px #000;
+            justify-content: center;
+            min-height: 100vh;
+            overflow: hidden;
         }
-        .btn-act:active { background: #166534; transform: scale(0.93); }
 
-        .bottom-center-ctrl {
-            position: absolute;
-            bottom: 15px;
-            left: 50%;
-            transform: translateX(-50%);
-            pointer-events: auto;
-            z-index: 30;
+        #setup-screen {
+            text-align: center;
+            background: #1e293b;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            max-width: 400px;
+            width: 90%;
         }
-        .btn-pause {
-            background: rgba(15, 23, 42, 0.85);
-            border: 2px solid #fff;
-            color: #fff;
-            padding: 6px 18px;
-            font-size: 10px;
-            border-radius: 6px;
+
+        input[type="file"] { display: none; }
+        
+        .btn {
+            background: #3b82f6;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
             cursor: pointer;
-            touch-action: manipulation;
-            box-shadow: 0 3px 6px rgba(0,0,0,0.3);
+            font-weight: bold;
+            margin-top: 15px;
+            display: inline-block;
+        }
+        .btn:hover { background: #2563eb; }
+
+        #game-container {
+            display: none;
+            position: relative;
+            width: 360px;
+            height: 600px;
+            background: #1e1e2e;
+            border: 4px solid #313244;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        canvas { display: block; width: 100%; height: 100%; }
+
+        .key-hints {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 60px;
+            display: flex;
+            background: rgba(0,0,0,0.4);
+            border-top: 2px solid #89b4fa;
+        }
+
+        .key-box {
+            flex: 1;
+            border-right: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: bold;
+            color: #cdd6f4;
+        }
+        .key-box:last-child { border-right: none; }
+        .key-box.active { background: rgba(137, 180, 250, 0.4); }
+
+        #score-board {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            text-shadow: 1px 1px 2px #000;
         }
     </style>
 </head>
 <body>
 
-<div id="gameContainer">
-    <canvas id="gameCanvas" width="800" height="450"></canvas>
+<div id="setup-screen">
+    <h2>🎵 Custom Music Tiles</h2>
+    <p style="margin-top:10px; font-size:14px; color:#94a3b8;">Import lagu MP3/WAV dari perangkat kamu buat dimainin!</p>
+    
+    <label class="btn" style="margin-top:20px;">
+        Pilih Lagu
+        <input type="file" id="audio-input" accept="audio/*">
+    </label>
+    <div id="file-name" style="margin-top:10px; font-size:12px; color:#38bdf8;"></div>
+    
+    <button class="btn" id="start-btn" style="display:none; background:#22c55e;">Mulai Game</button>
+</div>
 
-    <div class="ui-layer">
-        <div class="top-bar">
-            <div class="stats-box" id="hudStats">HP: 100/100<br>NAMA: Gg</div>
-            <div class="inventory-box" id="hudInv">🪵 Kayu: 0<br>🍓 Berry: 0 <br><span style="color:#f43f5e; font-size:9px;">[Tekan untuk Heal]</span></div>
-        </div>
-    </div>
-
-    <div class="bottom-center-ctrl">
-        <button class="btn-pause" id="pauseBtn">PAUSE</button>
-    </div>
-
-    <div class="controls-layer">
-        <div class="joystick-area" id="joystick">
-            <div class="joystick-knob" id="joystickKnob"></div>
-        </div>
-        <div class="action-buttons">
-            <button class="btn-act" id="actBtn">AKSI</button>
-        </div>
+<div id="game-container">
+    <div id="score-board">Score: <span id="score">0</span></div>
+    <canvas id="gameCanvas" width="360" height="600"></canvas>
+    <div class="key-hints">
+        <div class="key-box" id="k-Left">←</div>
+        <div class="key-box" id="k-Up">↑</div>
+        <div class="key-box" id="k-Down">↓</div>
+        <div class="key-box" id="k-Right">→</div>
     </div>
 </div>
 
 <script>
+    const audioInput = document.getElementById('audio-input');
+    const startBtn = document.getElementById('start-btn');
+    const fileNameDiv = document.getElementById('file-name');
+    const setupScreen = document.getElementById('setup-screen');
+    const gameContainer = document.getElementById('game-container');
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
-    ctx.imageSmoothingEnabled = false;
 
-    let isPaused = false;
-    let playerName = "Gg";
-    let globalTimer = 0;
+    let audioCtx, audioBuffer, audioSource;
+    let tiles = [];
+    let score = 0;
+    let isPlaying = false;
+    let startTime = 0;
 
-    let player = {
-        x: 400, y: 260, w: 20, h: 26,
-        speed: 2.3, hp: 100, maxHp: 100,
-        dir: 'down', isInsideHouse: false,
-        wood: 0, berries: 0, frameAnim: 0
+    // Pemetaan Tombol Panah (Samping Ctrl)
+    const keyMap = {
+        'ArrowLeft': 0,  // Jalur 1
+        'ArrowUp': 1,    // Jalur 2
+        'ArrowDown': 2,  // Jalur 3
+        'ArrowRight': 3  // Jalur 4
     };
 
-    let house = { x: 310, y: 130, w: 180, h: 110, doorX: 400, doorY: 235 };
-    
-    let trees = [
-        { x: 60, y: 60, hp: 4, maxHp: 4, alive: true },
-        { x: 130, y: 50, hp: 4, maxHp: 4, alive: true },
-        { x: 210, y: 70, hp: 4, maxHp: 4, alive: true },
-        { x: 580, y: 60, hp: 4, maxHp: 4, alive: true },
-        { x: 660, y: 80, hp: 4, maxHp: 4, alive: true },
-        { x: 730, y: 50, hp: 4, maxHp: 4, alive: true },
-        { x: 50, y: 310, hp: 4, maxHp: 4, alive: true },
-        { x: 120, y: 370, hp: 4, maxHp: 4, alive: true },
-        { x: 680, y: 340, hp: 4, maxHp: 4, alive: true },
-        { x: 740, y: 380, hp: 4, maxHp: 4, alive: true }
-    ];
+    const keyElements = {
+        'ArrowLeft': document.getElementById('k-Left'),
+        'ArrowUp': document.getElementById('k-Up'),
+        'ArrowDown': document.getElementById('k-Down'),
+        'ArrowRight': document.getElementById('k-Right')
+    };
 
-    let bushes = [
-        { x: 250, y: 100, hp: 2, maxHp: 2, alive: true },
-        { x: 510, y: 90, hp: 2, maxHp: 2, alive: true },
-        { x: 170, y: 250, hp: 2, maxHp: 2, alive: true },
-        { x: 560, y: 270, hp: 2, maxHp: 2, alive: true },
-        { x: 340, y: 370, hp: 2, maxHp: 2, alive: true },
-        { x: 450, y: 380, hp: 2, maxHp: 2, alive: true }
-    ];
-
-    let rocks = [
-        { x: 260, y: 60 }, { x: 490, y: 50 }, { x: 100, y: 210 }, { x: 690, y: 220 }, { x: 240, y: 350 }
-    ];
-
-    let flowers = [
-        { x: 90, y: 130, color: '#f43f5e' }, { x: 130, y: 150, color: '#eab308' },
-        { x: 630, y: 140, color: '#a855f7' }, { x: 670, y: 170, color: '#f43f5e' },
-        { x: 230, y: 320, color: '#38bdf8' }, { x: 500, y: 350, color: '#eab308' },
-        { x: 380, y: 80, color: '#f43f5e' }, { x: 420, y: 90, color: '#38bdf8' }
-    ];
-
-    let snakes = [
-        { x: 110, y: 160, hp: 5, maxHp: 5, alive: true, attackCooldown: 0 },
-        { x: 650, y: 260, hp: 5, maxHp: 5, alive: true, attackCooldown: 0 }
-    ];
-
-    let wolves = [
-        { x: 460, y: 390, hp: 5, maxHp: 5, alive: true, attackCooldown: 0 },
-        { x: 160, y: 390, hp: 5, maxHp: 5, alive: true, attackCooldown: 0 }
-    ];
-
-    let pond = { x: 30, y: 210, w: 120, h: 90 };
-    let frogs = [{ x: 45, y: 230 }, { x: 100, y: 260 }, { x: 70, y: 220 }];
-    let lotus = [{ x: 50, y: 230 }, { x: 95, y: 275 }, { x: 70, y: 250 }];
-
-    let clouds = [
-        { x: 60, y: 30, speed: 0.2 },
-        { x: 340, y: 50, speed: 0.15 },
-        { x: 580, y: 20, speed: 0.22 }
-    ];
-    let birds = [
-        { x: 30, y: 65, speed: 0.8 },
-        { x: 260, y: 35, speed: 1.0 },
-        { x: 520, y: 55, speed: 0.9 }
-    ];
-
-    let grassTufts = [];
-    for(let i=0; i<85; i++) {
-        grassTufts.push({
-            x: Math.random() * 780 + 10,
-            y: Math.random() * 320 + 125
-        });
-    }
-
-    // Event Listeners
-    document.getElementById('pauseBtn').addEventListener('click', togglePause);
-    document.getElementById('pauseBtn').addEventListener('touchend', (e) => { e.preventDefault(); togglePause(); }, { passive: false });
-
-    document.getElementById('actBtn').addEventListener('click', doAction);
-    document.getElementById('actBtn').addEventListener('touchend', (e) => { e.preventDefault(); doAction(); }, { passive: false });
-
-    document.getElementById('hudInv').addEventListener('click', healPlayer);
-    document.getElementById('hudInv').addEventListener('touchend', (e) => { e.preventDefault(); healPlayer(); }, { passive: false });
-
-    function togglePause() {
-        isPaused = !isPaused;
-        document.getElementById('pauseBtn').innerText = isPaused ? "RESUME" : "PAUSE";
-    }
-
-    function healPlayer() {
-        if (player.berries > 0 && player.hp < player.maxHp) {
-            player.berries--;
-            player.hp = Math.min(player.maxHp, player.hp + 25);
+    // 1. Handle Import File Audio
+    audioInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            fileNameDiv.innerText = file.name;
+            startBtn.style.display = 'inline-block';
+            
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                const arrayBuffer = evt.target.result;
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                audioCtx.decodeAudioData(arrayBuffer, (buffer) => {
+                    audioBuffer = buffer;
+                });
+            };
+            reader.readAsArrayBuffer(file);
         }
-    }
-
-    let joystickData = { active: false, vx: 0, vy: 0 };
-    const joystick = document.getElementById('joystick');
-    const knob = document.getElementById('joystickKnob');
-
-    joystick.addEventListener('pointerdown', (e) => { joystickData.active = true; updateJoystick(e); });
-    window.addEventListener('pointermove', (e) => { if (joystickData.active) updateJoystick(e); });
-    window.addEventListener('pointerup', () => {
-        joystickData.active = false;
-        joystickData.vx = 0; joystickData.vy = 0;
-        knob.style.transform = `translate(0px, 0px)`;
     });
 
-    function updateJoystick(e) {
-        const rect = joystick.getBoundingClientRect();
-        const centerX = rect.left + rect.width / 2;
-        const centerY = rect.top + rect.height / 2;
-        const dx = e.clientX - centerX;
-        const dy = e.clientY - centerY;
-        const dist = Math.hypot(dx, dy);
-        const maxDist = 35;
-        let angle = Math.atan2(dy, dx);
-        let clampedDist = Math.min(dist, maxDist);
-        let kx = Math.cos(angle) * clampedDist;
-        let ky = Math.sin(angle) * clampedDist;
-        knob.style.transform = `translate(${kx}px, ${ky}px)`;
-        joystickData.vx = (kx / maxDist);
-        joystickData.vy = (ky / maxDist);
+    // 2. Generator Tiles Berdasarkan Analisis Beat Audio
+    function generateTilesFromAudio(buffer) {
+        const data = buffer.getChannelData(0);
+        const sampleRate = buffer.sampleRate;
+        const step = Math.floor(sampleRate / 10); // Cek tiap 0.1 detik
+        let generatedTiles = [];
+
+        for (let i = 0; i < data.length; i += step) {
+            let sum = 0;
+            for (let j = 0; j < step && (i + j) < data.length; j++) {
+                sum += Math.abs(data[i + j]);
+            }
+            let average = sum / step;
+
+            // Jika ada lonjakan nada/suara keras
+            if (average > 0.18) { 
+                let lane = Math.floor(Math.random() * 4);
+                let time = i / sampleRate; 
+                // Panjang tile disesuaikan dengan intensitas nada (100px - 220px)
+                let length = Math.min(Math.max(average * 400, 80), 220); 
+
+                // Mencegah tile terlalu berdempetan di jalur yang sama
+                let lastTile = generatedTiles[generatedTiles.length - 1];
+                if (!lastTile || (time - lastTile.time > 0.3)) {
+                    generatedTiles.push({
+                        lane: lane,
+                        time: time,
+                        length: length,
+                        y: -length,
+                        hit: false
+                    });
+                }
+            }
+        }
+        return generatedTiles;
     }
 
-    function doAction() {
-        if (isPaused) return;
+    // 3. Start Game
+    startBtn.addEventListener('click', () => {
+        if (!audioBuffer) return;
+        
+        setupScreen.style.display = 'none';
+        gameContainer.style.display = 'block';
 
-        let distToDoor = Math.hypot(player.x - house.doorX, player.y - house.doorY);
-        if (distToDoor < 45) {
-            player.isInsideHouse = !player.isInsideHouse;
-            player.x = house.doorX;
-            player.y = player.isInsideHouse ? house.doorY + 25 : house.doorY - 25;
-            return;
+        tiles = generateTilesFromAudio(audioBuffer);
+        
+        audioSource = audioCtx.createBufferSource();
+        audioSource.buffer = audioBuffer;
+        audioSource.connect(audioCtx.destination);
+        
+        startTime = audioCtx.currentTime;
+        audioSource.start(0);
+        isPlaying = true;
+
+        requestAnimationFrame(gameLoop);
+    });
+
+    // 4. Controller Input (Tombol Panah)
+    window.addEventListener('keydown', (e) => {
+        if (keyMap.hasOwnProperty(e.key)) {
+            let lane = keyMap[e.key];
+            keyElements[e.key].classList.add('active');
+            checkHit(lane);
         }
+    });
 
-        if (player.isInsideHouse) return;
-
-        trees.forEach(t => {
-            if (t.alive && Math.hypot(player.x - t.x, player.y - t.y) < 50) {
-                t.hp--;
-                if (t.hp <= 0) { t.alive = false; player.wood += 2; }
-            }
-        });
-
-        bushes.forEach(b => {
-            if (b.alive && Math.hypot(player.x - b.x, player.y - b.y) < 40) {
-                b.hp--;
-                if (b.hp <= 0) { b.alive = false; player.berries += 3; }
-            }
-        });
-
-        snakes.forEach(s => {
-            if (s.alive && Math.hypot(player.x - s.x, player.y - s.y) < 40) {
-                s.hp--;
-                if (s.hp <= 0) s.alive = false;
-            }
-        });
-
-        wolves.forEach(w => {
-            if (w.alive && Math.hypot(player.x - w.x, player.y - w.y) < 45) {
-                w.hp--;
-                if (w.hp <= 0) w.alive = false;
-            }
-        });
-    }
-
-    function update() {
-        if (isPaused) return;
-        globalTimer++;
-
-        if (joystickData.vx !== 0 || joystickData.vy !== 0) {
-            player.x += joystickData.vx * player.speed;
-            player.y += joystickData.vy * player.speed;
-            if (Math.abs(joystickData.vx) > Math.abs(joystickData.vy)) {
-                player.dir = joystickData.vx > 0 ? 'right' : 'left';
-            } else {
-                player.dir = joystickData.vy > 0 ? 'down' : 'up';
-            }
-            player.frameAnim += 0.15;
+    window.addEventListener('keyup', (e) => {
+        if (keyMap.hasOwnProperty(e.key)) {
+            keyElements[e.key].classList.remove('active');
         }
+    });
 
-        if (!player.isInsideHouse) {
-            player.x = Math.max(15, Math.min(canvas.width - 15, player.x));
-            player.y = Math.max(120, Math.min(canvas.height - 15, player.y));
-        } else {
-            player.x = Math.max(house.x + 20, Math.min(house.x + house.w - 20, player.x));
-            player.y = Math.max(house.y + 45, Math.min(house.y + house.h - 15, player.y));
-        }
-
-        clouds.forEach(c => { c.x += c.speed; if (c.x > canvas.width + 60) c.x = -60; });
-        birds.forEach(b => { b.x += b.speed; if (b.x > canvas.width + 30) b.x = -30; });
-
-        snakes.forEach(s => {
-            if (!s.alive) return;
-            let dist = Math.hypot(player.x - s.x, player.y - s.y);
-            if (dist < 130 && !player.isInsideHouse) {
-                s.x += (player.x > s.x ? 0.75 : -0.75);
-                s.y += (player.y > s.y ? 0.75 : -0.75);
-                if (dist < 24) {
-                    s.attackCooldown++;
-                    if (s.attackCooldown > 45) { player.hp -= 15; s.attackCooldown = 0; }
+    // 5. Cek Ketepatan Tekan (Hit Logic)
+    function checkHit(lane) {
+        const hitZoneY = 540; // Area tombol di bawah
+        tiles.forEach(tile => {
+            if (tile.lane === lane && !tile.hit) {
+                // Toleransi area tekan
+                if (tile.y + tile.length >= hitZoneY - 50 && tile.y <= hitZoneY + 50) {
+                    tile.hit = true;
+                    score += Math.floor(tile.length / 10); // Tile lebih panjang = skor lebih gede
+                    document.getElementById('score').innerText = score;
                 }
             }
         });
-
-        wolves.forEach(w => {
-            if (!w.alive) return;
-            let dist = Math.hypot(player.x - w.x, player.y - w.y);
-            if (dist < 150 && !player.isInsideHouse) {
-                w.x += (player.x > w.x ? 1.05 : -1.05);
-                w.y += (player.y > w.y ? 1.05 : -1.05);
-                if (dist < 28) {
-                    w.attackCooldown++;
-                    if (w.attackCooldown > 40) { player.hp -= 20; w.attackCooldown = 0; }
-                }
-            }
-        });
-
-        if (player.hp <= 0) {
-            alert("Karaktermu kehabisan darah dan mati! Game Over.");
-            window.location.reload();
-        }
-
-        document.getElementById('hudStats').innerHTML = `HP: ${player.hp}/${player.maxHp}<br>NAMA: ${playerName}`;
-        document.getElementById('hudInv').innerHTML = `🪵 Kayu: ${player.wood}<br>🍓 Berry: ${player.berries} <br><span style="color:#f43f5e; font-size:9px;">[Tekan untuk Heal]</span>`;
     }
 
-    function draw() {
+    // 6. Game Loop (Render Canvas)
+    function gameLoop() {
+        if (!isPlaying) return;
+
         ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        // Gambar Garis Pembatas Lane
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+        for (let i = 1; i < 4; i++) {
+            ctx.beginPath();
+            ctx.moveTo(i * 90, 0);
+            ctx.lineTo(i * 90, canvas.height);
+            ctx.stroke();
+        }
 
-        if (!player.isInsideHouse) {
-            // Langit
-            ctx.fillStyle = '#0284c7';
-            ctx.fillRect(0, 0, canvas.width, 120);
-            ctx.fillStyle = '#fde047';
-            ctx.beginPath(); ctx.arc(710, 45, 24, 0, Math.PI * 2); ctx.fill();
-            ctx.fillStyle = 'rgba(253, 224, 71, 0.25)';
-            ctx.beginPath(); ctx.arc(710, 45, 36, 0, Math.PI * 2); ctx.fill();
+        let elapsedTime = audioCtx.currentTime - startTime;
+        let speed = 400; // Kecepatan turun tile (px/detik)
 
-            // Awan
-            ctx.fillStyle = 'rgba(255,255,255,0.92)';
-            clouds.forEach(c => {
-                ctx.fillRect(c.x, c.y, 50, 14);
-                ctx.fillRect(c.x + 10, c.y - 6, 30, 8);
-            });
+        // Render & Update Posisi Tiles
+        tiles.forEach(tile => {
+            // Kalkulasi posisi Y berdasarkan waktu berjalan
+            tile.y = (elapsedTime - tile.time) * speed;
 
-            // Burung
-            ctx.strokeStyle = '#0f172a'; ctx.lineWidth = 2;
-            birds.forEach(b => {
+            if (!tile.hit) {
+                // Warna Tile (Gradient)
+                let grad = ctx.createLinearGradient(0, tile.y, 0, tile.y + tile.length);
+                grad.addColorStop(0, '#89b4fa');
+                grad.addColorStop(1, '#b4befe');
+
+                ctx.fillStyle = grad;
+                // Gambar Tile dengan Sudut Membulat
                 ctx.beginPath();
-                let wing = Math.sin(globalTimer * 0.1) * 5;
-                ctx.moveTo(b.x, b.y);
-                ctx.quadraticCurveTo(b.x + 8, b.y - 10 + wing, b.x + 16, b.y);
-                ctx.quadraticCurveTo(b.x + 24, b.y - 10 + wing, b.x + 32, b.y);
-                ctx.stroke();
-            });
+                ctx.roundRect(tile.lane * 90 + 5, tile.y, 80, tile.length, 8);
+                ctx.fill();
+            }
+        });
 
-            // Tanah Utama
-            ctx.fillStyle = '#15803d';
-            ctx.fillRect(0, 120, canvas.width, canvas.height - 120);
-            ctx.fillStyle = '#166534';
-            ctx.fillRect(0, 120, canvas.width, 8);
+        requestAnimationFrame(gameLoop);
+    }
+</script>
+</body>
+</html>
 
-            // Kolam Air (Sudah diperbaiki dengan rect standar)
-            ctx.fillStyle = '#065f46';
-            ctx.fillRect(pond.x - 6, pond.y - 6, pond.w + 12, pond.h + 12);
-            ctx.fillStyle = '#0284c7';
-            ctx.fillRect(pond.x, pond.y, pond.w, pond.h);
-            ctx.fillStyle = '#38bdf8';
-            ctx.fillRect(pond.x + 10, pond.y + 10, pond.w - 20, pond.h - 20);
-
-            // Teratai & Katak
-            lotus.forEach(l => {
-                ctx.fillStyle = '#14532d'; ctx.beginPath(); ctx.arc(l.x + 8, l.y + 6, 8, 0, Math.PI * 2); ctx.fill();
-                ctx.fillStyle = '#f43f5e'; ctx.fillRect(l.x + 5, l.y + 3, 6, 5);
-            });
-            frogs.forEach(f => {
-                ctx.fillStyle = '#22c55e'; ctx.fillRect(f.x, f.y + 2, 12, 8);
-                ctx.fillStyle = '#000'; ctx.fillRect(f.x + 2, f.y + 2, 2, 2); ctx.fillRect(f.x + 8, f.y + 2, 2, 2);
-            });
-
-            // Bebatuan
-            rocks.forEach(r => {
-                ctx.fillStyle = '#334155'; ctx.fillRect(r.x, r.y + 8, 24, 12);
-                ctx.fillStyle = '#64748b'; ctx.fillRect(r.x + 3, r.y + 2, 18, 9);
-                ctx.fillStyle = '#94a3b8'; ctx.fillRect(r.x + 6, r.y, 8, 4);
-            });
-
-            // Bunga
-            flowers.forEach(fl => {
-                ctx.fillStyle = '#166534'; ctx.fillRect(fl.x + 2, fl.y + 4, 2, 6);
-                ctx.fillStyle = fl.color;
-                ctx.fillRect(fl.x, fl.y, 3, 3); ctx.fillRect(fl.x + 4, fl.y, 3, 3);
-                ctx.fillRect(fl.x + 2, fl.y - 2, 3, 3);
-                ctx.fillStyle = '#fef08a'; ctx.fillRect(fl.x + 2, fl.y, 2, 2);
-            });
-
-            // Rumput Liar
-            ctx.strokeStyle = '#16a34a'; ctx.lineWidth = 1.5;
-            grassTufts.forEach(g => {
-                let sway = Math.sin(globalTimer * 0.08 + g.x) * 3;
-                ctx.beginPath(); ctx.moveTo(g.x, g.y + 12);
-                ctx.quadraticCurveTo(g.x + sway, g.y + 3, g.x + sway * 1.5, g.y - 4);
-                ctx.stroke();
-            });
-
-            // Rumah
-            ctx.fillStyle = 'rgba(0,0,0,0.35)';
-            ctx.fillRect(house.x - 5, house.y + house.h - 5, house.w + 10, 15);
-
-            ctx.fillStyle = '#7c2d12'; 
-            ctx.beginPath();
-            ctx.moveTo(house.x - 20, house.y + 10);
-            ctx.lineTo(house.x + house.w / 2, house.y - 50);
-            ctx.lineTo(house.x + house.w + 20, house.y + 10);
-            ctx.fill();
-            ctx.strokeStyle = '#451a03'; ctx.lineWidth = 3; ctx.stroke();
-
-            ctx.strokeStyle = '#9a3412'; ctx.lineWidth = 2;
-            ctx.beginPath();
-            ctx.moveTo(house.x + house.w/2 - 15, house.y - 25); ctx.lineTo(house.x + house.w/2 + 15, house.y - 25);
-            ctx.stroke();
-
-            ctx.fillStyle = '#b45309'; 
-            ctx.fillRect(house.x, house.y + 10, house.w, house.h - 10);
-            ctx.strokeStyle = '#78350f'; ctx.lineWidth = 3; ctx.strokeRect(house.x, house.y + 10, house.w, house.h - 10);
-
-            // Jendela
-            ctx.fillStyle = '#38bdf8';
-            ctx.fillRect(house.x + 22, house.y + 30, 26, 26);
-            ctx.fillRect(house.x + house.w - 48, house.y + 30, 26, 26);
-            ctx.strokeStyle = '#451a03'; ctx.lineWidth = 2;
-            ctx.strokeRect(house.x + 22, house.y + 30, 26, 26);
-            ctx.strokeRect(house.x + house.w - 48, house.y + 30, 26, 26);
-
-            ctx.beginPath();
-            ctx.moveTo(house.x + 35, house.y + 30); ctx.lineTo(house.x + 35, house.y + 56);
-            ctx.moveTo(house.x + 22, house.y + 43); ctx.lineTo(house.x + 48, house.y + 43);
-            ctx.moveTo(house.x + house.w - 35, house.y + 30); ctx.lineTo(house.x + house.w - 35, house.y + 56);
-            ctx.moveTo(house.x + house.w - 48, house.y + 43); ctx.lineTo(house.x + house.w - 22, house.y + 43);
-            ctx.stroke();
-
-            // Pintu
-            ctx.fillStyle = '#451a03';
-            ctx.fillRect(house.doorX - house.x - 14, house.doorY - house.y - 38, 28, 48);
-            ctx.fillStyle = '#f59e0b'; ctx.fillRect(house.doorX - house.x + 5, house.doorY - house.y - 16, 4, 6);
-
-            // Pohon
-            trees.forEach(t => {
-                if (!t.alive) return;
-                ctx.fillStyle = 'rgba(0,0,0,0.
