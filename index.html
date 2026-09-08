@@ -2,12 +2,17 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Custom Music Rhythm Tiles</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Custom Music Rhythm Tiles - By Mario</title>
+    <!-- Import Font Signature (Great Vibes) dari Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap" rel="stylesheet">
+
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
         body {
-            background: #0f172a;
+            background: #09090b;
             color: #fff;
             font-family: sans-serif;
             display: flex;
@@ -20,12 +25,14 @@
 
         #setup-screen {
             text-align: center;
-            background: #1e293b;
+            background: rgba(30, 41, 59, 0.95);
             padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
             max-width: 400px;
             width: 90%;
+            border: 1px solid rgba(255,255,255,0.1);
+            backdrop-filter: blur(8px);
         }
 
         input[type="file"] { display: none; }
@@ -33,59 +40,93 @@
         .btn {
             background: #3b82f6;
             color: white;
-            padding: 12px 20px;
+            padding: 12px 22px;
             border: none;
             border-radius: 8px;
             cursor: pointer;
             font-weight: bold;
             margin-top: 15px;
             display: inline-block;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+            transition: all 0.2s ease;
         }
-        .btn:hover { background: #2563eb; }
+        .btn:active { transform: scale(0.95); }
 
         #game-container {
             display: none;
             position: relative;
-            width: 360px;
-            height: 600px;
-            background: #1e1e2e;
-            border: 4px solid #313244;
-            border-radius: 8px;
+            width: 100vw;
+            height: 100vh;
+            max-width: 400px;
+            max-height: 680px;
+            /* Background Gambar */
+            background: linear-gradient(rgba(0,0,0,0.45), rgba(0,0,0,0.45)), url('bg.jpg');
+            background-size: cover;
+            background-position: center;
+            border: 2px solid rgba(255,255,255,0.15);
+            border-radius: 12px;
             overflow: hidden;
+            box-shadow: 0 0 30px rgba(0,0,0,0.9);
         }
 
         canvas { display: block; width: 100%; height: 100%; }
 
+        /* Signature "By Mario" */
+        .signature {
+            position: absolute;
+            top: 12px;
+            right: 16px;
+            font-family: 'Great Vibes', cursive;
+            font-size: 26px;
+            color: #ffffff;
+            text-shadow: 0 0 8px rgba(255, 255, 255, 0.8), 0 0 15px rgba(56, 189, 248, 0.6);
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        #score-board {
+            position: absolute;
+            top: 14px;
+            left: 16px;
+            font-size: 18px;
+            font-weight: bold;
+            text-shadow: 0 2px 4px #000;
+            z-index: 10;
+        }
+
+        /* Area Tombol Bawah */
         .key-hints {
             position: absolute;
             bottom: 0;
             width: 100%;
-            height: 60px;
+            height: 85px;
             display: flex;
-            background: rgba(0,0,0,0.4);
-            border-top: 2px solid #89b4fa;
+            background: rgba(0, 0, 0, 0.65);
+            border-top: 2px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(4px);
+            z-index: 10;
         }
 
         .key-box {
             flex: 1;
-            border-right: 1px solid rgba(255,255,255,0.1);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 20px;
+            font-size: 24px;
             font-weight: bold;
-            color: #cdd6f4;
+            color: #e2e8f0;
+            touch-action: manipulation;
+            transition: background 0.05s ease, box-shadow 0.05s ease;
         }
         .key-box:last-child { border-right: none; }
-        .key-box.active { background: rgba(137, 180, 250, 0.4); }
 
-        #score-board {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            font-size: 18px;
-            font-weight: bold;
-            text-shadow: 1px 1px 2px #000;
+        /* Efek Cahaya / Glow Saat Tombol Ditekan */
+        .key-box.active {
+            background: rgba(56, 189, 248, 0.45);
+            box-shadow: 0 0 25px #38bdf8, inset 0 0 15px #ffffff;
+            color: #ffffff;
+            text-shadow: 0 0 10px #ffffff, 0 0 20px #38bdf8;
         }
     </style>
 </head>
@@ -93,7 +134,7 @@
 
 <div id="setup-screen">
     <h2>🎵 Custom Music Tiles</h2>
-    <p style="margin-top:10px; font-size:14px; color:#94a3b8;">Import lagu MP3/WAV dari perangkat kamu buat dimainin!</p>
+    <p style="margin-top:10px; font-size:14px; color:#94a3b8;">Import lagu MP3/WAV dari perangkat kamu!</p>
     
     <label class="btn" style="margin-top:20px;">
         Pilih Lagu
@@ -106,12 +147,15 @@
 
 <div id="game-container">
     <div id="score-board">Score: <span id="score">0</span></div>
+    <div class="signature">By Mario</div>
+    
     <canvas id="gameCanvas" width="360" height="600"></canvas>
+    
     <div class="key-hints">
-        <div class="key-box" id="k-Left">←</div>
-        <div class="key-box" id="k-Up">↑</div>
-        <div class="key-box" id="k-Down">↓</div>
-        <div class="key-box" id="k-Right">→</div>
+        <div class="key-box" id="k-Left" data-lane="0">←</div>
+        <div class="key-box" id="k-Up" data-lane="1">↑</div>
+        <div class="key-box" id="k-Down" data-lane="2">↓</div>
+        <div class="key-box" id="k-Right" data-lane="3">→</div>
     </div>
 </div>
 
@@ -130,22 +174,23 @@
     let isPlaying = false;
     let startTime = 0;
 
-    // Pemetaan Tombol Panah (Samping Ctrl)
+    // Status aktif tiap jalur untuk efek efek cahaya di canvas
+    let activeLanes = [false, false, false, false];
+
     const keyMap = {
-        'ArrowLeft': 0,  // Jalur 1
-        'ArrowUp': 1,    // Jalur 2
-        'ArrowDown': 2,  // Jalur 3
-        'ArrowRight': 3  // Jalur 4
+        'ArrowLeft': 0,
+        'ArrowUp': 1,
+        'ArrowDown': 2,
+        'ArrowRight': 3
     };
 
-    const keyElements = {
-        'ArrowLeft': document.getElementById('k-Left'),
-        'ArrowUp': document.getElementById('k-Up'),
-        'ArrowDown': document.getElementById('k-Down'),
-        'ArrowRight': document.getElementById('k-Right')
-    };
+    const keyBoxes = [
+        document.getElementById('k-Left'),
+        document.getElementById('k-Up'),
+        document.getElementById('k-Down'),
+        document.getElementById('k-Right')
+    ];
 
-    // 1. Handle Import File Audio
     audioInput.addEventListener('change', (e) => {
         const file = e.target.files[0];
         if (file) {
@@ -164,11 +209,10 @@
         }
     });
 
-    // 2. Generator Tiles Berdasarkan Analisis Beat Audio
     function generateTilesFromAudio(buffer) {
         const data = buffer.getChannelData(0);
         const sampleRate = buffer.sampleRate;
-        const step = Math.floor(sampleRate / 10); // Cek tiap 0.1 detik
+        const step = Math.floor(sampleRate / 10);
         let generatedTiles = [];
 
         for (let i = 0; i < data.length; i += step) {
@@ -178,14 +222,11 @@
             }
             let average = sum / step;
 
-            // Jika ada lonjakan nada/suara keras
             if (average > 0.18) { 
                 let lane = Math.floor(Math.random() * 4);
                 let time = i / sampleRate; 
-                // Panjang tile disesuaikan dengan intensitas nada (100px - 220px)
                 let length = Math.min(Math.max(average * 400, 80), 220); 
 
-                // Mencegah tile terlalu berdempetan di jalur yang sama
                 let lastTile = generatedTiles[generatedTiles.length - 1];
                 if (!lastTile || (time - lastTile.time > 0.3)) {
                     generatedTiles.push({
@@ -201,7 +242,6 @@
         return generatedTiles;
     }
 
-    // 3. Start Game
     startBtn.addEventListener('click', () => {
         if (!audioBuffer) return;
         
@@ -221,44 +261,72 @@
         requestAnimationFrame(gameLoop);
     });
 
-    // 4. Controller Input (Tombol Panah)
+    // --- KONTROL KEYBOARD ---
     window.addEventListener('keydown', (e) => {
         if (keyMap.hasOwnProperty(e.key)) {
             let lane = keyMap[e.key];
-            keyElements[e.key].classList.add('active');
-            checkHit(lane);
+            triggerHit(lane);
         }
     });
 
     window.addEventListener('keyup', (e) => {
         if (keyMap.hasOwnProperty(e.key)) {
-            keyElements[e.key].classList.remove('active');
+            let lane = keyMap[e.key];
+            keyBoxes[lane].classList.remove('active');
+            activeLanes[lane] = false;
         }
     });
 
-    // 5. Cek Ketepatan Tekan (Hit Logic)
-    function checkHit(lane) {
-        const hitZoneY = 540; // Area tombol di bawah
+    // --- KONTROL TOUCHSCREEN ---
+    keyBoxes.forEach((box) => {
+        const lane = parseInt(box.getAttribute('data-lane'));
+
+        box.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            triggerHit(lane);
+        }, { passive: false });
+
+        box.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            keyBoxes[lane].classList.remove('active');
+            activeLanes[lane] = false;
+        }, { passive: false });
+    });
+
+    function triggerHit(lane) {
+        keyBoxes[lane].classList.add('active');
+        activeLanes[lane] = true;
+        const hitZoneY = 520;
+        
         tiles.forEach(tile => {
             if (tile.lane === lane && !tile.hit) {
-                // Toleransi area tekan
-                if (tile.y + tile.length >= hitZoneY - 50 && tile.y <= hitZoneY + 50) {
+                if (tile.y + tile.length >= hitZoneY - 60 && tile.y <= hitZoneY + 60) {
                     tile.hit = true;
-                    score += Math.floor(tile.length / 10); // Tile lebih panjang = skor lebih gede
+                    score += Math.floor(tile.length / 10);
                     document.getElementById('score').innerText = score;
                 }
             }
         });
     }
 
-    // 6. Game Loop (Render Canvas)
     function gameLoop() {
         if (!isPlaying) return;
 
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         
-        // Gambar Garis Pembatas Lane
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+        // Efek Cahaya Sinar di Jalur Canvas Saat Ditekan
+        for (let i = 0; i < 4; i++) {
+            if (activeLanes[i]) {
+                let gradBeam = ctx.createLinearGradient(0, 0, 0, canvas.height);
+                gradBeam.addColorStop(0, 'rgba(56, 189, 248, 0)');
+                gradBeam.addColorStop(1, 'rgba(56, 189, 248, 0.35)');
+                ctx.fillStyle = gradBeam;
+                ctx.fillRect(i * 90, 0, 90, canvas.height);
+            }
+        }
+
+        // Garis Pembatas Jalur
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
         for (let i = 1; i < 4; i++) {
             ctx.beginPath();
             ctx.moveTo(i * 90, 0);
@@ -267,24 +335,24 @@
         }
 
         let elapsedTime = audioCtx.currentTime - startTime;
-        let speed = 400; // Kecepatan turun tile (px/detik)
+        let speed = 400;
 
-        // Render & Update Posisi Tiles
+        // Render Tile
         tiles.forEach(tile => {
-            // Kalkulasi posisi Y berdasarkan waktu berjalan
             tile.y = (elapsedTime - tile.time) * speed;
 
             if (!tile.hit) {
-                // Warna Tile (Gradient)
                 let grad = ctx.createLinearGradient(0, tile.y, 0, tile.y + tile.length);
-                grad.addColorStop(0, '#89b4fa');
-                grad.addColorStop(1, '#b4befe');
+                grad.addColorStop(0, '#38bdf8');
+                grad.addColorStop(1, '#818cf8');
 
                 ctx.fillStyle = grad;
-                // Gambar Tile dengan Sudut Membulat
-                ctx.beginPath();
-                ctx.roundRect(tile.lane * 90 + 5, tile.y, 80, tile.length, 8);
-                ctx.fill();
+                ctx.fillRect(tile.lane * 90 + 5, tile.y, 80, tile.length);
+
+                // Glow Border pada Tile
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 1;
+                ctx.strokeRect(tile.lane * 90 + 5, tile.y, 80, tile.length);
             }
         });
 
