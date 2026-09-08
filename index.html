@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Custom Music Rhythm Tiles - By Mario</title>
-    <!-- Import Font Signature (Great Vibes) dari Google Fonts -->
+    <!-- Import Font Signature (Great Vibes) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap" rel="stylesheet">
@@ -52,6 +52,7 @@
         }
         .btn:active { transform: scale(0.95); }
 
+        /* Container Game dengan Animasi Shake */
         #game-container {
             display: none;
             position: relative;
@@ -59,7 +60,6 @@
             height: 100vh;
             max-width: 400px;
             max-height: 680px;
-            /* Background Gambar */
             background: linear-gradient(rgba(0,0,0,0.45), rgba(0,0,0,0.45)), url('bg.jpg');
             background-size: cover;
             background-position: center;
@@ -67,6 +67,20 @@
             border-radius: 12px;
             overflow: hidden;
             box-shadow: 0 0 30px rgba(0,0,0,0.9);
+            transition: transform 0.05s ease;
+        }
+
+        /* Class Animasi Shake Ringan */
+        #game-container.shake {
+            animation: hitShake 0.08s ease-in-out;
+        }
+
+        @keyframes hitShake {
+            0% { transform: translate(0, 0); }
+            25% { transform: translate(-3px, 2px); }
+            50% { transform: translate(3px, -2px); }
+            75% { transform: translate(-2px, -1px); }
+            100% { transform: translate(0, 0); }
         }
 
         canvas { display: block; width: 100%; height: 100%; }
@@ -117,16 +131,17 @@
             font-weight: bold;
             color: #e2e8f0;
             touch-action: manipulation;
-            transition: background 0.05s ease, box-shadow 0.05s ease;
+            transition: background 0.05s ease, box-shadow 0.05s ease, transform 0.05s ease;
         }
         .key-box:last-child { border-right: none; }
 
-        /* Efek Cahaya / Glow Saat Tombol Ditekan */
+        /* Efek Cahaya & Shake pada Tombol */
         .key-box.active {
             background: rgba(56, 189, 248, 0.45);
             box-shadow: 0 0 25px #38bdf8, inset 0 0 15px #ffffff;
             color: #ffffff;
             text-shadow: 0 0 10px #ffffff, 0 0 20px #38bdf8;
+            transform: translateY(2px);
         }
     </style>
 </head>
@@ -174,8 +189,20 @@
     let isPlaying = false;
     let startTime = 0;
 
-    // Status aktif tiap jalur untuk efek efek cahaya di canvas
     let activeLanes = [false, false, false, false];
+
+    // System Partikel Cahaya Background
+    let bgParticles = [];
+    for (let i = 0; i < 20; i++) {
+        bgParticles.push({
+            x: Math.random() * 360,
+            y: Math.random() * 600,
+            radius: Math.random() * 2 + 0.8,
+            alpha: Math.random() * 0.7 + 0.3,
+            speedY: Math.random() * 0.4 + 0.1,
+            pulse: Math.random() * 0.02 + 0.005
+        });
+    }
 
     const keyMap = {
         'ArrowLeft': 0,
@@ -297,6 +324,11 @@
         keyBoxes[lane].classList.add('active');
         activeLanes[lane] = true;
         const hitZoneY = 520;
+
+        // Efek Shake Layar Instan
+        gameContainer.classList.remove('shake');
+        void gameContainer.offsetWidth; // Trigger reflow
+        gameContainer.classList.add('shake');
         
         tiles.forEach(tile => {
             if (tile.lane === lane && !tile.hit) {
@@ -313,8 +345,24 @@
         if (!isPlaying) return;
 
         ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Render Percikan Cahaya Ambient
+        bgParticles.forEach(p => {
+            p.y -= p.speedY;
+            p.alpha += p.pulse;
+            if (p.alpha > 0.8 || p.alpha < 0.2) p.pulse = -p.pulse;
+            if (p.y < 0) p.y = canvas.height;
+
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(186, 230, 253, ${p.alpha})`;
+            ctx.shadowBlur = 8;
+            ctx.shadowColor = '#38bdf8';
+            ctx.fill();
+            ctx.shadowBlur = 0; // reset shadow
+        });
         
-        // Efek Cahaya Sinar di Jalur Canvas Saat Ditekan
+        // Sinar Cahaya di Jalur Pas Ditekan
         for (let i = 0; i < 4; i++) {
             if (activeLanes[i]) {
                 let gradBeam = ctx.createLinearGradient(0, 0, 0, canvas.height);
@@ -349,7 +397,6 @@
                 ctx.fillStyle = grad;
                 ctx.fillRect(tile.lane * 90 + 5, tile.y, 80, tile.length);
 
-                // Glow Border pada Tile
                 ctx.strokeStyle = '#ffffff';
                 ctx.lineWidth = 1;
                 ctx.strokeRect(tile.lane * 90 + 5, tile.y, 80, tile.length);
@@ -361,4 +408,3 @@
 </script>
 </body>
 </html>
-
