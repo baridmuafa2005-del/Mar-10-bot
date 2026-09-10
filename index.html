@@ -99,6 +99,19 @@
             border: 1.5px solid rgba(255, 255, 255, 0.2);
             overflow: hidden;
             box-shadow: 0 0 30px rgba(0,0,0,0.9);
+            transition: transform 0.05s ease;
+        }
+
+        .shake {
+            animation: shakeAnim 0.15s ease;
+        }
+        @keyframes shakeAnim {
+            0% { transform: translate(0, 0); }
+            20% { transform: translate(-3px, 3px); }
+            40% { transform: translate(3px, -2px); }
+            60% { transform: translate(-2px, -3px); }
+            80% { transform: translate(2px, 2px); }
+            100% { transform: translate(0, 0); }
         }
 
         #game-overlay {
@@ -273,6 +286,8 @@
     const comboCount = document.getElementById('combo-count');
 
     let tiles = [];
+    let particles = [];
+    let bgParticles = []; // Partikel cahaya background
     let score = 0, combo = 0, maxCombo = 0;
     let countPerfect = 0, countGreat = 0, countGood = 0, countMiss = 0;
     let isPlaying = false;
@@ -302,171 +317,11 @@
         }
     });
 
-    function startGame() {
-        if (!bgAudio.src) return;
-
-        setupScreen.style.display = 'none';
-        gameContainer.style.display = 'block';
-
-        bgAudio.play();
-        isPlaying = true;
-
-        let spawnRate = tileSpeed === 4 ? 600 : (tileSpeed === 6 ? 450 : 320);
-        spawnInterval = setInterval(() => {
-            if(isPlaying) {
-                tiles.push({
-                    lane: Math.floor(Math.random() * 4),
-                    y: -80,
-                    height: 80,
-                    hit: false,
-                    missed: false
-                });
-            }
-        }, spawnRate);
-
-        bgAudio.onended = showResult;
-        requestAnimationFrame(gameLoop);
-    }
-
-    startBtn.addEventListener('click', startGame);
-
-    function triggerHit(lane) {
-        keyBoxes[lane].classList.add('active');
-        const hitZoneY = 515;
-
-        tiles.forEach(tile => {
-            if (tile.lane === lane && !tile.hit && !tile.missed) {
-                let hitOffset = Math.abs(tile.y + tile.height - hitZoneY);
-                
-                if (hitOffset <= 70) {
-                    tile.hit = true;
-                    combo++;
-                    if (combo > maxCombo) maxCombo = combo;
-
-                    if (hitOffset <= 20) {
-                        countPerfect++;
-                        showFeedback('PERFECT!', '#34d399');
-                        score += 150 + (combo * 5);
-                    } else if (hitOffset <= 45) {
-                        countGreat++;
-                        showFeedback('GREAT!', '#38bdf8');
-                        score += 100 + (combo * 3);
-                    } else {
-                        countGood++;
-                        showFeedback('GOOD', '#fbbf24');
-                        score += 50;
-                    }
-
-                    document.getElementById('score').innerText = score;
-                }
-            }
-        });
-    }
-
-    function releaseHit(lane) {
-        keyBoxes[lane].classList.remove('active');
-    }
-
-    window.addEventListener('keydown', (e) => {
-        if (keyMap.hasOwnProperty(e.key)) triggerHit(keyMap[e.key]);
-    });
-
-    window.addEventListener('keyup', (e) => {
-        if (keyMap.hasOwnProperty(e.key)) releaseHit(keyMap[e.key]);
-    });
-
-    keyBoxes.forEach((box) => {
-        const lane = parseInt(box.getAttribute('data-lane'));
-        box.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            triggerHit(lane);
-        });
-        box.addEventListener('touchend', (e) => {
-            e.preventDefault();
-            releaseHit(lane);
-        });
-    });
-
-    function resetCombo() {
-        combo = 0;
-        comboCount.style.opacity = '0';
-    }
-
-    function showFeedback(text, color) {
-        hitText.innerText = text;
-        hitText.style.color = color;
-        hitText.style.textShadow = `0 0 10px #000, 0 0 15px ${color}`;
-        hitText.style.opacity = '1';
-
-        if (combo > 1) {
-            comboCount.innerText = `${combo}x COMBO`;
-            comboCount.style.opacity = '1';
-        }
-
-        setTimeout(() => { hitText.style.opacity = '0'; }, 300);
-    }
-
-    function showResult() {
-        isPlaying = false;
-        clearInterval(spawnInterval);
-        gameContainer.style.display = 'none';
-        resultScreen.style.display = 'block';
-
-        document.getElementById('res-score').innerText = score;
-        document.getElementById('res-perfect').innerText = countPerfect;
-        document.getElementById('res-great').innerText = countGreat;
-        document.getElementById('res-good').innerText = countGood;
-        document.getElementById('res-miss').innerText = countMiss;
-        document.getElementById('res-combo').innerText = `${maxCombo}x`;
-    }
-
-    function gameLoop() {
-        if (!isPlaying) return;
-
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
-        ctx.lineWidth = 1;
-        for (let i = 1; i < 4; i++) {
-            ctx.beginPath();
-            ctx.moveTo(i * 90, 0);
-            ctx.lineTo(i * 90, canvas.height);
-            ctx.stroke();
-        }
-
-        ctx.strokeStyle = '#38bdf8';
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.moveTo(0, 520);
-        ctx.lineTo(360, 520);
-        ctx.stroke();
-
-        tiles.forEach(tile => {
-            tile.y += tileSpeed;
-
-            if (!tile.hit && !tile.missed && tile.y > 560) {
-                tile.missed = true;
-                countMiss++;
-                resetCombo();
-                showFeedback('MISS', '#ef4444');
-            }
-
-            if (!tile.hit && !tile.missed) {
-                let grad = ctx.createLinearGradient(0, tile.y, 0, tile.y + tile.height);
-                grad.addColorStop(0, '#38bdf8');
-                grad.addColorStop(1, '#0284c7');
-
-                ctx.fillStyle = grad;
-                ctx.fillRect(tile.lane * 90 + 6, tile.y, 78, tile.height);
-
-                ctx.strokeStyle = '#ffffff';
-                ctx.lineWidth = 1.5;
-                ctx.strokeRect(tile.lane * 90 + 6, tile.y, 78, tile.height);
-            }
-        });
-
-        requestAnimationFrame(gameLoop);
-    }
-</script>
-</body>
-</html>
+    // Inisialisasi partikel cahaya background yang melayang
+    function initBgParticles() {
+        bgParticles = [];
+        for (let i = 0; i < 25; i++) {
+            bgParticles.push({
+                x: Math.random() * canvas.width,
+                y:
+    
