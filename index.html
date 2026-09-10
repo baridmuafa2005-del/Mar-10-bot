@@ -114,7 +114,6 @@
             100% { transform: translate(0, 0); }
         }
 
-        /* Flash Light overlay saat hit perfect */
         #flash-overlay {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -333,7 +332,6 @@
     let isFever = false;
     let highScore = localStorage.getItem('rhythm_hi_score') || 0;
 
-    // Tema Warna Skin
     const themes = {
         neon: { c1: '#38bdf8', c2: '#818cf8', accent: '#38bdf8' },
         sakura: { c1: '#f472b6', c2: '#fb7185', accent: '#f472b6' },
@@ -419,7 +417,6 @@
         osc.stop(audioCtx.currentTime + 0.08);
     }
 
-    // Sound Victory/Rank SFX
     function playRankSFX(rank) {
         if (!audioCtx) return;
         let freqs = rank === 'SS' || rank === 'S' ? [523.25, 659.25, 783.99, 1046.50] : [392.00, 440.00, 493.88];
@@ -462,7 +459,6 @@
                         y: -length, hit: false, missed: false, holding: false, holdProgress: 0
                     });
 
-                    // Generator Double Notes (Dua ubin berdampingan pas audio kencang)
                     if (average > 0.42 && Math.random() > 0.5) {
                         let secondLane = (lane + 2) % 4;
                         generatedTiles.push({
@@ -569,4 +565,10 @@
                         gameContainer.classList.add('fever');
                         feverBanner.style.opacity = '1';
                         triggerVibrate([50, 50, 50]);
- 
+                    }
+
+                    let isPerfect = hitOffset <= 30;
+                    if (isPerfect) {
+                        countPerfect++;
+                        triggerFlash();
+                        
