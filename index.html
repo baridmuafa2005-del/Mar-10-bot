@@ -203,11 +203,26 @@
         .key-box:last-child { border-right: none; }
         
         .key-box.active {
-            background: rgba(56, 189, 248, 0.4);
+            background: rgba(56, 189, 248, 0.45);
             color: #fff;
             box-shadow: inset 0 0 20px #38bdf8, 0 0 15px #38bdf8;
-            transform: scale(0.93);
+            transform: scale(0.92);
             border-top: 4px solid #38bdf8;
+        }
+
+        /* Animasi Ikon Jari/Tangan saat ditekan */
+        .hand-icon {
+            position: absolute;
+            bottom: 10px;
+            font-size: 24px;
+            opacity: 0;
+            transform: translateY(15px) scale(0.6);
+            transition: all 0.1s ease;
+            pointer-events: none;
+        }
+        .key-box.active .hand-icon {
+            opacity: 1;
+            transform: translateY(-5px) scale(1.1);
         }
 
         .stat-list {
@@ -270,10 +285,10 @@
     <canvas id="gameCanvas" width="360" height="600"></canvas>
     
     <div class="key-hints">
-        <div class="key-box" id="k-Left" data-lane="0"><span>←</span></div>
-        <div class="key-box" id="k-Up" data-lane="1"><span>↑</span></div>
-        <div class="key-box" id="k-Down" data-lane="2"><span>↓</span></div>
-        <div class="key-box" id="k-Right" data-lane="3"><span>→</span></div>
+        <div class="key-box" id="k-Left" data-lane="0"><span>←</span><div class="hand-icon">👆</div></div>
+        <div class="key-box" id="k-Up" data-lane="1"><span>↑</span><div class="hand-icon">👆</div></div>
+        <div class="key-box" id="k-Down" data-lane="2"><span>↓</span><div class="hand-icon">👆</div></div>
+        <div class="key-box" id="k-Right" data-lane="3"><span>→</span><div class="hand-icon">👆</div></div>
     </div>
 </div>
 
@@ -295,6 +310,7 @@
     let tiles = [];
     let particles = [];
     let bgParticles = [];
+    let touchVisuals = [];
     let lanePressed = [false, false, false, false];
     let score = 0, combo = 0, maxCombo = 0;
     let countPerfect = 0, countGreat = 0, countGood = 0, countMiss = 0;
@@ -348,17 +364,18 @@
         bgAudio.play();
         isPlaying = true;
 
-        let spawnRate = tileSpeed === 4 ? 600 : (tileSpeed === 6 ? 450 : 320);
+        let spawnRate = tileSpeed === 4 ? 650 : (tileSpeed === 6 ? 480 : 350);
         spawnInterval = setInterval(() => {
             if(isPlaying) {
-                let isLong = Math.random() < 0.25; 
-                let tHeight = isLong ? 120 : 65;
+                let isLong = Math.random() < 0.28; 
+                let tHeight = isLong ? 160 : 65;
 
                 tiles.push({
                     lane: Math.floor(Math.random() * 4),
                     y: -tHeight,
                     height: tHeight,
                     isLong: isLong,
+                    holding: false,
                     hit: false,
                     missed: false
                 });
@@ -380,9 +397,19 @@
     function createSparks(lane, color) {
         let sparkX = lane * 90 + 45;
         let sparkY = 520;
-        for (let i = 0; i < 14; i++) {
+        
+        touchVisuals.push({
+            x: sparkX,
+            y: sparkY,
+            radius: 10,
+            maxRadius: 45,
+            alpha: 1,
+            color: color
+        });
+
+        for (let i = 0; i < 12; i++) {
             let angle = Math.random() * Math.PI - Math.PI / 2;
-            let speed = Math.random() * 6 + 2;
+            let speed = Math.random() * 5 + 2;
             particles.push({
                 x: sparkX,
                 y: sparkY,
@@ -402,34 +429,50 @@
 
         for (let i = 0; i < tiles.length; i++) {
             let tile = tiles[i];
-            if (tile.lane === lane && !tile.hit && !tile.missed) {
-                let hitOffset = Math.abs((tile.y + tile.height) - hitZoneY);
-                
-                if (hitOffset <= 85) {
-                    tile.hit = true;
-                    combo++;
-                    if (combo > maxCombo) maxCombo = combo;
-
-                    if (hitOffset <= 25) {
+            if (tile.lane === lane && !tile.missed) {
+                if (tile.isLong) {
+                    let tileBottom = tile.y + tile.height;
+                    if (!tile.hit && tile.y <= hitZoneY && tileBottom >= hitZoneY) {
+                        tile.hit = true;
+                        tile.holding = true;
+                        combo++;
+                        if (combo > maxCombo) maxCombo = combo;
                         countPerfect++;
-                        showFeedback('PERFECT!', '#34d399');
-                        score += 150 + (combo * 5);
-                        createSparks(lane, '#34d399');
+                        showFeedback('HOLD...', '#a855f7');
+                        createSparks(lane, '#a855f7');
                         triggerShake();
-                    } else if (hitOffset <= 55) {
-                        countGreat++;
-                        showFeedback('GREAT!', '#38bdf8');
-                        score += 100 + (combo * 3);
-                        createSparks(lane, '#38bdf8');
-                    } else {
-                        countGood++;
-                        showFeedback('GOOD', '#fbbf24');
-                        score += 50;
-                        createSparks(lane, '#fbbf24');
+                        break;
                     }
+                } else {
+                    if (!tile.hit) {
+                        let hitOffset = Math.abs((tile.y + tile.height) - hitZoneY);
+                        if (hitOffset <= 85) {
+                            tile.hit = true;
+                            combo++;
+                            if (combo > maxCombo) maxCombo = combo;
 
-                    document.getElementById('score').innerText = score;
-                    break;
+                            if (hitOffset <= 25) {
+                                countPerfect++;
+                                showFeedback('PERFECT!', '#34d399');
+                                score += 150 + (combo * 5);
+                                createSparks(lane, '#34d399');
+                                triggerShake();
+                            } else if (hitOffset <= 55) {
+                                countGreat++;
+                                showFeedback('GREAT!', '#38bdf8');
+                                score += 100 + (combo * 3);
+                                createSparks(lane, '#38bdf8');
+                            } else {
+                                countGood++;
+                                showFeedback('GOOD', '#fbbf24');
+                                score += 50;
+                                createSparks(lane, '#fbbf24');
+                            }
+
+                            document.getElementById('score').innerText = score;
+                            break;
+                        }
+                    }
                 }
             }
         }
@@ -438,6 +481,17 @@
     function releaseHit(lane) {
         keyBoxes[lane].classList.remove('active');
         lanePressed[lane] = false;
+
+        for (let i = 0; i < tiles.length; i++) {
+            let tile = tiles[i];
+            if (tile.lane === lane && tile.isLong && tile.holding) {
+                tile.holding = false;
+                tile.hit = true;
+                score += 200;
+                document.getElementById('score').innerText = score;
+                showFeedback('GREAT HOLD!', '#38bdf8');
+            }
+        }
     }
 
     window.addEventListener('keydown', (e) => {
@@ -532,67 +586,14 @@
         for (let l = 0; l < 4; l++) {
             if (lanePressed[l]) {
                 ctx.save();
-                let glowGrad = ctx.createRadialGradient(l * 90 + 45, 520, 5, l * 90 + 45, 520, 50);
-                glowGrad.addColorStop(0, 'rgba(56, 189, 248, 0.9)');
-                glowGrad.addColorStop(0.5, 'rgba(56, 189, 248, 0.4)');
+                let glowGrad = ctx.createRadialGradient(l * 90 + 45, 520, 5, l * 90 + 45, 520, 55);
+                glowGrad.addColorStop(0, 'rgba(56, 189, 248, 0.95)');
+                glowGrad.addColorStop(0.5, 'rgba(56, 189, 248, 0.45)');
                 glowGrad.addColorStop(1, 'rgba(56, 189, 248, 0)');
                 ctx.fillStyle = glowGrad;
-                ctx.fillRect(l * 90, 460, 90, 110);
+                ctx.fillRect(l * 90, 450, 90, 120);
                 ctx.restore();
             }
         }
 
-        for (let i = tiles.length - 1; i >= 0; i--) {
-            let tile = tiles[i];
-            tile.y += tileSpeed;
-
-            if (!tile.hit && !tile.missed && tile.y > 560) {
-                tile.missed = true;
-                countMiss++;
-                resetCombo();
-                showFeedback('MISS', '#ef4444');
-            }
-
-            if (tile.y > 650 || tile.hit) {
-                tiles.splice(i, 1);
-                continue;
-            }
-
-            let grad = ctx.createLinearGradient(0, tile.y, 0, tile.y + tile.height);
-            grad.addColorStop(0, '#38bdf8');
-            grad.addColorStop(1, '#0284c7');
-
-            ctx.fillStyle = grad;
-            ctx.fillRect(tile.lane * 90 + 6, tile.y, 78, tile.height);
-
-            ctx.strokeStyle = '#ffffff';
-            ctx.lineWidth = 1.5;
-            ctx.strokeRect(tile.lane * 90 + 6, tile.y, 78, tile.height);
-        }
-
-        for (let i = particles.length - 1; i >= 0; i--) {
-            let p = particles[i];
-            p.x += p.vx;
-            p.y += p.vy;
-            p.vy += 0.2; 
-            p.alpha -= 0.03;
-
-            if (p.alpha <= 0) {
-                particles.splice(i, 1);
-            } else {
-                ctx.save();
-                ctx.globalAlpha = p.alpha;
-                ctx.fillStyle = p.color;
-                ctx.beginPath();
-                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.restore();
-            }
-        }
-
-        requestAnimationFrame(gameLoop);
-    }
-</script>
-</body>
-                                   </html>
-
+        for (let i = tiles.length - 1; i >=
