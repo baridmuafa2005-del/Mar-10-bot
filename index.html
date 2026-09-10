@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -211,7 +210,6 @@
             border-top: 5px solid #38bdf8;
         }
 
-        /* Animasi ikon tangan/jari yang interaktif */
         .hand-icon {
             position: absolute;
             bottom: 12px;
@@ -241,11 +239,12 @@
     <h2>🎵 Custom Music Rhythm Tiles</h2>
     <p style="margin-top:6px; font-size:12px; color:#aaa;">Pilih lagu favoritmu!</p>
     
-    <label class="btn-select-song">
+    <label class="btn-select-song" id="label-select">
         📁 Pilih File Audio
         <input type="file" id="audio-input" accept="audio/*">
     </label>
     <div id="file-name" style="margin-top:8px; font-size:12px; color:#38bdf8; font-weight:bold;"></div>
+    <div id="loading-status" style="margin-top:6px; font-size:11px; color:#fbbf24;"></div>
 
     <div class="option-group">
         <div class="option-label">Kecepatan Tile:</div>
@@ -293,21 +292,24 @@
     </div>
 </div>
 
-<audio id="bg-audio"></audio>
-
 <script>
     const audioInput = document.getElementById('audio-input');
     const startBtn = document.getElementById('start-btn');
     const fileNameDiv = document.getElementById('file-name');
+    const loadingStatus = document.getElementById('loading-status');
     const setupScreen = document.getElementById('setup-screen');
     const resultScreen = document.getElementById('result-screen');
     const gameContainer = document.getElementById('game-container');
-    const bgAudio = document.getElementById('bg-audio');
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
     const hitText = document.getElementById('hit-text');
     const comboCount = document.getElementById('combo-count');
 
+    let audioCtx = null;
+    let audioBuffer = null;
+    let audioSource = null;
+    let audioStartTime = 0;
+    
     let tiles = [];
     let particles = [];
     let bgParticles = [];
@@ -333,12 +335,27 @@
         });
     });
 
-    audioInput.addEventListener('change', (e) => {
+    audioInput.addEventListener('change', async (e) => {
         const file = e.target.files[0];
-        if (file) {
-            bgAudio.src = URL.createObjectURL(file);
-            fileNameDiv.innerText = "🎵 " + file.name;
+        if (!file) return;
+
+        fileNameDiv.innerText = "🎵 " + file.name;
+        loadingStatus.innerText = "Memuat audio ke memori...";
+        startBtn.style.display = 'none';
+
+        try {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            
+            const arrayBuffer = await file.arrayBuffer();
+            audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+            
+            loadingStatus.innerText = "Audio siap dimainkan! ✅";
             startBtn.style.display = 'block';
+        } catch (err) {
+            console.error(err);
+            loadingStatus.innerText = "Gagal memuat audio. Coba file MP3 lain.";
         }
     });
 
@@ -356,13 +373,28 @@
     }
 
     function startGame() {
-        if (!bgAudio.src) return;
+        if (!audioBuffer) return;
+
+        if (audioCtx.state === 'suspended') {
+            audioCtx.resume();
+        }
 
         setupScreen.style.display = 'none';
         gameContainer.style.display = 'block';
 
         initBgParticles();
-        bgAudio.play();
+
+        // Putar audio menggunakan Web Audio API (Sangat stabil di HP)
+        audioSource = audioCtx.createBufferSource();
+        audioSource.buffer = audioBuffer;
+        audioSource.connect(audioCtx.destination);
+        audioSource.start(0);
+        audioStartTime = audioCtx.currentTime;
+
+        audioSource.onended = () => {
+            if (isPlaying) showResult();
+        };
+
         isPlaying = true;
 
         let spawnRate = tileSpeed === 4 ? 650 : (tileSpeed === 6 ? 480 : 350);
@@ -383,7 +415,6 @@
             }
         }, spawnRate);
 
-        bgAudio.onended = showResult;
         requestAnimationFrame(gameLoop);
     }
 
@@ -508,11 +539,13 @@
         box.addEventListener('touchstart', (e) => {
             e.preventDefault();
             triggerHit(lane);
-        });
+        }, { passive: false });
         box.addEventListener('touchend', (e) => {
             e.preventDefault();
             releaseHit(lane);
-        });
+        }, { passive: false });
+        box.addEventListener('mousedown', () => triggerHit(lane));
+        box.addEventListener('mouseup', () => releaseHit(lane));
     });
 
     function resetCombo() {
@@ -537,6 +570,9 @@
     function showResult() {
         isPlaying = false;
         clearInterval(spawnInterval);
+        if (audioSource) {
+            try { audioSource.stop(); } catch(e){}
+        }
         gameContainer.style.display = 'none';
         resultScreen.style.display = 'block';
 
@@ -555,125 +591,4 @@
 
         bgParticles.forEach(p => {
             p.y -= p.speedY;
-            if (p.y < 0) {
-                p.y = canvas.height;
-                p.x = Math.random() * canvas.width;
-            }
-            ctx.save();
-            ctx.globalAlpha = p.alpha * 0.6;
-            ctx.fillStyle = '#38bdf8';
-            ctx.beginPath();
-            ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.restore();
-        });
-
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
-        ctx.lineWidth = 1;
-        for (let i = 1; i < 4; i++) {
-            ctx.beginPath();
-            ctx.moveTo(i * 90, 0);
-            ctx.lineTo(i * 90, canvas.height);
-            ctx.stroke();
-        }
-
-        ctx.strokeStyle = '#38bdf8';
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.moveTo(0, 520);
-        ctx.lineTo(360, 520);
-        ctx.stroke();
-
-        for (let l = 0; l < 4; l++) {
-            if (lanePressed[l]) {
-                ctx.save();
-                let glowGrad = ctx.createRadialGradient(l * 90 + 45, 520, 5, l * 90 + 45, 520, 55);
-                glowGrad.addColorStop(0, 'rgba(56, 189, 248, 0.95)');
-                glowGrad.addColorStop(0.5, 'rgba(56, 189, 248, 0.45)');
-                glowGrad.addColorStop(1, 'rgba(56, 189, 248, 0)');
-                ctx.fillStyle = glowGrad;
-                ctx.fillRect(l * 90, 450, 90, 120);
-                ctx.restore();
-            }
-        }
-
-        for (let i = tiles.length - 1; i >= 0; i--) {
-            let tile = tiles[i];
-            
-            if (!tile.holding) {
-                tile.y += tileSpeed;
-            }
-
-            if (!tile.hit && !tile.missed && tile.y > 560) {
-                tile.missed = true;
-                countMiss++;
-                resetCombo();
-                showFeedback('MISS', '#ef4444');
-            }
-
-            if (tile.y > 650 || (tile.hit && !tile.holding && tile.y + tile.height < 0)) {
-                tiles.splice(i, 1);
-                continue;
-            }
-
-            let grad = ctx.createLinearGradient(0, tile.y, 0, tile.y + tile.height);
-            if (tile.isLong) {
-                grad.addColorStop(0, '#c084fc');
-                grad.addColorStop(1, '#9333ea');
-            } else {
-                grad.addColorStop(0, '#38bdf8');
-                grad.addColorStop(1, '#0284c7');
-            }
-
-            ctx.fillStyle = grad;
-            ctx.fillRect(tile.lane * 90 + 6, tile.y, 78, tile.height);
-
-            ctx.strokeStyle = '#ffffff';
-            ctx.lineWidth = 1.5;
-            ctx.strokeRect(tile.lane * 90 + 6, tile.y, 78, tile.height);
-        }
-
-        for (let i = touchVisuals.length - 1; i >= 0; i--) {
-            let tv = touchVisuals[i];
-            tv.radius += 3;
-            tv.alpha -= 0.05;
-
-            if (tv.alpha <= 0) {
-                touchVisuals.splice(i, 1);
-            } else {
-                ctx.save();
-                ctx.globalAlpha = tv.alpha;
-                ctx.strokeStyle = tv.color;
-                ctx.lineWidth = 3.5;
-                ctx.beginPath();
-                ctx.arc(tv.x, tv.y, tv.radius, 0, Math.PI * 2);
-                ctx.stroke();
-                ctx.restore();
-            }
-        }
-
-        for (let i = particles.length - 1; i >= 0; i--) {
-            let p = particles[i];
-            p.x += p.vx;
-            p.y += p.vy;
-            p.vy += 0.2; 
-            p.alpha -= 0.03;
-
-            if (p.alpha <= 0) {
-                particles.splice(i, 1);
-            } else {
-                ctx.save();
-                ctx.globalAlpha = p.alpha;
-                ctx.fillStyle = p.color;
-                ctx.beginPath();
-                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.restore();
-            }
-        }
-
-        requestAnimationFrame(gameLoop);
-    }
-</script>
-</body>
-</html>
+     
