@@ -203,26 +203,26 @@
         .key-box:last-child { border-right: none; }
         
         .key-box.active {
-            background: rgba(56, 189, 248, 0.45);
+            background: rgba(56, 189, 248, 0.5);
             color: #fff;
-            box-shadow: inset 0 0 20px #38bdf8, 0 0 15px #38bdf8;
-            transform: scale(0.92);
-            border-top: 4px solid #38bdf8;
+            box-shadow: inset 0 0 25px #38bdf8, 0 0 20px #38bdf8;
+            transform: scale(0.90);
+            border-top: 5px solid #38bdf8;
         }
 
-        /* Animasi Ikon Jari/Tangan saat ditekan */
+        /* Animasi ikon tangan/jari yang interaktif */
         .hand-icon {
             position: absolute;
-            bottom: 10px;
-            font-size: 24px;
+            bottom: 12px;
+            font-size: 26px;
             opacity: 0;
-            transform: translateY(15px) scale(0.6);
-            transition: all 0.1s ease;
+            transform: translateY(20px) scale(0.5);
+            transition: all 0.08s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             pointer-events: none;
         }
         .key-box.active .hand-icon {
             opacity: 1;
-            transform: translateY(-5px) scale(1.1);
+            transform: translateY(-8px) scale(1.25);
         }
 
         .stat-list {
@@ -401,13 +401,13 @@
         touchVisuals.push({
             x: sparkX,
             y: sparkY,
-            radius: 10,
-            maxRadius: 45,
+            radius: 8,
+            maxRadius: 50,
             alpha: 1,
             color: color
         });
 
-        for (let i = 0; i < 12; i++) {
+        for (let i = 0; i < 14; i++) {
             let angle = Math.random() * Math.PI - Math.PI / 2;
             let speed = Math.random() * 5 + 2;
             particles.push({
@@ -596,4 +596,4 @@
             }
         }
 
-        for (let i = tiles.length - 1; i >=
+     
