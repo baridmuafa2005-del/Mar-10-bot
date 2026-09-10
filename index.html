@@ -1,10 +1,9 @@
-
 <!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Custom Music Rhythm Tiles - By Mario</title>
+    <title>Custom Music Rhythm Tiles</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
@@ -14,7 +13,7 @@
         body {
             background: #09090b;
             color: #fff;
-            font-family: sans-serif;
+            font-family: system-ui, -apple-system, sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -25,14 +24,14 @@
 
         #setup-screen, #result-screen {
             text-align: center;
-            background: rgba(30, 41, 59, 0.95);
-            padding: 30px;
-            border-radius: 16px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
-            max-width: 400px;
+            background: rgba(15, 23, 42, 0.92);
+            padding: 24px;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.8), inset 0 1px 1px rgba(255,255,255,0.1);
+            max-width: 380px;
             width: 90%;
-            border: 1px solid rgba(255,255,255,0.1);
-            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255,255,255,0.12);
+            backdrop-filter: blur(12px);
             z-index: 20;
         }
 
@@ -40,42 +39,65 @@
 
         input[type="file"] { display: none; }
         
-        .btn {
-            background: #3b82f6;
+        .btn-select-song {
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
             color: white;
-            padding: 12px 22px;
-            border: none;
-            border-radius: 8px;
+            padding: 14px 24px;
+            border-radius: 12px;
             cursor: pointer;
-            font-weight: bold;
+            font-weight: 700;
+            font-size: 14px;
             margin-top: 15px;
-            display: inline-block;
-            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
-            transition: all 0.2s ease;
+            display: block;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+            transition: transform 0.1s ease, box-shadow 0.2s ease;
         }
-        .btn:active { transform: scale(0.95); }
+        .btn-select-song:active { transform: scale(0.97); }
 
-        .diff-container {
-            margin-top: 15px;
+        .option-group { margin-top: 18px; }
+        .option-label { font-size: 12px; color: #94a3b8; margin-bottom: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+
+        .diff-container, .theme-container {
             display: flex;
             justify-content: center;
-            gap: 10px;
+            gap: 8px;
+            flex-wrap: wrap;
         }
 
-        .diff-btn {
-            background: #334155;
+        .opt-btn {
+            background: rgba(51, 65, 85, 0.7);
             color: #94a3b8;
-            border: 1px solid rgba(255,255,255,0.1);
-            padding: 6px 14px;
-            border-radius: 6px;
+            border: 1px solid rgba(255,255,255,0.08);
+            padding: 10px 14px;
+            border-radius: 10px;
             cursor: pointer;
             font-size: 12px;
-            font-weight: bold;
+            font-weight: 700;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+            flex: 1;
+            min-width: 75px;
         }
-        .diff-btn.active {
+        .opt-btn.active {
             background: #38bdf8;
             color: #0f172a;
-            box-shadow: 0 0 10px #38bdf8;
+            box-shadow: 0 0 15px rgba(56, 189, 248, 0.6);
+            border-color: #38bdf8;
+        }
+
+        #start-btn {
+            background: linear-gradient(135deg, #22c55e, #15803d);
+            color: white;
+            padding: 14px;
+            border: none;
+            border-radius: 12px;
+            font-weight: 800;
+            font-size: 16px;
+            width: 100%;
+            margin-top: 22px;
+            cursor: pointer;
+            box-shadow: 0 4px 20px rgba(34, 197, 94, 0.4);
+            display: none;
         }
 
         #game-container {
@@ -85,20 +107,17 @@
             height: 100vh;
             max-width: 400px;
             max-height: 680px;
-            background: linear-gradient(rgba(0,0,0,0.45), rgba(0,0,0,0.45)), url('bg.jpg');
-            background-size: cover;
-            background-position: center;
+            background: #090d16;
             border: 2px solid rgba(255,255,255,0.15);
-            border-radius: 12px;
+            border-radius: 16px;
             overflow: hidden;
-            box-shadow: 0 0 30px rgba(0,0,0,0.9);
+            box-shadow: 0 0 40px rgba(0,0,0,0.9);
             transition: border-color 0.3s ease, box-shadow 0.3s ease;
         }
 
-        /* Fever Mode Aura */
         #game-container.fever {
             border-color: #f43f5e;
-            box-shadow: 0 0 35px #f43f5e;
+            box-shadow: 0 0 40px #f43f5e;
         }
 
         #game-container.shake {
@@ -107,10 +126,20 @@
 
         @keyframes hitShake {
             0% { transform: translate(0, 0); }
-            25% { transform: translate(-3px, 2px); }
-            50% { transform: translate(3px, -2px); }
-            75% { transform: translate(-2px, -1px); }
+            25% { transform: translate(-4px, 3px); }
+            50% { transform: translate(4px, -3px); }
+            75% { transform: translate(-3px, -2px); }
             100% { transform: translate(0, 0); }
+        }
+
+        #flash-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255,255,255,0.15);
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.05s linear;
+            z-index: 5;
         }
 
         canvas { display: block; width: 100%; height: 100%; }
@@ -179,9 +208,9 @@
             width: 100%;
             height: 85px;
             display: flex;
-            background: rgba(0, 0, 0, 0.65);
+            background: rgba(0, 0, 0, 0.7);
             border-top: 2px solid rgba(255, 255, 255, 0.2);
-            backdrop-filter: blur(4px);
+            backdrop-filter: blur(6px);
             z-index: 10;
         }
 
@@ -209,7 +238,7 @@
 
         .rank-badge {
             font-family: 'Orbitron', sans-serif;
-            font-size: 50px;
+            font-size: 55px;
             font-weight: 900;
             color: #fbbf24;
             text-shadow: 0 0 20px #fbbf24;
@@ -229,22 +258,34 @@
 
 <div id="setup-screen">
     <h2>🎵 Custom Music Tiles</h2>
-    <p style="margin-top:10px; font-size:14px; color:#94a3b8;">Import lagu MP3/WAV dari perangkat kamu!</p>
+    <p style="margin-top:6px; font-size:13px; color:#94a3b8;">Import lagu MP3/WAV dari HP kamu!</p>
     
-    <label class="btn" style="margin-top:20px;">
-        Pilih Lagu
+    <label class="btn-select-song">
+        📁 Pilih File Lagu
         <input type="file" id="audio-input" accept="audio/*">
     </label>
-    <div id="file-name" style="margin-top:10px; font-size:12px; color:#38bdf8;"></div>
+    <div id="file-name" style="margin-top:10px; font-size:12px; color:#38bdf8; font-weight:bold;"></div>
 
-    <p style="margin-top:15px; font-size:12px; color:#64748b;">Kecepatan Tile:</p>
-    <div class="diff-container">
-        <button class="diff-btn active" data-speed="350">Pelan</button>
-        <button class="diff-btn" data-speed="480">Sedang</button>
-        <button class="diff-btn" data-speed="620">Cepat</button>
+    <div class="option-group">
+        <div class="option-label">Kecepatan Tile:</div>
+        <div class="diff-container">
+            <button class="opt-btn diff-btn active" data-speed="4">Pelan</button>
+            <button class="opt-btn diff-btn" data-speed="6">Sedang</button>
+            <button class="opt-btn diff-btn" data-speed="8">Cepat</button>
+        </div>
+    </div>
+
+    <div class="option-group">
+        <div class="option-label">Tema Visual (Skin):</div>
+        <div class="theme-container">
+            <button class="opt-btn theme-btn active" data-theme="neon">Neon Blue</button>
+            <button class="opt-btn theme-btn" data-theme="sakura">Sakura</button>
+            <button class="opt-btn theme-btn" data-theme="sunset">Sunset</button>
+            <button class="opt-btn theme-btn" data-theme="cyber">Cyberpunk</button>
+        </div>
     </div>
     
-    <button class="btn" id="start-btn" style="display:none; background:#22c55e;">Mulai Game</button>
+    <button id="start-btn">MULAI GAME 🚀</button>
 </div>
 
 <div id="result-screen">
@@ -258,9 +299,11 @@
         <div>Miss: <b id="res-miss" style="color:#ef4444;">0</b></div>
         <div>Max Combo: <b id="res-combo" style="color:#fbbf24;">0x</b></div>
     </div>
+    <button class="opt-btn active" onclick="location.reload()" style="width:100%; padding:14px; font-size:14px; margin-top:10px;">Main Lagi 🔄</button>
 </div>
 
 <div id="game-container">
+    <div id="flash-overlay"></div>
     <div id="score-board">
         Score: <span id="score">0</span><br>
         <small style="color:#94a3b8;">High: <span id="hi-score">0</span></small>
@@ -283,6 +326,8 @@
     </div>
 </div>
 
+<audio id="bg-audio"></audio>
+
 <script>
     const audioInput = document.getElementById('audio-input');
     const startBtn = document.getElementById('start-btn');
@@ -290,22 +335,31 @@
     const setupScreen = document.getElementById('setup-screen');
     const resultScreen = document.getElementById('result-screen');
     const gameContainer = document.getElementById('game-container');
+    const flashOverlay = document.getElementById('flash-overlay');
+    const bgAudio = document.getElementById('bg-audio');
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
     const hitText = document.getElementById('hit-text');
     const comboCount = document.getElementById('combo-count');
     const feverBanner = document.getElementById('fever-banner');
 
-    let audioCtx, analyser, audioBuffer, audioSource;
-    let freqData;
+    let audioCtx, analyser, freqData, audioSourceNode;
     let tiles = [];
     let score = 0, combo = 0, maxCombo = 0;
     let countPerfect = 0, countGreat = 0, countMiss = 0;
     let isPlaying = false;
-    let startTime = 0;
-    let gameSpeed = 350;
+    let tileSpeed = 4;
     let isFever = false;
+    let spawnInterval = null;
     let highScore = localStorage.getItem('rhythm_hi_score') || 0;
+
+    const themes = {
+        neon: { c1: '#38bdf8', c2: '#818cf8' },
+        sakura: { c1: '#f472b6', c2: '#fb7185' },
+        sunset: { c1: '#fbbf24', c2: '#f97316' },
+        cyber: { c1: '#a855f7', c2: '#06b6d4' }
+    };
+    let currentTheme = themes.neon;
 
     document.getElementById('hi-score').innerText = highScore;
 
@@ -314,12 +368,9 @@
     let bgParticles = [];
     for (let i = 0; i < 20; i++) {
         bgParticles.push({
-            x: Math.random() * 360,
-            y: Math.random() * 600,
-            radius: Math.random() * 2 + 0.8,
-            alpha: Math.random() * 0.7 + 0.3,
-            speedY: Math.random() * 0.4 + 0.1,
-            pulse: Math.random() * 0.02 + 0.005
+            x: Math.random() * 360, y: Math.random() * 600,
+            radius: Math.random() * 2 + 0.8, alpha: Math.random() * 0.7 + 0.3,
+            speedY: Math.random() * 0.4 + 0.1, pulse: Math.random() * 0.02 + 0.005
         });
     }
 
@@ -331,116 +382,146 @@
         document.getElementById('k-Down'), document.getElementById('k-Right')
     ];
 
-    document.querySelectorAll('.diff-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            gameSpeed = parseInt(btn.getAttribute('data-speed'));
+    function bindOptionButtons(selector, callback) {
+        document.querySelectorAll(selector).forEach(btn => {
+            const handleSelect = (e) => {
+                e.preventDefault();
+                document.querySelectorAll(selector).forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                callback(btn);
+            };
+            btn.addEventListener('click', handleSelect);
+            btn.addEventListener('touchstart', handleSelect, { passive: false });
         });
+    }
+
+    bindOptionButtons('.diff-btn', (btn) => {
+        tileSpeed = parseInt(btn.getAttribute('data-speed'));
+    });
+
+    bindOptionButtons('.theme-btn', (btn) => {
+        const themeKey = btn.getAttribute('data-theme');
+        if(themes[themeKey]) currentTheme = themes[themeKey];
     });
 
     audioInput.addEventListener('change', (e) => {
         const file = e.target.files[0];
         if (file) {
-            fileNameDiv.innerText = file.name;
-            startBtn.style.display = 'inline-block';
-            
-            const reader = new FileReader();
-            reader.onload = function(evt) {
-                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                audioCtx.decodeAudioData(evt.target.result, (buffer) => {
-                    audioBuffer = buffer;
-                });
-            };
-            reader.readAsArrayBuffer(file);
+            bgAudio.src = URL.createObjectURL(file);
+            fileNameDiv.innerText = "🎵 " + file.name;
+            startBtn.style.display = 'block';
         }
     });
 
-    function triggerVibrate(pattern) {
-        if (navigator.vibrate) navigator.vibrate(pattern);
+    function triggerVibrate(ms) {
+        if (navigator.vibrate) navigator.vibrate(ms);
     }
 
-    function playHitSFX(isPerfect) {
-        if (!audioCtx) return;
-        let osc = audioCtx.createOscillator();
-        let gain = audioCtx.createGain();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(isPerfect ? 587.33 : 440, audioCtx.currentTime);
-        gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.08);
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc.start();
-        osc.stop(audioCtx.currentTime + 0.08);
+    function triggerFlash() {
+        flashOverlay.style.opacity = '1';
+        setTimeout(() => { flashOverlay.style.opacity = '0'; }, 50);
     }
 
-    function generateTilesFromAudio(buffer) {
-        const data = buffer.getChannelData(0);
-        const sampleRate = buffer.sampleRate;
-        const step = Math.floor(sampleRate / 10);
-        let generatedTiles = [];
+    function startGame() {
+        if (!bgAudio.src) return;
 
-        for (let i = 0; i < data.length; i += step) {
-            let sum = 0;
-            for (let j = 0; j < step && (i + j) < data.length; j++) {
-                sum += Math.abs(data[i + j]);
-            }
-            let average = sum / step;
-
-            if (average > 0.18) { 
-                let lane = Math.floor(Math.random() * 4);
-                let time = i / sampleRate; 
-                let isHold = average > 0.35; // Tile Panjang jika audio cukup kuat
-                let length = isHold ? Math.min(average * 500, 260) : 80;
-
-                let lastTile = generatedTiles[generatedTiles.length - 1];
-                if (!lastTile || (time - lastTile.time > 0.28)) {
-                    generatedTiles.push({
-                        lane: lane, time: time, length: length, isHold: isHold,
-                        y: -length, hit: false, missed: false, holding: false, holdProgress: 0
-                    });
-                }
-            }
-        }
-        return generatedTiles;
-    }
-
-    startBtn.addEventListener('click', () => {
-        if (!audioBuffer) return;
         setupScreen.style.display = 'none';
         gameContainer.style.display = 'block';
 
-        tiles = generateTilesFromAudio(audioBuffer);
-        
-        analyser = audioCtx.createAnalyser();
-        analyser.fftSize = 64;
-        freqData = new Uint8Array(analyser.frequencyBinCount);
+        try {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            analyser = audioCtx.createAnalyser();
+            analyser.fftSize = 64;
+            freqData = new Uint8Array(analyser.frequencyBinCount);
+            
+            audioSourceNode = audioCtx.createMediaElementSource(bgAudio);
+            audioSourceNode.connect(analyser);
+            analyser.connect(audioCtx.destination);
+        } catch(e) {}
 
-        audioSource = audioCtx.createBufferSource();
-        audioSource.buffer = audioBuffer;
-        audioSource.connect(analyser);
-        analyser.connect(audioCtx.destination);
-        
-        startTime = audioCtx.currentTime;
-        audioSource.start(0);
+        bgAudio.play();
         isPlaying = true;
 
-        audioSource.onended = showResult;
+        let spawnRate = tileSpeed === 4 ? 650 : (tileSpeed === 6 ? 480 : 350);
+        spawnInterval = setInterval(() => {
+            if(isPlaying) {
+                tiles.push({
+                    lane: Math.floor(Math.random() * 4),
+                    y: -70,
+                    height: 70,
+                    hit: false,
+                    missed: false
+                });
+            }
+        }, spawnRate);
+
+        bgAudio.onended = showResult;
 
         requestAnimationFrame(gameLoop);
-    });
+    }
+
+    startBtn.addEventListener('click', startGame);
+    startBtn.addEventListener('touchstart', (e) => { e.preventDefault(); startGame(); }, { passive: false });
+
+    function triggerHit(lane) {
+        keyBoxes[lane].classList.add('active');
+        activeLanes[lane] = true;
+        const hitZoneY = 510;
+
+        gameContainer.classList.remove('shake');
+        void gameContainer.offsetWidth;
+        gameContainer.classList.add('shake');
+
+        let hitFound = false;
+        tiles.forEach(tile => {
+            if (tile.lane === lane && !tile.hit && !tile.missed) {
+                let hitOffset = Math.abs(tile.y + tile.height - hitZoneY);
+                
+                if (hitOffset <= 65) {
+                    tile.hit = true;
+                    hitFound = true;
+
+                    combo++;
+                    if (combo > maxCombo) maxCombo = combo;
+
+                    if (combo >= 15 && !isFever) {
+                        isFever = true;
+                        gameContainer.classList.add('fever');
+                        feverBanner.style.opacity = '1';
+                        triggerVibrate([40, 40, 40]);
+                    }
+
+                    let isPerfect = hitOffset <= 25;
+                    if (isPerfect) {
+                        countPerfect++;
+                        triggerFlash();
+                    } else {
+                        countGreat++;
+                    }
+
+                    let points = (isPerfect ? 150 : 80) * (isFever ? 2 : 1);
+                    score += points + (combo * 5);
+                    
+                    document.getElementById('score').innerText = score;
+                    showFeedback(isPerfect ? 'PERFECT!' : 'GREAT!', isPerfect ? currentTheme.c1 : '#34d399');
+                    triggerVibrate(isPerfect ? 25 : 12);
+                    spawnHitBurst(lane * 90 + 45, hitZoneY);
+                }
+            }
+        });
+    }
+
+    function releaseHit(lane) {
+        keyBoxes[lane].classList.remove('active');
+        activeLanes[lane] = false;
+    }
 
     window.addEventListener('keydown', (e) => {
         if (keyMap.hasOwnProperty(e.key)) triggerHit(keyMap[e.key]);
     });
 
     window.addEventListener('keyup', (e) => {
-        if (keyMap.hasOwnProperty(e.key)) {
-            let lane = keyMap[e.key];
-            keyBoxes[lane].classList.remove('active');
-            activeLanes[lane] = false;
-            releaseHold(lane);
-        }
+        if (keyMap.hasOwnProperty(e.key)) releaseHit(keyMap[e.key]);
     });
 
     keyBoxes.forEach((box) => {
@@ -452,84 +533,20 @@
 
         box.addEventListener('touchend', (e) => {
             e.preventDefault();
-            keyBoxes[lane].classList.remove('active');
-            activeLanes[lane] = false;
-            releaseHold(lane);
+            releaseHit(lane);
         }, { passive: false });
     });
 
     function spawnHitBurst(x, y) {
-        let colorTheme = isFever ? '#f43f5e' : '#38bdf8';
-        for (let i = 0; i < 12; i++) {
+        let colorTheme = isFever ? '#f43f5e' : currentTheme.c1;
+        for (let i = 0; i < 10; i++) {
             hitParticles.push({
                 x: x, y: y,
-                vx: (Math.random() - 0.5) * 8, vy: (Math.random() - 0.5) * 8,
+                vx: (Math.random() - 0.5) * 7, vy: (Math.random() - 0.5) * 7,
                 radius: Math.random() * 3 + 2, alpha: 1,
                 color: i % 2 === 0 ? colorTheme : '#ffffff'
             });
         }
-    }
-
-    function triggerHit(lane) {
-        keyBoxes[lane].classList.add('active');
-        activeLanes[lane] = true;
-        const hitZoneY = 520;
-
-        gameContainer.classList.remove('shake');
-        void gameContainer.offsetWidth;
-        gameContainer.classList.add('shake');
-
-        tiles.forEach(tile => {
-            if (tile.lane === lane && !tile.hit && !tile.missed) {
-                let hitOffset = Math.abs((tile.y + tile.length) - hitZoneY);
-                
-                if (hitOffset <= 70) {
-                    if (tile.isHold) {
-                        tile.holding = true;
-                    } else {
-                        tile.hit = true;
-                    }
-
-                    combo++;
-                    if (combo > maxCombo) maxCombo = combo;
-
-                    // Fever Mode Streak (Combo >= 15)
-                    if (combo >= 15 && !isFever) {
-                        isFever = true;
-                        gameContainer.classList.add('fever');
-                        feverBanner.style.opacity = '1';
-                        triggerVibrate([50, 50, 50]);
-                    }
-
-                    let isPerfect = hitOffset <= 30;
-                    if (isPerfect) countPerfect++; else countGreat++;
-
-                    let multiplier = isFever ? 2 : 1;
-                    let points = (isPerfect ? 150 : 80) * multiplier;
-                    score += points + (combo * 5);
-                    
-                    document.getElementById('score').innerText = score;
-                    showFeedback(isPerfect ? 'PERFECT!' : 'GREAT!', isPerfect ? '#38bdf8' : '#34d399');
-                    playHitSFX(isPerfect);
-                    triggerVibrate(isPerfect ? 30 : 15);
-                    spawnHitBurst(lane * 90 + 45, hitZoneY);
-                }
-            }
-        });
-    }
-
-    function releaseHold(lane) {
-        tiles.forEach(tile => {
-            if (tile.lane === lane && tile.isHold && tile.holding && !tile.hit) {
-                tile.holding = false;
-                if (tile.holdProgress >= tile.length - 20) {
-                    tile.hit = true;
-                } else {
-                    tile.missed = true;
-                    resetCombo();
-                }
-            }
-        });
     }
 
     function resetCombo() {
@@ -556,6 +573,7 @@
 
     function showResult() {
         isPlaying = false;
+        clearInterval(spawnInterval);
         gameContainer.style.display = 'none';
         resultScreen.style.display = 'block';
 
@@ -572,19 +590,4 @@
 
         document.getElementById('res-rank').innerText = rank;
         document.getElementById('res-score').innerText = score;
-        document.getElementById('res-high-score').innerText = highScore;
-        document.getElementById('res-perfect').innerText = countPerfect;
-        document.getElementById('res-great').innerText = countGreat;
-        document.getElementById('res-miss').innerText = countMiss;
-        document.getElementById('res-combo').innerText = `${maxCombo}x`;
-    }
-
-    function gameLoop() {
-        if (!isPlaying) return;
-
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-        // Render Audio Visualizer (Waveform Bottom Bar)
-        if (analyser) {
-            analyser.getByteFrequencyData(freqData);
-            ctx.fillStyle = isFever ? 'rgba(244, 63, 94, 0.25)' : 'rgba(56, 189, 248, 0
+        document.getE
