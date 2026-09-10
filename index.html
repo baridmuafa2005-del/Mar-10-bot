@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -25,7 +26,7 @@
         #setup-screen, #result-screen {
             text-align: center;
             background: rgba(10, 15, 30, 0.95);
-            padding: 20px;
+            padding: 24px;
             border-radius: 16px;
             box-shadow: 0 0 25px rgba(0,191,255,0.3);
             max-width: 360px;
@@ -35,51 +36,9 @@
         }
 
         #result-screen { display: none; }
-        input[type="file"] { display: none; }
         
-        .btn-select-song {
-            background: #0284c7;
-            color: white;
-            padding: 10px 16px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: bold;
-            font-size: 13px;
-            margin-top: 8px;
-            display: inline-block;
-            box-shadow: 0 0 10px rgba(2, 132, 199, 0.5);
-        }
-
-        .song-list {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-            margin-top: 10px;
-            max-height: 130px;
-            overflow-y: auto;
-        }
-
-        .song-option {
-            background: #1e293b;
-            border: 1px solid #334155;
-            color: #cbd5e1;
-            padding: 8px 12px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 12px;
-            text-align: left;
-            font-weight: bold;
-            transition: 0.2s;
-        }
-        .song-option.selected {
-            background: #38bdf8;
-            color: #000;
-            border-color: #38bdf8;
-            box-shadow: 0 0 10px #38bdf8;
-        }
-
-        .option-group { margin-top: 12px; }
-        .option-label { font-size: 12px; color: #cbd5e1; margin-bottom: 6px; font-weight: bold; }
+        .option-group { margin-top: 15px; }
+        .option-label { font-size: 13px; color: #cbd5e1; margin-bottom: 8px; font-weight: bold; }
 
         .diff-container { display: flex; justify-content: center; gap: 8px; }
 
@@ -87,7 +46,7 @@
             background: #1e293b;
             color: #fff;
             border: 1px solid #334155;
-            padding: 8px 12px;
+            padding: 10px 12px;
             border-radius: 6px;
             cursor: pointer;
             font-size: 12px;
@@ -110,10 +69,10 @@
             font-weight: bold;
             font-size: 16px;
             width: 100%;
-            margin-top: 15px;
+            margin-top: 20px;
             cursor: pointer;
-            display: none;
             box-shadow: 0 0 15px rgba(16, 185, 129, 0.6);
+            display: block;
         }
 
         #game-container {
@@ -140,14 +99,6 @@
             60% { transform: translate(-2px, -3px); }
             80% { transform: translate(2px, 2px); }
             100% { transform: translate(0, 0); }
-        }
-
-        #game-overlay {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.3);
-            pointer-events: none;
-            z-index: 1;
         }
 
         canvas { display: block; width: 100%; height: 100%; position: relative; z-index: 2; }
@@ -264,21 +215,9 @@
 <body>
 
 <div id="setup-screen">
-    <h2>🎵 Custom Music Rhythm Tiles</h2>
-    <p style="margin-top:4px; font-size:11px; color:#aaa;">Pilih lagu atau upload sendiri!</p>
+    <h2>🎵 Piano Rhythm Tiles</h2>
+    <p style="margin-top:8px; font-size:12px; color:#aaa;">Pilih kecepatan lalu langsung mulai game!</p>
     
-    <div class="song-list" id="song-list">
-        <div class="song-option selected" data-src="https://upload.wikimedia.org/wikipedia/commons/b/b2/Beethoven_Moonlight_1st_movement.ogg">🎹 Beethoven - Moonlight Sonata</div>
-        <div class="song-option" data-src="https://upload.wikimedia.org/wikipedia/commons/d/d4/Mozart_Rondo_alla_turca.ogg">🎻 Mozart - Rondo alla Turca</div>
-    </div>
-
-    <label class="btn-select-song">
-        📁 Upload File Lagu Sendiri
-        <input type="file" id="audio-input" accept="audio/*">
-    </label>
-    <div id="file-name" style="margin-top:4px; font-size:11px; color:#38bdf8; font-weight:bold;"></div>
-    <div id="loading-status" style="margin-top:4px; font-size:11px; color:#fbbf24;"></div>
-
     <div class="option-group">
         <div class="option-label">Kecepatan Tile:</div>
         <div class="diff-container">
@@ -288,7 +227,7 @@
         </div>
     </div>
     
-    <button id="start-btn" style="display:block;">MULAI GAME 🚀</button>
+    <button id="start-btn">MULAI GAME 🚀</button>
 </div>
 
 <div id="result-screen">
@@ -305,9 +244,7 @@
 </div>
 
 <div id="game-container">
-    <div id="game-overlay"></div>
     <div id="score-board">Score: <span id="score">0</span></div>
-    
     <div class="signature">By Mario</div>
     
     <div id="combo-hud">
@@ -326,10 +263,7 @@
 </div>
 
 <script>
-    const audioInput = document.getElementById('audio-input');
     const startBtn = document.getElementById('start-btn');
-    const fileNameDiv = document.getElementById('file-name');
-    const loadingStatus = document.getElementById('loading-status');
     const setupScreen = document.getElementById('setup-screen');
     const resultScreen = document.getElementById('result-screen');
     const gameContainer = document.getElementById('game-container');
@@ -339,10 +273,6 @@
     const comboCount = document.getElementById('combo-count');
 
     let audioCtx = null;
-    let audioBuffer = null;
-    let audioSource = null;
-    let currentSelectedUrl = "https://upload.wikimedia.org/wikipedia/commons/b/b2/Beethoven_Moonlight_1st_movement.ogg";
-    
     let tiles = [];
     let particles = [];
     let bgParticles = [];
@@ -360,70 +290,34 @@
         document.getElementById('k-Down'), document.getElementById('k-Right')
     ];
 
+    const pianoNotes = [261.63, 329.63, 392.00, 523.25];
+
+    function playPianoNote(lane) {
+        if (!audioCtx) return;
+        try {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(pianoNotes[lane], audioCtx.currentTime);
+
+            gain.gain.setValueAtTime(0.5, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.6);
+
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.6);
+        } catch(e) {}
+    }
+
     document.querySelectorAll('.diff-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
             tileSpeed = parseInt(btn.getAttribute('data-speed'));
         });
-    });
-
-    async function loadAudioFromUrl(url, name) {
-        fileNameDiv.innerText = "🎵 " + name;
-        loadingStatus.innerText = "Mengunduh & memproses audio...";
-        startBtn.style.display = 'none';
-
-        try {
-            if (!audioCtx) {
-                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            }
-            
-            const response = await fetch(url);
-            const arrayBuffer = await response.arrayBuffer();
-            audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
-            
-            loadingStatus.innerText = "Audio siap dimainkan! ✅";
-            startBtn.style.display = 'block';
-        } catch (err) {
-            console.error(err);
-            loadingStatus.innerText = "Gagal memuat audio. Coba lagu lain.";
-        }
-    }
-
-    loadAudioFromUrl(currentSelectedUrl, "Beethoven - Moonlight Sonata");
-
-    document.querySelectorAll('.song-option').forEach(opt => {
-        opt.addEventListener('click', () => {
-            document.querySelectorAll('.song-option').forEach(o => o.classList.remove('selected'));
-            opt.classList.add('selected');
-            currentSelectedUrl = opt.getAttribute('data-src');
-            loadAudioFromUrl(currentSelectedUrl, opt.innerText);
-        });
-    });
-
-    audioInput.addEventListener('change', async (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-
-        document.querySelectorAll('.song-option').forEach(o => o.classList.remove('selected'));
-        fileNameDiv.innerText = "🎵 " + file.name;
-        loadingStatus.innerText = "Memuat audio ke memori...";
-        startBtn.style.display = 'none';
-
-        try {
-            if (!audioCtx) {
-                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            }
-            
-            const arrayBuffer = await file.arrayBuffer();
-            audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
-            
-            loadingStatus.innerText = "Audio siap dimainkan! ✅";
-            startBtn.style.display = 'block';
-        } catch (err) {
-            console.error(err);
-            loadingStatus.innerText = "Gagal memuat file audio.";
-        }
     });
 
     function initBgParticles() {
@@ -440,8 +334,6 @@
     }
 
     async function startGame() {
-        if (!audioBuffer) return;
-
         if (!audioCtx) {
             audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         }
@@ -453,23 +345,6 @@
         gameContainer.style.display = 'block';
 
         initBgParticles();
-
-        try {
-            if (audioSource) {
-                try { audioSource.stop(); } catch(e){}
-            }
-            audioSource = audioCtx.createBufferSource();
-            audioSource.buffer = audioBuffer;
-            audioSource.connect(audioCtx.destination);
-            audioSource.start(0);
-
-            audioSource.onended = () => {
-                if (isPlaying) showResult();
-            };
-        } catch(e) {
-            console.error("Audio play error:", e);
-        }
-
         isPlaying = true;
 
         let spawnRate = tileSpeed === 4 ? 650 : (tileSpeed === 6 ? 480 : 350);
@@ -536,6 +411,7 @@
     function triggerHit(lane) {
         keyBoxes[lane].classList.add('active');
         lanePressed[lane] = true;
+        playPianoNote(lane);
         const hitZoneY = 520;
 
         for (let i = 0; i < tiles.length; i++) {
@@ -650,9 +526,6 @@
     function showResult() {
         isPlaying = false;
         clearInterval(spawnInterval);
-        if (audioSource) {
-            try { audioSource.stop(); } catch(e){}
-        }
         gameContainer.style.display = 'none';
         resultScreen.style.display = 'block';
 
@@ -722,75 +595,4 @@
 
             if (!tile.hit && !tile.missed && tile.y > 560) {
                 tile.missed = true;
-                countMiss++;
-                resetCombo();
-                showFeedback('MISS', '#ef4444');
-            }
-
-            if (tile.y > 650 || (tile.hit && !tile.holding && tile.y + tile.height < 0)) {
-                tiles.splice(i, 1);
-                continue;
-            }
-
-            let grad = ctx.createLinearGradient(0, tile.y, 0, tile.y + tile.height);
-            if (tile.isLong) {
-                grad.addColorStop(0, '#c084fc');
-                grad.addColorStop(0.5, '#a855f7');
-                grad.addColorStop(1, '#7e22ce');
-            } else {
-                grad.addColorStop(0, '#38bdf8');
-                grad.addColorStop(1, '#0284c7');
-            }
-
-            ctx.fillStyle = grad;
-            ctx.fillRect(tile.lane * 90 + 5, tile.y, 80, tile.height);
-
-            ctx.strokeStyle = '#ffffff';
-            ctx.lineWidth = 2;
-            ctx.strokeRect(tile.lane * 90 + 5, tile.y, 80, tile.height);
-        }
-
-        for (let i = touchVisuals.length - 1; i >= 0; i--) {
-            let tv = touchVisuals[i];
-            tv.radius += 3.5;
-            tv.alpha -= 0.05;
-
-            if (tv.alpha <= 0) {
-                touchVisuals.splice(i, 1);
-            } else {
-                ctx.save();
-                ctx.globalAlpha = tv.alpha;
-                ctx.strokeStyle = tv.color;
-                ctx.lineWidth = 4;
-                ctx.beginPath();
-                ctx.arc(tv.x, tv.y, tv.radius, 0, Math.PI * 2);
-                ctx.stroke();
-                ctx.restore();
-            }
-        }
-
-        for (let i = particles.length - 1; i >= 0; i--) {
-            let p = particles[i];
-            p.x += p.vx;
-            p.y += p.vy;
-            p.vy += 0.2; 
-            p.alpha -= 0.03;
-
-            if (p.alpha <= 0) {
-                particles.splice(i, 1);
-            } else {
-                ctx.save();
-                ctx.globalAlpha = p.alpha;
-                ctx.fillStyle = p.color;
-                ctx.beginPath();
-                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.restore();
-            }
-        }
-
-        requestAnimationFrame(gameLoop);
-    }
-</script>
-</body>
-</html>
+        
