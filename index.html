@@ -104,7 +104,7 @@
         #start-btn {
             background: #10b981;
             color: white;
-            padding: 12px;
+            padding: 14px;
             border: none;
             border-radius: 8px;
             font-weight: bold;
@@ -113,7 +113,7 @@
             margin-top: 15px;
             cursor: pointer;
             display: none;
-            box-shadow: 0 0 15px rgba(16, 185, 129, 0.5);
+            box-shadow: 0 0 15px rgba(16, 185, 129, 0.6);
         }
 
         #game-container {
@@ -123,7 +123,7 @@
             height: 100vh;
             max-width: 380px;
             max-height: 640px;
-            background: url('bg.jpg') center/cover no-repeat #000;
+            background: #090d16;
             border: 1.5px solid rgba(255, 255, 255, 0.2);
             overflow: hidden;
             box-shadow: 0 0 30px rgba(0,0,0,0.9);
@@ -145,7 +145,7 @@
         #game-overlay {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.4);
+            background: rgba(0, 0, 0, 0.3);
             pointer-events: none;
             z-index: 1;
         }
@@ -207,9 +207,9 @@
             position: absolute;
             bottom: 0;
             width: 100%;
-            height: 85px;
+            height: 90px;
             display: flex;
-            background: rgba(0, 0, 0, 0.9);
+            background: rgba(0, 0, 0, 0.95);
             border-top: 2px solid rgba(255, 255, 255, 0.3);
             z-index: 10;
         }
@@ -221,10 +221,10 @@
             flex-direction: column;
             align-items: center;
             justify-content: flex-start;
-            padding-top: 10px;
-            font-size: 18px;
+            padding-top: 8px;
+            font-size: 16px;
             font-weight: bold;
-            color: #aaa;
+            color: #888;
             transition: all 0.05s ease;
             touch-action: manipulation;
             position: relative;
@@ -232,7 +232,7 @@
         .key-box:last-child { border-right: none; }
         
         .key-box.active {
-            background: rgba(56, 189, 248, 0.4);
+            background: rgba(56, 189, 248, 0.5);
             color: #fff;
             box-shadow: inset 0 0 20px #38bdf8, 0 0 15px #38bdf8;
             border-top: 6px solid #38bdf8;
@@ -240,16 +240,16 @@
 
         .hand-icon {
             position: absolute;
-            bottom: 12px;
-            font-size: 30px;
+            bottom: 10px;
+            font-size: 32px;
             opacity: 0;
-            transform: translateY(15px) scale(0.6);
+            transform: translateY(15px) scale(0.5);
             transition: all 0.08s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             pointer-events: none;
         }
         .key-box.active .hand-icon {
             opacity: 1;
-            transform: translateY(-2px) scale(1.3);
+            transform: translateY(-2px) scale(1.35);
         }
 
         .stat-list {
@@ -318,10 +318,10 @@
     <canvas id="gameCanvas" width="360" height="600"></canvas>
     
     <div class="key-hints">
-        <div class="key-box" id="k-Left" data-lane="0"><span>←</span><div class="hand-icon">👆</div></div>
-        <div class="key-box" id="k-Up" data-lane="1"><span>↑</span><div class="hand-icon">👆</div></div>
-        <div class="key-box" id="k-Down" data-lane="2"><span>↓</span><div class="hand-icon">👆</div></div>
-        <div class="key-box" id="k-Right" data-lane="3"><span>→</span><div class="hand-icon">👆</div></div>
+        <div class="key-box" id="k-Left" data-lane="0"><span>1</span><div class="hand-icon">👆</div></div>
+        <div class="key-box" id="k-Up" data-lane="1"><span>2</span><div class="hand-icon">👆</div></div>
+        <div class="key-box" id="k-Down" data-lane="2"><span>3</span><div class="hand-icon">👆</div></div>
+        <div class="key-box" id="k-Right" data-lane="3"><span>4</span><div class="hand-icon">👆</div></div>
     </div>
 </div>
 
@@ -354,7 +354,7 @@
     let tileSpeed = 4;
     let spawnInterval = null;
 
-    const keyMap = { 'ArrowLeft': 0, 'ArrowUp': 1, 'ArrowDown': 2, 'ArrowRight': 3 };
+    const keyMap = { 'ArrowLeft': 0, 'ArrowUp': 1, 'ArrowDown': 2, 'ArrowRight': 3, '1': 0, '2': 1, '3': 2, '4': 3 };
     const keyBoxes = [
         document.getElementById('k-Left'), document.getElementById('k-Up'),
         document.getElementById('k-Down'), document.getElementById('k-Right')
@@ -390,7 +390,6 @@
         }
     }
 
-    // Load default lagu pertama
     loadAudioFromUrl(currentSelectedUrl, "Beethoven - Moonlight Sonata");
 
     document.querySelectorAll('.song-option').forEach(opt => {
@@ -440,11 +439,14 @@
         }
     }
 
-    function startGame() {
+    async function startGame() {
         if (!audioBuffer) return;
 
+        if (!audioCtx) {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
         if (audioCtx.state === 'suspended') {
-            audioCtx.resume();
+            await audioCtx.resume();
         }
 
         setupScreen.style.display = 'none';
@@ -452,21 +454,28 @@
 
         initBgParticles();
 
-        audioSource = audioCtx.createBufferSource();
-        audioSource.buffer = audioBuffer;
-        audioSource.connect(audioCtx.destination);
-        audioSource.start(0);
+        try {
+            if (audioSource) {
+                try { audioSource.stop(); } catch(e){}
+            }
+            audioSource = audioCtx.createBufferSource();
+            audioSource.buffer = audioBuffer;
+            audioSource.connect(audioCtx.destination);
+            audioSource.start(0);
 
-        audioSource.onended = () => {
-            if (isPlaying) showResult();
-        };
+            audioSource.onended = () => {
+                if (isPlaying) showResult();
+            };
+        } catch(e) {
+            console.error("Audio play error:", e);
+        }
 
         isPlaying = true;
 
         let spawnRate = tileSpeed === 4 ? 650 : (tileSpeed === 6 ? 480 : 350);
         spawnInterval = setInterval(() => {
             if(isPlaying) {
-                let isLong = Math.random() < 0.3; // 30% peluang muncul tile panjang (ungu)
+                let isLong = Math.random() < 0.3; 
                 let tHeight = isLong ? 180 : 65;
 
                 tiles.push({
@@ -485,6 +494,10 @@
     }
 
     startBtn.addEventListener('click', startGame);
+    startBtn.addEventListener('touchend', (e) => {
+        e.preventDefault();
+        startGame();
+    });
 
     function triggerShake() {
         gameContainer.classList.remove('shake');
@@ -581,4 +594,203 @@
         lanePressed[lane] = false;
 
         for (let i = 0; i < tiles.length; i++) {
-        
+            let tile = tiles[i];
+            if (tile.lane === lane && tile.isLong && tile.holding) {
+                tile.holding = false;
+                tile.hit = true;
+                score += 250;
+                document.getElementById('score').innerText = score;
+                showFeedback('GREAT HOLD!', '#c084fc');
+                createSparks(lane, '#c084fc');
+            }
+        }
+    }
+
+    window.addEventListener('keydown', (e) => {
+        if (keyMap.hasOwnProperty(e.key) && !e.repeat) triggerHit(keyMap[e.key]);
+    });
+
+    window.addEventListener('keyup', (e) => {
+        if (keyMap.hasOwnProperty(e.key)) releaseHit(keyMap[e.key]);
+    });
+
+    keyBoxes.forEach((box) => {
+        const lane = parseInt(box.getAttribute('data-lane'));
+        box.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            triggerHit(lane);
+        }, { passive: false });
+        box.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            releaseHit(lane);
+        }, { passive: false });
+        box.addEventListener('mousedown', () => triggerHit(lane));
+        box.addEventListener('mouseup', () => releaseHit(lane));
+    });
+
+    function resetCombo() {
+        combo = 0;
+        comboCount.style.opacity = '0';
+    }
+
+    function showFeedback(text, color) {
+        hitText.innerText = text;
+        hitText.style.color = color;
+        hitText.style.textShadow = `0 0 10px #000, 0 0 15px ${color}`;
+        hitText.style.opacity = '1';
+
+        if (combo > 1) {
+            comboCount.innerText = `${combo}x COMBO`;
+            comboCount.style.opacity = '1';
+        }
+
+        setTimeout(() => { hitText.style.opacity = '0'; }, 300);
+    }
+
+    function showResult() {
+        isPlaying = false;
+        clearInterval(spawnInterval);
+        if (audioSource) {
+            try { audioSource.stop(); } catch(e){}
+        }
+        gameContainer.style.display = 'none';
+        resultScreen.style.display = 'block';
+
+        document.getElementById('res-score').innerText = score;
+        document.getElementById('res-perfect').innerText = countPerfect;
+        document.getElementById('res-great').innerText = countGreat;
+        document.getElementById('res-good').innerText = countGood;
+        document.getElementById('res-miss').innerText = countMiss;
+        document.getElementById('res-combo').innerText = `${maxCombo}x`;
+    }
+
+    function gameLoop() {
+        if (!isPlaying) return;
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        bgParticles.forEach(p => {
+            p.y -= p.speedY;
+            if (p.y < 0) {
+                p.y = canvas.height;
+                p.x = Math.random() * canvas.width;
+            }
+            ctx.save();
+            ctx.globalAlpha = p.alpha * 0.6;
+            ctx.fillStyle = '#38bdf8';
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+        });
+
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+        ctx.lineWidth = 1;
+        for (let i = 1; i < 4; i++) {
+            ctx.beginPath();
+            ctx.moveTo(i * 90, 0);
+            ctx.lineTo(i * 90, canvas.height);
+            ctx.stroke();
+        }
+
+        ctx.strokeStyle = '#38bdf8';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(0, 520);
+        ctx.lineTo(360, 520);
+        ctx.stroke();
+
+        for (let l = 0; l < 4; l++) {
+            if (lanePressed[l]) {
+                ctx.save();
+                let glowGrad = ctx.createRadialGradient(l * 90 + 45, 520, 5, l * 90 + 45, 520, 60);
+                glowGrad.addColorStop(0, 'rgba(56, 189, 248, 0.95)');
+                glowGrad.addColorStop(0.5, 'rgba(56, 189, 248, 0.5)');
+                glowGrad.addColorStop(1, 'rgba(56, 189, 248, 0)');
+                ctx.fillStyle = glowGrad;
+                ctx.fillRect(l * 90, 440, 90, 130);
+                ctx.restore();
+            }
+        }
+
+        for (let i = tiles.length - 1; i >= 0; i--) {
+            let tile = tiles[i];
+            
+            if (!tile.holding) {
+                tile.y += tileSpeed;
+            }
+
+            if (!tile.hit && !tile.missed && tile.y > 560) {
+                tile.missed = true;
+                countMiss++;
+                resetCombo();
+                showFeedback('MISS', '#ef4444');
+            }
+
+            if (tile.y > 650 || (tile.hit && !tile.holding && tile.y + tile.height < 0)) {
+                tiles.splice(i, 1);
+                continue;
+            }
+
+            let grad = ctx.createLinearGradient(0, tile.y, 0, tile.y + tile.height);
+            if (tile.isLong) {
+                grad.addColorStop(0, '#c084fc');
+                grad.addColorStop(0.5, '#a855f7');
+                grad.addColorStop(1, '#7e22ce');
+            } else {
+                grad.addColorStop(0, '#38bdf8');
+                grad.addColorStop(1, '#0284c7');
+            }
+
+            ctx.fillStyle = grad;
+            ctx.fillRect(tile.lane * 90 + 5, tile.y, 80, tile.height);
+
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(tile.lane * 90 + 5, tile.y, 80, tile.height);
+        }
+
+        for (let i = touchVisuals.length - 1; i >= 0; i--) {
+            let tv = touchVisuals[i];
+            tv.radius += 3.5;
+            tv.alpha -= 0.05;
+
+            if (tv.alpha <= 0) {
+                touchVisuals.splice(i, 1);
+            } else {
+                ctx.save();
+                ctx.globalAlpha = tv.alpha;
+                ctx.strokeStyle = tv.color;
+                ctx.lineWidth = 4;
+                ctx.beginPath();
+                ctx.arc(tv.x, tv.y, tv.radius, 0, Math.PI * 2);
+                ctx.stroke();
+                ctx.restore();
+            }
+        }
+
+        for (let i = particles.length - 1; i >= 0; i--) {
+            let p = particles[i];
+            p.x += p.vx;
+            p.y += p.vy;
+            p.vy += 0.2; 
+            p.alpha -= 0.03;
+
+            if (p.alpha <= 0) {
+                particles.splice(i, 1);
+            } else {
+                ctx.save();
+                ctx.globalAlpha = p.alpha;
+                ctx.fillStyle = p.color;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        requestAnimationFrame(gameLoop);
+    }
+</script>
+</body>
+</html>
