@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -596,4 +597,83 @@
             }
         }
 
-     
+        for (let i = tiles.length - 1; i >= 0; i--) {
+            let tile = tiles[i];
+            
+            if (!tile.holding) {
+                tile.y += tileSpeed;
+            }
+
+            if (!tile.hit && !tile.missed && tile.y > 560) {
+                tile.missed = true;
+                countMiss++;
+                resetCombo();
+                showFeedback('MISS', '#ef4444');
+            }
+
+            if (tile.y > 650 || (tile.hit && !tile.holding && tile.y + tile.height < 0)) {
+                tiles.splice(i, 1);
+                continue;
+            }
+
+            let grad = ctx.createLinearGradient(0, tile.y, 0, tile.y + tile.height);
+            if (tile.isLong) {
+                grad.addColorStop(0, '#c084fc');
+                grad.addColorStop(1, '#9333ea');
+            } else {
+                grad.addColorStop(0, '#38bdf8');
+                grad.addColorStop(1, '#0284c7');
+            }
+
+            ctx.fillStyle = grad;
+            ctx.fillRect(tile.lane * 90 + 6, tile.y, 78, tile.height);
+
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 1.5;
+            ctx.strokeRect(tile.lane * 90 + 6, tile.y, 78, tile.height);
+        }
+
+        for (let i = touchVisuals.length - 1; i >= 0; i--) {
+            let tv = touchVisuals[i];
+            tv.radius += 3;
+            tv.alpha -= 0.05;
+
+            if (tv.alpha <= 0) {
+                touchVisuals.splice(i, 1);
+            } else {
+                ctx.save();
+                ctx.globalAlpha = tv.alpha;
+                ctx.strokeStyle = tv.color;
+                ctx.lineWidth = 3.5;
+                ctx.beginPath();
+                ctx.arc(tv.x, tv.y, tv.radius, 0, Math.PI * 2);
+                ctx.stroke();
+                ctx.restore();
+            }
+        }
+
+        for (let i = particles.length - 1; i >= 0; i--) {
+            let p = particles[i];
+            p.x += p.vx;
+            p.y += p.vy;
+            p.vy += 0.2; 
+            p.alpha -= 0.03;
+
+            if (p.alpha <= 0) {
+                particles.splice(i, 1);
+            } else {
+                ctx.save();
+                ctx.globalAlpha = p.alpha;
+                ctx.fillStyle = p.color;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        requestAnimationFrame(gameLoop);
+    }
+</script>
+</body>
+</html>
