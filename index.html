@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -33,12 +32,26 @@
             width: 90%;
             border: 1px solid #38bdf8;
             z-index: 30;
+            position: relative;
         }
 
         #result-screen { display: none; }
         
-        .option-group { margin-top: 15px; }
-        .option-label { font-size: 13px; color: #cbd5e1; margin-bottom: 8px; font-weight: bold; }
+        .option-group { margin-top: 15px; text-align: left; }
+        .option-label { font-size: 13px; color: #cbd5e1; margin-bottom: 6px; font-weight: bold; }
+
+        .file-drop-area {
+            border: 2px dashed #38bdf8;
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+            background: rgba(56, 189, 248, 0.05);
+            cursor: pointer;
+            font-size: 12px;
+            color: #38bdf8;
+            margin-bottom: 12px;
+        }
+        .file-drop-area input { display: none; }
 
         .diff-container { display: flex; justify-content: center; gap: 8px; }
 
@@ -69,15 +82,17 @@
             font-weight: bold;
             font-size: 16px;
             width: 100%;
-            margin-top: 20px;
+            margin-top: 15px;
             cursor: pointer;
             box-shadow: 0 0 15px rgba(16, 185, 129, 0.6);
-            display: block;
         }
 
         #game-container {
             display: none;
-            position: relative;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
             width: 100vw;
             height: 100vh;
             max-width: 380px;
@@ -86,19 +101,16 @@
             border: 1.5px solid rgba(255, 255, 255, 0.2);
             overflow: hidden;
             box-shadow: 0 0 30px rgba(0,0,0,0.9);
-            transition: transform 0.05s ease;
         }
 
-        .shake {
-            animation: shakeAnim 0.15s ease;
-        }
+        .shake { animation: shakeAnim 0.15s ease; }
         @keyframes shakeAnim {
-            0% { transform: translate(0, 0); }
-            20% { transform: translate(-3px, 3px); }
-            40% { transform: translate(3px, -2px); }
-            60% { transform: translate(-2px, -3px); }
-            80% { transform: translate(2px, 2px); }
-            100% { transform: translate(0, 0); }
+            0% { transform: translate(-50%, -50%) translate(0, 0); }
+            20% { transform: translate(-50%, -50%) translate(-3px, 3px); }
+            40% { transform: translate(-50%, -50%) translate(3px, -2px); }
+            60% { transform: translate(-50%, -50%) translate(-2px, -3px); }
+            80% { transform: translate(-50%, -50%) translate(2px, 2px); }
+            100% { transform: translate(-50%, -50%) translate(0, 0); }
         }
 
         canvas { display: block; width: 100%; height: 100%; position: relative; z-index: 2; }
@@ -192,7 +204,7 @@
         .hand-icon {
             position: absolute;
             bottom: 10px;
-            font-size: 32px;
+            font-size: 28px;
             opacity: 0;
             transform: translateY(15px) scale(0.5);
             transition: all 0.08s cubic-bezier(0.175, 0.885, 0.32, 1.275);
@@ -200,7 +212,7 @@
         }
         .key-box.active .hand-icon {
             opacity: 1;
-            transform: translateY(-2px) scale(1.35);
+            transform: translateY(-2px) scale(1.3);
         }
 
         .stat-list {
@@ -216,8 +228,16 @@
 
 <div id="setup-screen">
     <h2>🎵 Piano Rhythm Tiles</h2>
-    <p style="margin-top:8px; font-size:12px; color:#aaa;">Pilih kecepatan lalu langsung mulai game!</p>
+    <p style="margin-top:6px; font-size:12px; color:#aaa;">Drop lagu MP3 & pilih kecepatanmu!</p>
     
+    <div class="option-group" style="margin-top: 12px;">
+        <div class="option-label">File Musik (MP3/WAV):</div>
+        <div class="file-drop-area" id="drop-area">
+            <span id="file-label">📁 Ketuk untuk Pilih Musik</span>
+            <input type="file" id="audio-file" accept="audio/*">
+        </div>
+    </div>
+
     <div class="option-group">
         <div class="option-label">Kecepatan Tile:</div>
         <div class="diff-container">
@@ -271,8 +291,11 @@
     const ctx = canvas.getContext('2d');
     const hitText = document.getElementById('hit-text');
     const comboCount = document.getElementById('combo-count');
+    const audioInput = document.getElementById('audio-file');
+    const fileLabel = document.getElementById('file-label');
+    const dropArea = document.getElementById('drop-area');
 
-    let audioCtx = null;
+    let bgAudio = new Audio();
     let tiles = [];
     let particles = [];
     let bgParticles = [];
@@ -290,27 +313,15 @@
         document.getElementById('k-Down'), document.getElementById('k-Right')
     ];
 
-    const pianoNotes = [261.63, 329.63, 392.00, 523.25];
-
-    function playPianoNote(lane) {
-        if (!audioCtx) return;
-        try {
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            
-            osc.type = 'triangle';
-            osc.frequency.setValueAtTime(pianoNotes[lane], audioCtx.currentTime);
-
-            gain.gain.setValueAtTime(0.5, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.6);
-
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-
-            osc.start();
-            osc.stop(audioCtx.currentTime + 0.6);
-        } catch(e) {}
-    }
+    dropArea.addEventListener('click', () => audioInput.click());
+    audioInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            fileLabel.innerText = `🎵 ${file.name}`;
+            bgAudio.src = URL.createObjectURL(file);
+            bgAudio.load();
+        }
+    });
 
     document.querySelectorAll('.diff-btn').forEach(btn => {
         btn.addEventListener('click', () => {
@@ -333,16 +344,16 @@
         }
     }
 
-    async function startGame() {
-        if (!audioCtx) {
-            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        }
-        if (audioCtx.state === 'suspended') {
-            await audioCtx.resume();
-        }
+    function startGame(e) {
+        if (e) e.preventDefault();
 
         setupScreen.style.display = 'none';
         gameContainer.style.display = 'block';
+
+        if (bgAudio.src) {
+            bgAudio.currentTime = 0;
+            bgAudio.play().catch(() => {});
+        }
 
         initBgParticles();
         isPlaying = true;
@@ -350,8 +361,8 @@
         let spawnRate = tileSpeed === 4 ? 650 : (tileSpeed === 6 ? 480 : 350);
         spawnInterval = setInterval(() => {
             if(isPlaying) {
-                let isLong = Math.random() < 0.3; 
-                let tHeight = isLong ? 180 : 65;
+                let isLong = Math.random() < 0.35; 
+                let tHeight = isLong ? 190 : 65;
 
                 tiles.push({
                     lane: Math.floor(Math.random() * 4),
@@ -365,14 +376,15 @@
             }
         }, spawnRate);
 
+        bgAudio.onended = () => {
+            showResult();
+        };
+
         requestAnimationFrame(gameLoop);
     }
 
     startBtn.addEventListener('click', startGame);
-    startBtn.addEventListener('touchend', (e) => {
-        e.preventDefault();
-        startGame();
-    });
+    startBtn.addEventListener('pointerdown', startGame);
 
     function triggerShake() {
         gameContainer.classList.remove('shake');
@@ -385,25 +397,17 @@
         let sparkY = 520;
         
         touchVisuals.push({
-            x: sparkX,
-            y: sparkY,
-            radius: 10,
-            maxRadius: 60,
-            alpha: 1,
-            color: color
+            x: sparkX, y: sparkY, radius: 10, maxRadius: 60, alpha: 1, color: color
         });
 
         for (let i = 0; i < 14; i++) {
             let angle = Math.random() * Math.PI - Math.PI / 2;
             let speed = Math.random() * 5 + 2;
             particles.push({
-                x: sparkX,
-                y: sparkY,
+                x: sparkX, y: sparkY,
                 vx: Math.cos(angle) * speed,
                 vy: Math.sin(angle) * speed - 2,
-                alpha: 1,
-                color: color,
-                size: Math.random() * 4 + 2
+                alpha: 1, color: color, size: Math.random() * 4 + 2
             });
         }
     }
@@ -411,7 +415,6 @@
     function triggerHit(lane) {
         keyBoxes[lane].classList.add('active');
         lanePressed[lane] = true;
-        playPianoNote(lane);
         const hitZoneY = 520;
 
         for (let i = 0; i < tiles.length; i++) {
@@ -485,21 +488,14 @@
     window.addEventListener('keydown', (e) => {
         if (keyMap.hasOwnProperty(e.key) && !e.repeat) triggerHit(keyMap[e.key]);
     });
-
     window.addEventListener('keyup', (e) => {
         if (keyMap.hasOwnProperty(e.key)) releaseHit(keyMap[e.key]);
     });
 
     keyBoxes.forEach((box) => {
         const lane = parseInt(box.getAttribute('data-lane'));
-        box.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            triggerHit(lane);
-        }, { passive: false });
-        box.addEventListener('touchend', (e) => {
-            e.preventDefault();
-            releaseHit(lane);
-        }, { passive: false });
+        box.addEventListener('touchstart', (e) => { e.preventDefault(); triggerHit(lane); }, { passive: false });
+        box.addEventListener('touchend', (e) => { e.preventDefault(); releaseHit(lane); }, { passive: false });
         box.addEventListener('mousedown', () => triggerHit(lane));
         box.addEventListener('mouseup', () => releaseHit(lane));
     });
@@ -526,6 +522,7 @@
     function showResult() {
         isPlaying = false;
         clearInterval(spawnInterval);
+        bgAudio.pause();
         gameContainer.style.display = 'none';
         resultScreen.style.display = 'block';
 
@@ -595,4 +592,75 @@
 
             if (!tile.hit && !tile.missed && tile.y > 560) {
                 tile.missed = true;
-        
+                countMiss++;
+                resetCombo();
+                showFeedback('MISS', '#ef4444');
+            }
+
+            if (tile.y > 650 || (tile.hit && !tile.holding && tile.y + tile.height < 0)) {
+                tiles.splice(i, 1);
+                continue;
+            }
+
+            let grad = ctx.createLinearGradient(0, tile.y, 0, tile.y + tile.height);
+            if (tile.isLong) {
+                grad.addColorStop(0, '#c084fc');
+                grad.addColorStop(0.5, '#a855f7');
+                grad.addColorStop(1, '#7e22ce');
+            } else {
+                grad.addColorStop(0, '#38bdf8');
+                grad.addColorStop(1, '#0284c7');
+            }
+
+            ctx.fillStyle = grad;
+            ctx.fillRect(tile.lane * 90 + 5, tile.y, 80, tile.height);
+
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(tile.lane * 90 + 5, tile.y, 80, tile.height);
+        }
+
+        for (let i = touchVisuals.length - 1; i >= 0; i--) {
+            let tv = touchVisuals[i];
+            tv.radius += 3.5;
+            tv.alpha -= 0.05;
+
+            if (tv.alpha <= 0) {
+                touchVisuals.splice(i, 1);
+            } else {
+                ctx.save();
+                ctx.globalAlpha = tv.alpha;
+                ctx.strokeStyle = tv.color;
+                ctx.lineWidth = 4;
+                ctx.beginPath();
+                ctx.arc(tv.x, tv.y, tv.radius, 0, Math.PI * 2);
+                ctx.stroke();
+                ctx.restore();
+            }
+        }
+
+        for (let i = particles.length - 1; i >= 0; i--) {
+            let p = particles[i];
+            p.x += p.vx;
+            p.y += p.vy;
+            p.vy += 0.2; 
+            p.alpha -= 0.03;
+
+            if (p.alpha <= 0) {
+                particles.splice(i, 1);
+            } else {
+                ctx.save();
+                ctx.globalAlpha = p.alpha;
+                ctx.fillStyle = p.color;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        requestAnimationFrame(gameLoop);
+    }
+</script>
+</body>
+</html>
