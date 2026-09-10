@@ -287,7 +287,8 @@
 
     let tiles = [];
     let particles = [];
-    let bgParticles = []; // Partikel cahaya background
+    let bgParticles = [];
+    let lanePressed = [false, false, false, false];
     let score = 0, combo = 0, maxCombo = 0;
     let countPerfect = 0, countGreat = 0, countGood = 0, countMiss = 0;
     let isPlaying = false;
@@ -317,7 +318,6 @@
         }
     });
 
-    // Inisialisasi partikel cahaya background yang melayang
     function initBgParticles() {
         bgParticles = [];
         for (let i = 0; i < 25; i++) {
@@ -344,13 +344,15 @@
         let spawnRate = tileSpeed === 4 ? 600 : (tileSpeed === 6 ? 450 : 320);
         spawnInterval = setInterval(() => {
             if(isPlaying) {
-                let isLong = Math.random() < 0.25; 
-                let tHeight = isLong ? 140 : 75;
+                let isLong = Math.random() < 0.3; 
+                let tHeight = isLong ? 150 : 75;
 
                 tiles.push({
                     lane: Math.floor(Math.random() * 4),
                     y: -tHeight,
                     height: tHeight,
+                    isLong: isLong,
+                    holding: false,
                     hit: false,
                     missed: false
                 });
@@ -372,14 +374,14 @@
     function createSparks(lane, color) {
         let sparkX = lane * 90 + 45;
         let sparkY = 520;
-        for (let i = 0; i < 14; i++) {
+        for (let i = 0; i < 16; i++) {
             let angle = Math.random() * Math.PI - Math.PI / 2;
-            let speed = Math.random() * 6 + 2;
+            let speed = Math.random() * 7 + 2;
             particles.push({
                 x: sparkX,
                 y: sparkY,
                 vx: Math.cos(angle) * speed,
-                vy: Math.sin(angle) * speed - 2,
+                vy: Math.sin(angle) * speed - 2.5,
                 alpha: 1,
                 color: color,
                 size: Math.random() * 4 + 2
@@ -389,6 +391,7 @@
 
     function triggerHit(lane) {
         keyBoxes[lane].classList.add('active');
+        lanePressed[lane] = true;
         const hitZoneY = 520;
 
         tiles.forEach(tile => {
@@ -396,7 +399,12 @@
                 let hitOffset = Math.abs(tile.y + tile.height - hitZoneY);
                 
                 if (hitOffset <= 80) {
-                    tile.hit = true;
+                    if (tile.isLong) {
+                        tile.holding = true;
+                    } else {
+                        tile.hit = true;
+                    }
+
                     combo++;
                     if (combo > maxCombo) maxCombo = combo;
 
@@ -426,10 +434,18 @@
 
     function releaseHit(lane) {
         keyBoxes[lane].classList.remove('active');
+        lanePressed[lane] = false;
+
+        tiles.forEach(tile => {
+            if (tile.lane === lane && tile.holding) {
+                tile.holding = false;
+                tile.hit = true;
+            }
+        });
     }
 
     window.addEventListener('keydown', (e) => {
-        if (keyMap.hasOwnProperty(e.key)) triggerHit(keyMap[e.key]);
+        if (keyMap.hasOwnProperty(e.key) && !e.repeat) triggerHit(keyMap[e.key]);
     });
 
     window.addEventListener('keyup', (e) => {
@@ -486,7 +502,7 @@
 
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        // 1. Render Partikel Cahaya Background (Mengambang Pelan)
+        // 1. Partikel Cahaya Background
         bgParticles.forEach(p => {
             p.y -= p.speedY;
             if (p.y < 0) {
@@ -502,7 +518,7 @@
             ctx.restore();
         });
 
-        // 2. Garis Jalur Vertikal (Lanes)
+        // 2. Garis Jalur Vertikal
         ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
         ctx.lineWidth = 1;
         for (let i = 1; i < 4; i++) {
@@ -520,18 +536,39 @@
         ctx.lineTo(360, 520);
         ctx.stroke();
 
-        // 3. Render & Update Tiles (Variasi Panjang & Pendek)
-        tiles.forEach(tile => {
-            tile.y += tileSpeed;
+        // 3. Efek Cahaya Menyala Terus Saat Tombol Ditekan / Hold Note Ditahan
+        for (let l = 0; l < 4; l++) {
+            if (lanePressed[l]) {
+                ctx.save();
+                let glowGrad = ctx.createRadialGradient(l * 90 + 45, 520, 5, l * 90 + 45, 520, 50);
+                glowGrad.addColorStop(0, 'rgba(56, 189, 248, 0.9)');
+                glowGrad.addColorStop(0.5, 'rgba(56, 189, 248, 0.4)');
+                glowGrad.addColorStop(1, 'rgba(56, 189, 248, 0)');
+                ctx.fillStyle = glowGrad;
+                ctx.fillRect(l * 90, 460, 90, 110);
+                ctx.restore();
+            }
+        }
 
-            if (!tile.hit && !tile.missed && tile.y > 560) {
+        // 4. Render & Update Tiles (Variasi Panjang & Pendek)
+        tiles.forEach(tile => {
+            if (!tile.holding) {
+                tile.y += tileSpeed;
+            } else {
+                tile.height -= tileSpeed;
+                if (tile.height <= 0) {
+                    tile.hit = true;
+                }
+            }
+
+            if (!tile.hit && !tile.missed && !tile.holding && tile.y > 560) {
                 tile.missed = true;
                 countMiss++;
                 resetCombo();
                 showFeedback('MISS', '#ef4444');
             }
 
-            if (!tile.hit && !tile.missed) {
+            if (!tile.hit) {
                 let grad = ctx.createLinearGradient(0, tile.y, 0, tile.y + tile.height);
                 grad.addColorStop(0, '#38bdf8');
                 grad.addColorStop(1, '#0284c7');
@@ -545,7 +582,7 @@
             }
         });
 
-        // 4. Render & Update Partikel Percikan Cahaya Saat Dipencet
+        // 5. Render Partikel Letupan Cahaya (Sparkles)
         particles.forEach((p, index) => {
             p.x += p.vx;
             p.y += p.vy;
