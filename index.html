@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -25,7 +26,7 @@
         #setup-screen, #result-screen {
             text-align: center;
             background: rgba(30, 41, 59, 0.95);
-            padding: 25px;
+            padding: 30px;
             border-radius: 16px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.8);
             max-width: 400px;
@@ -54,27 +55,24 @@
         }
         .btn:active { transform: scale(0.95); }
 
-        .option-group { margin-top: 12px; }
-        .option-label { font-size: 12px; color: #94a3b8; margin-bottom: 5px; }
-
-        .diff-container, .theme-container {
+        .diff-container {
+            margin-top: 15px;
             display: flex;
             justify-content: center;
-            gap: 8px;
-            flex-wrap: wrap;
+            gap: 10px;
         }
 
-        .opt-btn {
+        .diff-btn {
             background: #334155;
             color: #94a3b8;
             border: 1px solid rgba(255,255,255,0.1);
-            padding: 6px 12px;
+            padding: 6px 14px;
             border-radius: 6px;
             cursor: pointer;
-            font-size: 11px;
+            font-size: 12px;
             font-weight: bold;
         }
-        .opt-btn.active {
+        .diff-btn.active {
             background: #38bdf8;
             color: #0f172a;
             box-shadow: 0 0 10px #38bdf8;
@@ -97,6 +95,7 @@
             transition: border-color 0.3s ease, box-shadow 0.3s ease;
         }
 
+        /* Fever Mode Aura */
         #game-container.fever {
             border-color: #f43f5e;
             box-shadow: 0 0 35px #f43f5e;
@@ -108,21 +107,10 @@
 
         @keyframes hitShake {
             0% { transform: translate(0, 0); }
-            25% { transform: translate(-4px, 3px); }
-            50% { transform: translate(4px, -3px); }
-            75% { transform: translate(-3px, -2px); }
+            25% { transform: translate(-3px, 2px); }
+            50% { transform: translate(3px, -2px); }
+            75% { transform: translate(-2px, -1px); }
             100% { transform: translate(0, 0); }
-        }
-
-        /* Flash Light overlay saat hit perfect */
-        #flash-overlay {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(255,255,255,0.15);
-            pointer-events: none;
-            opacity: 0;
-            transition: opacity 0.05s linear;
-            z-index: 5;
         }
 
         canvas { display: block; width: 100%; height: 100%; }
@@ -221,7 +209,7 @@
 
         .rank-badge {
             font-family: 'Orbitron', sans-serif;
-            font-size: 55px;
+            font-size: 50px;
             font-weight: 900;
             color: #fbbf24;
             text-shadow: 0 0 20px #fbbf24;
@@ -241,31 +229,19 @@
 
 <div id="setup-screen">
     <h2>🎵 Custom Music Tiles</h2>
-    <p style="margin-top:8px; font-size:13px; color:#94a3b8;">Import lagu MP3/WAV dari perangkat kamu!</p>
+    <p style="margin-top:10px; font-size:14px; color:#94a3b8;">Import lagu MP3/WAV dari perangkat kamu!</p>
     
-    <label class="btn" style="margin-top:15px;">
+    <label class="btn" style="margin-top:20px;">
         Pilih Lagu
         <input type="file" id="audio-input" accept="audio/*">
     </label>
-    <div id="file-name" style="margin-top:8px; font-size:12px; color:#38bdf8;"></div>
+    <div id="file-name" style="margin-top:10px; font-size:12px; color:#38bdf8;"></div>
 
-    <div class="option-group">
-        <div class="option-label">Kecepatan Tile:</div>
-        <div class="diff-container">
-            <button class="opt-btn diff-btn active" data-speed="350">Pelan</button>
-            <button class="opt-btn diff-btn" data-speed="480">Sedang</button>
-            <button class="opt-btn diff-btn" data-speed="620">Cepat</button>
-        </div>
-    </div>
-
-    <div class="option-group">
-        <div class="option-label">Tema Visual (Skin):</div>
-        <div class="theme-container">
-            <button class="opt-btn theme-btn active" data-theme="neon">Neon Blue</button>
-            <button class="opt-btn theme-btn" data-theme="sakura">Sakura Pink</button>
-            <button class="opt-btn theme-btn" data-theme="sunset">Sunset Gold</button>
-            <button class="opt-btn theme-btn" data-theme="cyber">Cyberpunk</button>
-        </div>
+    <p style="margin-top:15px; font-size:12px; color:#64748b;">Kecepatan Tile:</p>
+    <div class="diff-container">
+        <button class="diff-btn active" data-speed="350">Pelan</button>
+        <button class="diff-btn" data-speed="480">Sedang</button>
+        <button class="diff-btn" data-speed="620">Cepat</button>
     </div>
     
     <button class="btn" id="start-btn" style="display:none; background:#22c55e;">Mulai Game</button>
@@ -285,7 +261,6 @@
 </div>
 
 <div id="game-container">
-    <div id="flash-overlay"></div>
     <div id="score-board">
         Score: <span id="score">0</span><br>
         <small style="color:#94a3b8;">High: <span id="hi-score">0</span></small>
@@ -315,7 +290,6 @@
     const setupScreen = document.getElementById('setup-screen');
     const resultScreen = document.getElementById('result-screen');
     const gameContainer = document.getElementById('game-container');
-    const flashOverlay = document.getElementById('flash-overlay');
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
     const hitText = document.getElementById('hit-text');
@@ -333,15 +307,6 @@
     let isFever = false;
     let highScore = localStorage.getItem('rhythm_hi_score') || 0;
 
-    // Tema Warna Skin
-    const themes = {
-        neon: { c1: '#38bdf8', c2: '#818cf8', accent: '#38bdf8' },
-        sakura: { c1: '#f472b6', c2: '#fb7185', accent: '#f472b6' },
-        sunset: { c1: '#fbbf24', c2: '#f97316', accent: '#fbbf24' },
-        cyber: { c1: '#a855f7', c2: '#06b6d4', accent: '#a855f7' }
-    };
-    let currentTheme = themes.neon;
-
     document.getElementById('hi-score').innerText = highScore;
 
     let activeLanes = [false, false, false, false];
@@ -349,9 +314,12 @@
     let bgParticles = [];
     for (let i = 0; i < 20; i++) {
         bgParticles.push({
-            x: Math.random() * 360, y: Math.random() * 600,
-            radius: Math.random() * 2 + 0.8, alpha: Math.random() * 0.7 + 0.3,
-            speedY: Math.random() * 0.4 + 0.1, pulse: Math.random() * 0.02 + 0.005
+            x: Math.random() * 360,
+            y: Math.random() * 600,
+            radius: Math.random() * 2 + 0.8,
+            alpha: Math.random() * 0.7 + 0.3,
+            speedY: Math.random() * 0.4 + 0.1,
+            pulse: Math.random() * 0.02 + 0.005
         });
     }
 
@@ -368,14 +336,6 @@
             document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
             gameSpeed = parseInt(btn.getAttribute('data-speed'));
-        });
-    });
-
-    document.querySelectorAll('.theme-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            document.querySelectorAll('.theme-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            currentTheme = themes[btn.getAttribute('data-theme')];
         });
     });
 
@@ -400,11 +360,6 @@
         if (navigator.vibrate) navigator.vibrate(pattern);
     }
 
-    function triggerFlash() {
-        flashOverlay.style.opacity = '1';
-        setTimeout(() => { flashOverlay.style.opacity = '0'; }, 50);
-    }
-
     function playHitSFX(isPerfect) {
         if (!audioCtx) return;
         let osc = audioCtx.createOscillator();
@@ -417,23 +372,6 @@
         gain.connect(audioCtx.destination);
         osc.start();
         osc.stop(audioCtx.currentTime + 0.08);
-    }
-
-    // Sound Victory/Rank SFX
-    function playRankSFX(rank) {
-        if (!audioCtx) return;
-        let freqs = rank === 'SS' || rank === 'S' ? [523.25, 659.25, 783.99, 1046.50] : [392.00, 440.00, 493.88];
-        freqs.forEach((f, idx) => {
-            let osc = audioCtx.createOscillator();
-            let gain = audioCtx.createGain();
-            osc.frequency.setValueAtTime(f, audioCtx.currentTime + idx * 0.12);
-            gain.gain.setValueAtTime(0.2, audioCtx.currentTime + idx * 0.12);
-            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + idx * 0.12 + 0.3);
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            osc.start(audioCtx.currentTime + idx * 0.12);
-            osc.stop(audioCtx.currentTime + idx * 0.12 + 0.3);
-        });
     }
 
     function generateTilesFromAudio(buffer) {
@@ -452,7 +390,7 @@
             if (average > 0.18) { 
                 let lane = Math.floor(Math.random() * 4);
                 let time = i / sampleRate; 
-                let isHold = average > 0.38; 
+                let isHold = average > 0.35; // Tile Panjang jika audio cukup kuat
                 let length = isHold ? Math.min(average * 500, 260) : 80;
 
                 let lastTile = generatedTiles[generatedTiles.length - 1];
@@ -461,15 +399,6 @@
                         lane: lane, time: time, length: length, isHold: isHold,
                         y: -length, hit: false, missed: false, holding: false, holdProgress: 0
                     });
-
-                    // Generator Double Notes (Dua ubin berdampingan pas audio kencang)
-                    if (average > 0.42 && Math.random() > 0.5) {
-                        let secondLane = (lane + 2) % 4;
-                        generatedTiles.push({
-                            lane: secondLane, time: time, length: 80, isHold: false,
-                            y: -80, hit: false, missed: false, holding: false, holdProgress: 0
-                        });
-                    }
                 }
             }
         }
@@ -530,7 +459,7 @@
     });
 
     function spawnHitBurst(x, y) {
-        let colorTheme = isFever ? '#f43f5e' : currentTheme.c1;
+        let colorTheme = isFever ? '#f43f5e' : '#38bdf8';
         for (let i = 0; i < 12; i++) {
             hitParticles.push({
                 x: x, y: y,
@@ -564,9 +493,98 @@
                     combo++;
                     if (combo > maxCombo) maxCombo = combo;
 
+                    // Fever Mode Streak (Combo >= 15)
                     if (combo >= 15 && !isFever) {
                         isFever = true;
                         gameContainer.classList.add('fever');
                         feverBanner.style.opacity = '1';
                         triggerVibrate([50, 50, 50]);
- 
+                    }
+
+                    let isPerfect = hitOffset <= 30;
+                    if (isPerfect) countPerfect++; else countGreat++;
+
+                    let multiplier = isFever ? 2 : 1;
+                    let points = (isPerfect ? 150 : 80) * multiplier;
+                    score += points + (combo * 5);
+                    
+                    document.getElementById('score').innerText = score;
+                    showFeedback(isPerfect ? 'PERFECT!' : 'GREAT!', isPerfect ? '#38bdf8' : '#34d399');
+                    playHitSFX(isPerfect);
+                    triggerVibrate(isPerfect ? 30 : 15);
+                    spawnHitBurst(lane * 90 + 45, hitZoneY);
+                }
+            }
+        });
+    }
+
+    function releaseHold(lane) {
+        tiles.forEach(tile => {
+            if (tile.lane === lane && tile.isHold && tile.holding && !tile.hit) {
+                tile.holding = false;
+                if (tile.holdProgress >= tile.length - 20) {
+                    tile.hit = true;
+                } else {
+                    tile.missed = true;
+                    resetCombo();
+                }
+            }
+        });
+    }
+
+    function resetCombo() {
+        combo = 0;
+        isFever = false;
+        gameContainer.classList.remove('fever');
+        feverBanner.style.opacity = '0';
+        comboCount.style.opacity = '0';
+    }
+
+    function showFeedback(text, color) {
+        hitText.innerText = text;
+        hitText.style.color = color;
+        hitText.style.textShadow = `0 0 12px ${color}`;
+        hitText.style.opacity = '1';
+
+        if (combo > 1) {
+            comboCount.innerText = `${combo}x COMBO`;
+            comboCount.style.opacity = '1';
+        }
+
+        setTimeout(() => { hitText.style.opacity = '0'; }, 300);
+    }
+
+    function showResult() {
+        isPlaying = false;
+        gameContainer.style.display = 'none';
+        resultScreen.style.display = 'block';
+
+        if (score > highScore) {
+            highScore = score;
+            localStorage.setItem('rhythm_hi_score', highScore);
+        }
+
+        let rank = 'C';
+        if (countMiss === 0 && countGreat === 0) rank = 'SS';
+        else if (countMiss === 0) rank = 'S';
+        else if (countPerfect > countMiss * 3) rank = 'A';
+        else if (countPerfect > countMiss) rank = 'B';
+
+        document.getElementById('res-rank').innerText = rank;
+        document.getElementById('res-score').innerText = score;
+        document.getElementById('res-high-score').innerText = highScore;
+        document.getElementById('res-perfect').innerText = countPerfect;
+        document.getElementById('res-great').innerText = countGreat;
+        document.getElementById('res-miss').innerText = countMiss;
+        document.getElementById('res-combo').innerText = `${maxCombo}x`;
+    }
+
+    function gameLoop() {
+        if (!isPlaying) return;
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Render Audio Visualizer (Waveform Bottom Bar)
+        if (analyser) {
+            analyser.getByteFrequencyData(freqData);
+            ctx.fillStyle = isFever ? 'rgba(244, 63, 94, 0.25)' : 'rgba(56, 189, 248, 0
