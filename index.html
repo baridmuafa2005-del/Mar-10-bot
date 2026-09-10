@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Custom Music Rhythm Tiles</title>
+    <title>Music Rhythm Game - By Mario</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
@@ -11,9 +11,9 @@
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
         body {
-            background: #09090b;
+            background: #000;
             color: #fff;
-            font-family: system-ui, -apple-system, sans-serif;
+            font-family: Arial, sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -24,14 +24,13 @@
 
         #setup-screen, #result-screen {
             text-align: center;
-            background: rgba(15, 23, 42, 0.92);
+            background: rgba(0, 0, 0, 0.85);
             padding: 24px;
-            border-radius: 20px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.8), inset 0 1px 1px rgba(255,255,255,0.1);
-            max-width: 380px;
+            border-radius: 16px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.8);
+            max-width: 360px;
             width: 90%;
-            border: 1px solid rgba(255,255,255,0.12);
-            backdrop-filter: blur(12px);
+            border: 2px solid #38bdf8;
             z-index: 20;
         }
 
@@ -40,127 +39,101 @@
         input[type="file"] { display: none; }
         
         .btn-select-song {
-            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            background: #2563eb;
             color: white;
-            padding: 14px 24px;
-            border-radius: 12px;
+            padding: 12px 20px;
+            border-radius: 8px;
             cursor: pointer;
-            font-weight: 700;
+            font-weight: bold;
             font-size: 14px;
             margin-top: 15px;
-            display: block;
-            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
-            transition: transform 0.1s ease, box-shadow 0.2s ease;
+            display: inline-block;
         }
-        .btn-select-song:active { transform: scale(0.97); }
 
-        .option-group { margin-top: 18px; }
-        .option-label { font-size: 12px; color: #94a3b8; margin-bottom: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+        .option-group { margin-top: 15px; }
+        .option-label { font-size: 12px; color: #ccc; margin-bottom: 8px; font-weight: bold; }
 
-        .diff-container, .theme-container {
+        .diff-container {
             display: flex;
             justify-content: center;
             gap: 8px;
-            flex-wrap: wrap;
         }
 
         .opt-btn {
-            background: rgba(51, 65, 85, 0.7);
-            color: #94a3b8;
-            border: 1px solid rgba(255,255,255,0.08);
-            padding: 10px 14px;
-            border-radius: 10px;
+            background: #334155;
+            color: #fff;
+            border: 1px solid #475569;
+            padding: 8px 12px;
+            border-radius: 6px;
             cursor: pointer;
             font-size: 12px;
-            font-weight: 700;
-            touch-action: manipulation;
-            transition: all 0.2s ease;
+            font-weight: bold;
             flex: 1;
-            min-width: 75px;
         }
         .opt-btn.active {
             background: #38bdf8;
-            color: #0f172a;
-            box-shadow: 0 0 15px rgba(56, 189, 248, 0.6);
+            color: #000;
             border-color: #38bdf8;
         }
 
         #start-btn {
-            background: linear-gradient(135deg, #22c55e, #15803d);
+            background: #22c55e;
             color: white;
-            padding: 14px;
+            padding: 12px;
             border: none;
-            border-radius: 12px;
-            font-weight: 800;
+            border-radius: 8px;
+            font-weight: bold;
             font-size: 16px;
             width: 100%;
-            margin-top: 22px;
+            margin-top: 20px;
             cursor: pointer;
-            box-shadow: 0 4px 20px rgba(34, 197, 94, 0.4);
             display: none;
         }
 
+        /* Container Game dengan Background JPG */
         #game-container {
             display: none;
             position: relative;
             width: 100vw;
             height: 100vh;
-            max-width: 400px;
-            max-height: 680px;
-            background: #090d16;
-            border: 2px solid rgba(255,255,255,0.15);
-            border-radius: 16px;
+            max-width: 380px;
+            max-height: 640px;
+            /* Kamu bisa ganti URL gambar .jpg background di bawah ini */
+            background: url('https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=1000&auto=format&fit=crop') center/cover no-repeat;
+            border: 2px solid #555;
+            border-radius: 12px;
             overflow: hidden;
-            box-shadow: 0 0 40px rgba(0,0,0,0.9);
-            transition: border-color 0.3s ease, box-shadow 0.3s ease;
         }
 
-        #game-container.fever {
-            border-color: #f43f5e;
-            box-shadow: 0 0 40px #f43f5e;
-        }
-
-        #game-container.shake {
-            animation: hitShake 0.08s ease-in-out;
-        }
-
-        @keyframes hitShake {
-            0% { transform: translate(0, 0); }
-            25% { transform: translate(-4px, 3px); }
-            50% { transform: translate(4px, -3px); }
-            75% { transform: translate(-3px, -2px); }
-            100% { transform: translate(0, 0); }
-        }
-
-        #flash-overlay {
+        /* Overlay gelap agar tile tetap kelihatan jelas di atas background JPG */
+        #game-overlay {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(255,255,255,0.15);
+            background: rgba(0, 0, 0, 0.4);
             pointer-events: none;
-            opacity: 0;
-            transition: opacity 0.05s linear;
-            z-index: 5;
+            z-index: 1;
         }
 
-        canvas { display: block; width: 100%; height: 100%; }
+        canvas { display: block; width: 100%; height: 100%; position: relative; z-index: 2; }
 
+        /* Signature Watermark "By Mario" */
         .signature {
             position: absolute;
-            top: 12px;
-            right: 16px;
+            top: 10px;
+            right: 15px;
             font-family: 'Great Vibes', cursive;
-            font-size: 26px;
+            font-size: 28px;
             color: #ffffff;
-            text-shadow: 0 0 8px rgba(255, 255, 255, 0.8), 0 0 15px rgba(56, 189, 248, 0.6);
+            text-shadow: 0 0 8px rgba(0, 0, 0, 0.9), 0 0 12px #38bdf8;
             z-index: 10;
             pointer-events: none;
         }
 
         #score-board {
             position: absolute;
-            top: 14px;
-            left: 16px;
-            font-size: 15px;
+            top: 12px;
+            left: 15px;
+            font-size: 14px;
             font-weight: bold;
             text-shadow: 0 2px 4px #000;
             z-index: 10;
@@ -168,7 +141,7 @@
 
         #combo-hud {
             position: absolute;
-            top: 18%;
+            top: 20%;
             width: 100%;
             text-align: center;
             font-family: 'Orbitron', sans-serif;
@@ -176,41 +149,32 @@
             z-index: 10;
         }
 
+        /* Indikator Hit: PERFECT, GREAT, MISS */
         #hit-text {
-            font-size: 24px;
+            font-size: 26px;
             font-weight: 900;
             color: #38bdf8;
-            text-shadow: 0 0 12px #38bdf8;
+            text-shadow: 0 0 10px #000;
             opacity: 0;
-            transition: opacity 0.2s ease, transform 0.2s ease;
+            transition: opacity 0.15s ease;
         }
 
         #combo-count {
             font-size: 18px;
             color: #fbbf24;
-            text-shadow: 0 0 10px #fbbf24;
+            text-shadow: 0 0 8px #000;
             margin-top: 4px;
             opacity: 0;
-        }
-
-        #fever-banner {
-            font-size: 20px;
-            font-weight: 900;
-            color: #f43f5e;
-            text-shadow: 0 0 15px #f43f5e;
-            opacity: 0;
-            transition: opacity 0.3s ease;
         }
 
         .key-hints {
             position: absolute;
             bottom: 0;
             width: 100%;
-            height: 85px;
+            height: 80px;
             display: flex;
             background: rgba(0, 0, 0, 0.7);
-            border-top: 2px solid rgba(255, 255, 255, 0.2);
-            backdrop-filter: blur(6px);
+            border-top: 2px solid rgba(255, 255, 255, 0.3);
             z-index: 10;
         }
 
@@ -220,31 +184,18 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 24px;
+            font-size: 22px;
             font-weight: bold;
-            color: #e2e8f0;
+            color: #fff;
             touch-action: manipulation;
-            transition: background 0.05s ease, box-shadow 0.05s ease, transform 0.05s ease;
         }
         .key-box:last-child { border-right: none; }
 
         .key-box.active {
-            background: rgba(56, 189, 248, 0.45);
-            box-shadow: 0 0 25px #38bdf8, inset 0 0 15px #ffffff;
-            color: #ffffff;
-            text-shadow: 0 0 10px #ffffff, 0 0 20px #38bdf8;
-            transform: translateY(2px);
+            background: rgba(56, 189, 248, 0.5);
+            box-shadow: inset 0 0 10px #38bdf8;
         }
 
-        .rank-badge {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 55px;
-            font-weight: 900;
-            color: #fbbf24;
-            text-shadow: 0 0 20px #fbbf24;
-            margin: 10px 0;
-        }
-        
         .stat-list {
             text-align: left;
             margin: 15px 0;
@@ -257,14 +208,14 @@
 <body>
 
 <div id="setup-screen">
-    <h2>🎵 Custom Music Tiles</h2>
-    <p style="margin-top:6px; font-size:13px; color:#94a3b8;">Import lagu MP3/WAV dari HP kamu!</p>
+    <h2>🎵 Music Rhythm Game</h2>
+    <p style="margin-top:6px; font-size:12px; color:#aaa;">Pilih lagu dari HP kamu!</p>
     
     <label class="btn-select-song">
-        📁 Pilih File Lagu
+        📁 Pilih Lagu (.mp3)
         <input type="file" id="audio-input" accept="audio/*">
     </label>
-    <div id="file-name" style="margin-top:10px; font-size:12px; color:#38bdf8; font-weight:bold;"></div>
+    <div id="file-name" style="margin-top:8px; font-size:12px; color:#38bdf8; font-weight:bold;"></div>
 
     <div class="option-group">
         <div class="option-label">Kecepatan Tile:</div>
@@ -274,44 +225,33 @@
             <button class="opt-btn diff-btn" data-speed="8">Cepat</button>
         </div>
     </div>
-
-    <div class="option-group">
-        <div class="option-label">Tema Visual (Skin):</div>
-        <div class="theme-container">
-            <button class="opt-btn theme-btn active" data-theme="neon">Neon Blue</button>
-            <button class="opt-btn theme-btn" data-theme="sakura">Sakura</button>
-            <button class="opt-btn theme-btn" data-theme="sunset">Sunset</button>
-            <button class="opt-btn theme-btn" data-theme="cyber">Cyberpunk</button>
-        </div>
-    </div>
     
     <button id="start-btn">MULAI GAME 🚀</button>
 </div>
 
 <div id="result-screen">
-    <h2>🎉 GAME FINISHED</h2>
-    <div class="rank-badge" id="res-rank">S</div>
+    <h2>🎉 GAME OVER</h2>
     <div class="stat-list">
         <div>Score: <b id="res-score" style="color:#fff;">0</b></div>
-        <div>High Score: <b id="res-high-score" style="color:#38bdf8;">0</b></div>
         <div>Perfect: <b id="res-perfect" style="color:#34d399;">0</b></div>
         <div>Great: <b id="res-great" style="color:#38bdf8;">0</b></div>
         <div>Miss: <b id="res-miss" style="color:#ef4444;">0</b></div>
         <div>Max Combo: <b id="res-combo" style="color:#fbbf24;">0x</b></div>
     </div>
-    <button class="opt-btn active" onclick="location.reload()" style="width:100%; padding:14px; font-size:14px; margin-top:10px;">Main Lagi 🔄</button>
+    <button class="opt-btn active" onclick="location.reload()" style="width:100%; padding:12px; font-size:14px;">Main Lagi 🔄</button>
 </div>
 
 <div id="game-container">
-    <div id="flash-overlay"></div>
+    <div id="game-overlay"></div>
     <div id="score-board">
-        Score: <span id="score">0</span><br>
-        <small style="color:#94a3b8;">High: <span id="hi-score">0</span></small>
+        Score: <span id="score">0</span>
     </div>
+    
+    <!-- Watermark Signature By Mario -->
     <div class="signature">By Mario</div>
     
+    <!-- Text indikator Hit -->
     <div id="combo-hud">
-        <div id="fever-banner">🔥 FEVER MODE 🔥</div>
         <div id="hit-text">PERFECT</div>
         <div id="combo-count">0x COMBO</div>
     </div>
@@ -335,46 +275,18 @@
     const setupScreen = document.getElementById('setup-screen');
     const resultScreen = document.getElementById('result-screen');
     const gameContainer = document.getElementById('game-container');
-    const flashOverlay = document.getElementById('flash-overlay');
     const bgAudio = document.getElementById('bg-audio');
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
     const hitText = document.getElementById('hit-text');
     const comboCount = document.getElementById('combo-count');
-    const feverBanner = document.getElementById('fever-banner');
 
-    let audioCtx, analyser, freqData, audioSourceNode;
     let tiles = [];
     let score = 0, combo = 0, maxCombo = 0;
     let countPerfect = 0, countGreat = 0, countMiss = 0;
     let isPlaying = false;
     let tileSpeed = 4;
-    let isFever = false;
     let spawnInterval = null;
-    let highScore = localStorage.getItem('rhythm_hi_score') || 0;
-
-    const themes = {
-        neon: { c1: '#38bdf8', c2: '#818cf8' },
-        sakura: { c1: '#f472b6', c2: '#fb7185' },
-        sunset: { c1: '#fbbf24', c2: '#f97316' },
-        cyber: { c1: '#a855f7', c2: '#06b6d4' }
-    };
-    let currentTheme = themes.neon;
-
-    document.getElementById('hi-score').innerText = highScore;
-
-    let activeLanes = [false, false, false, false];
-
-    let bgParticles = [];
-    for (let i = 0; i < 20; i++) {
-        bgParticles.push({
-            x: Math.random() * 360, y: Math.random() * 600,
-            radius: Math.random() * 2 + 0.8, alpha: Math.random() * 0.7 + 0.3,
-            speedY: Math.random() * 0.4 + 0.1, pulse: Math.random() * 0.02 + 0.005
-        });
-    }
-
-    let hitParticles = [];
 
     const keyMap = { 'ArrowLeft': 0, 'ArrowUp': 1, 'ArrowDown': 2, 'ArrowRight': 3 };
     const keyBoxes = [
@@ -382,26 +294,12 @@
         document.getElementById('k-Down'), document.getElementById('k-Right')
     ];
 
-    function bindOptionButtons(selector, callback) {
-        document.querySelectorAll(selector).forEach(btn => {
-            const handleSelect = (e) => {
-                e.preventDefault();
-                document.querySelectorAll(selector).forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                callback(btn);
-            };
-            btn.addEventListener('click', handleSelect);
-            btn.addEventListener('touchstart', handleSelect, { passive: false });
+    document.querySelectorAll('.diff-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            tileSpeed = parseInt(btn.getAttribute('data-speed'));
         });
-    }
-
-    bindOptionButtons('.diff-btn', (btn) => {
-        tileSpeed = parseInt(btn.getAttribute('data-speed'));
-    });
-
-    bindOptionButtons('.theme-btn', (btn) => {
-        const themeKey = btn.getAttribute('data-theme');
-        if(themes[themeKey]) currentTheme = themes[themeKey];
     });
 
     audioInput.addEventListener('change', (e) => {
@@ -413,31 +311,11 @@
         }
     });
 
-    function triggerVibrate(ms) {
-        if (navigator.vibrate) navigator.vibrate(ms);
-    }
-
-    function triggerFlash() {
-        flashOverlay.style.opacity = '1';
-        setTimeout(() => { flashOverlay.style.opacity = '0'; }, 50);
-    }
-
     function startGame() {
         if (!bgAudio.src) return;
 
         setupScreen.style.display = 'none';
         gameContainer.style.display = 'block';
-
-        try {
-            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            analyser = audioCtx.createAnalyser();
-            analyser.fftSize = 64;
-            freqData = new Uint8Array(analyser.frequencyBinCount);
-            
-            audioSourceNode = audioCtx.createMediaElementSource(bgAudio);
-            audioSourceNode.connect(analyser);
-            analyser.connect(audioCtx.destination);
-        } catch(e) {}
 
         bgAudio.play();
         isPlaying = true;
@@ -456,56 +334,36 @@
         }, spawnRate);
 
         bgAudio.onended = showResult;
-
         requestAnimationFrame(gameLoop);
     }
 
     startBtn.addEventListener('click', startGame);
-    startBtn.addEventListener('touchstart', (e) => { e.preventDefault(); startGame(); }, { passive: false });
 
     function triggerHit(lane) {
         keyBoxes[lane].classList.add('active');
-        activeLanes[lane] = true;
         const hitZoneY = 510;
 
-        gameContainer.classList.remove('shake');
-        void gameContainer.offsetWidth;
-        gameContainer.classList.add('shake');
-
-        let hitFound = false;
         tiles.forEach(tile => {
             if (tile.lane === lane && !tile.hit && !tile.missed) {
                 let hitOffset = Math.abs(tile.y + tile.height - hitZoneY);
                 
                 if (hitOffset <= 65) {
                     tile.hit = true;
-                    hitFound = true;
-
                     combo++;
                     if (combo > maxCombo) maxCombo = combo;
-
-                    if (combo >= 15 && !isFever) {
-                        isFever = true;
-                        gameContainer.classList.add('fever');
-                        feverBanner.style.opacity = '1';
-                        triggerVibrate([40, 40, 40]);
-                    }
 
                     let isPerfect = hitOffset <= 25;
                     if (isPerfect) {
                         countPerfect++;
-                        triggerFlash();
+                        showFeedback('PERFECT!', '#34d399');
+                        score += 150 + (combo * 5);
                     } else {
                         countGreat++;
+                        showFeedback('GREAT!', '#38bdf8');
+                        score += 80 + (combo * 5);
                     }
 
-                    let points = (isPerfect ? 150 : 80) * (isFever ? 2 : 1);
-                    score += points + (combo * 5);
-                    
                     document.getElementById('score').innerText = score;
-                    showFeedback(isPerfect ? 'PERFECT!' : 'GREAT!', isPerfect ? currentTheme.c1 : '#34d399');
-                    triggerVibrate(isPerfect ? 25 : 12);
-                    spawnHitBurst(lane * 90 + 45, hitZoneY);
                 }
             }
         });
@@ -513,7 +371,6 @@
 
     function releaseHit(lane) {
         keyBoxes[lane].classList.remove('active');
-        activeLanes[lane] = false;
     }
 
     window.addEventListener('keydown', (e) => {
@@ -529,38 +386,21 @@
         box.addEventListener('touchstart', (e) => {
             e.preventDefault();
             triggerHit(lane);
-        }, { passive: false });
-
+        });
         box.addEventListener('touchend', (e) => {
             e.preventDefault();
             releaseHit(lane);
-        }, { passive: false });
+        });
     });
-
-    function spawnHitBurst(x, y) {
-        let colorTheme = isFever ? '#f43f5e' : currentTheme.c1;
-        for (let i = 0; i < 10; i++) {
-            hitParticles.push({
-                x: x, y: y,
-                vx: (Math.random() - 0.5) * 7, vy: (Math.random() - 0.5) * 7,
-                radius: Math.random() * 3 + 2, alpha: 1,
-                color: i % 2 === 0 ? colorTheme : '#ffffff'
-            });
-        }
-    }
 
     function resetCombo() {
         combo = 0;
-        isFever = false;
-        gameContainer.classList.remove('fever');
-        feverBanner.style.opacity = '0';
         comboCount.style.opacity = '0';
     }
 
     function showFeedback(text, color) {
         hitText.innerText = text;
         hitText.style.color = color;
-        hitText.style.textShadow = `0 0 12px ${color}`;
         hitText.style.opacity = '1';
 
         if (combo > 1) {
@@ -577,17 +417,61 @@
         gameContainer.style.display = 'none';
         resultScreen.style.display = 'block';
 
-        if (score > highScore) {
-            highScore = score;
-            localStorage.setItem('rhythm_hi_score', highScore);
+        document.getElementById('res-score').innerText = score;
+        document.getElementById('res-perfect').innerText = countPerfect;
+        document.getElementById('res-great').innerText = countGreat;
+        document.getElementById('res-miss').innerText = countMiss;
+        document.getElementById('res-combo').innerText = `${maxCombo}x`;
+    }
+
+    function gameLoop() {
+        if (!isPlaying) return;
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Garis Jalur (Lanes)
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+        ctx.lineWidth = 1;
+        for (let i = 1; i < 4; i++) {
+            ctx.beginPath();
+            ctx.moveTo(i * 90, 0);
+            ctx.lineTo(i * 90, canvas.height);
+            ctx.stroke();
         }
 
-        let rank = 'C';
-        if (countMiss === 0 && countGreat === 0) rank = 'SS';
-        else if (countMiss === 0) rank = 'S';
-        else if (countPerfect > countMiss * 3) rank = 'A';
-        else if (countPerfect > countMiss) rank = 'B';
+        // Garis Batas Hit (Merah)
+        ctx.strokeStyle = '#ef4444';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(0, 510);
+        ctx.lineTo(360, 510);
+        ctx.stroke();
 
-        document.getElementById('res-rank').innerText = rank;
-        document.getElementById('res-score').innerText = score;
-        document.getE
+        // Render Tile
+        tiles.forEach(tile => {
+            tile.y += tileSpeed;
+
+            if (!tile.hit && !tile.missed && tile.y > 560) {
+                tile.missed = true;
+                countMiss++;
+                resetCombo();
+                showFeedback('MISS', '#ef4444');
+            }
+
+            if (!tile.hit && !tile.missed) {
+                // Warna Tile Neon
+                ctx.fillStyle = '#38bdf8';
+                ctx.fillRect(tile.lane * 90 + 8, tile.y, 74, tile.height);
+
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(tile.lane * 90 + 8, tile.y, 74, tile.height);
+            }
+        });
+
+        requestAnimationFrame(gameLoop);
+    }
+</script>
+</body>
+</html>
+
