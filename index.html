@@ -24,8 +24,8 @@
 
         #setup-screen, #result-screen {
             text-align: center;
-            background: rgba(10, 15, 30, 0.9);
-            padding: 24px;
+            background: rgba(10, 15, 30, 0.95);
+            padding: 20px;
             border-radius: 16px;
             box-shadow: 0 0 25px rgba(0,191,255,0.3);
             max-width: 360px;
@@ -40,18 +40,46 @@
         .btn-select-song {
             background: #0284c7;
             color: white;
-            padding: 12px 20px;
+            padding: 10px 16px;
             border-radius: 8px;
             cursor: pointer;
             font-weight: bold;
-            font-size: 14px;
-            margin-top: 15px;
+            font-size: 13px;
+            margin-top: 8px;
             display: inline-block;
             box-shadow: 0 0 10px rgba(2, 132, 199, 0.5);
         }
 
-        .option-group { margin-top: 15px; }
-        .option-label { font-size: 12px; color: #cbd5e1; margin-bottom: 8px; font-weight: bold; }
+        .song-list {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-top: 10px;
+            max-height: 130px;
+            overflow-y: auto;
+        }
+
+        .song-option {
+            background: #1e293b;
+            border: 1px solid #334155;
+            color: #cbd5e1;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            text-align: left;
+            font-weight: bold;
+            transition: 0.2s;
+        }
+        .song-option.selected {
+            background: #38bdf8;
+            color: #000;
+            border-color: #38bdf8;
+            box-shadow: 0 0 10px #38bdf8;
+        }
+
+        .option-group { margin-top: 12px; }
+        .option-label { font-size: 12px; color: #cbd5e1; margin-bottom: 6px; font-weight: bold; }
 
         .diff-container { display: flex; justify-content: center; gap: 8px; }
 
@@ -82,7 +110,7 @@
             font-weight: bold;
             font-size: 16px;
             width: 100%;
-            margin-top: 20px;
+            margin-top: 15px;
             cursor: pointer;
             display: none;
             box-shadow: 0 0 15px rgba(16, 185, 129, 0.5);
@@ -117,7 +145,7 @@
         #game-overlay {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.45);
+            background: rgba(0, 0, 0, 0.4);
             pointer-events: none;
             z-index: 1;
         }
@@ -164,7 +192,7 @@
             color: #38bdf8;
             text-shadow: 0 0 10px #000, 0 0 15px #38bdf8;
             opacity: 0;
-            transition: opacity 0.15s ease, transform 0.1s ease;
+            transition: opacity 0.15s ease;
         }
 
         #combo-count {
@@ -179,10 +207,10 @@
             position: absolute;
             bottom: 0;
             width: 100%;
-            height: 75px;
+            height: 85px;
             display: flex;
-            background: rgba(0, 0, 0, 0.85);
-            border-top: 1.5px solid rgba(255, 255, 255, 0.25);
+            background: rgba(0, 0, 0, 0.9);
+            border-top: 2px solid rgba(255, 255, 255, 0.3);
             z-index: 10;
         }
 
@@ -192,8 +220,9 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
-            font-size: 20px;
+            justify-content: flex-start;
+            padding-top: 10px;
+            font-size: 18px;
             font-weight: bold;
             color: #aaa;
             transition: all 0.05s ease;
@@ -203,25 +232,24 @@
         .key-box:last-child { border-right: none; }
         
         .key-box.active {
-            background: rgba(56, 189, 248, 0.5);
+            background: rgba(56, 189, 248, 0.4);
             color: #fff;
-            box-shadow: inset 0 0 25px #38bdf8, 0 0 20px #38bdf8;
-            transform: scale(0.90);
-            border-top: 5px solid #38bdf8;
+            box-shadow: inset 0 0 20px #38bdf8, 0 0 15px #38bdf8;
+            border-top: 6px solid #38bdf8;
         }
 
         .hand-icon {
             position: absolute;
             bottom: 12px;
-            font-size: 26px;
+            font-size: 30px;
             opacity: 0;
-            transform: translateY(20px) scale(0.5);
+            transform: translateY(15px) scale(0.6);
             transition: all 0.08s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             pointer-events: none;
         }
         .key-box.active .hand-icon {
             opacity: 1;
-            transform: translateY(-8px) scale(1.25);
+            transform: translateY(-2px) scale(1.3);
         }
 
         .stat-list {
@@ -237,14 +265,19 @@
 
 <div id="setup-screen">
     <h2>🎵 Custom Music Rhythm Tiles</h2>
-    <p style="margin-top:6px; font-size:12px; color:#aaa;">Pilih lagu favoritmu!</p>
+    <p style="margin-top:4px; font-size:11px; color:#aaa;">Pilih lagu atau upload sendiri!</p>
     
-    <label class="btn-select-song" id="label-select">
-        📁 Pilih File Audio
+    <div class="song-list" id="song-list">
+        <div class="song-option selected" data-src="https://upload.wikimedia.org/wikipedia/commons/b/b2/Beethoven_Moonlight_1st_movement.ogg">🎹 Beethoven - Moonlight Sonata</div>
+        <div class="song-option" data-src="https://upload.wikimedia.org/wikipedia/commons/d/d4/Mozart_Rondo_alla_turca.ogg">🎻 Mozart - Rondo alla Turca</div>
+    </div>
+
+    <label class="btn-select-song">
+        📁 Upload File Lagu Sendiri
         <input type="file" id="audio-input" accept="audio/*">
     </label>
-    <div id="file-name" style="margin-top:8px; font-size:12px; color:#38bdf8; font-weight:bold;"></div>
-    <div id="loading-status" style="margin-top:6px; font-size:11px; color:#fbbf24;"></div>
+    <div id="file-name" style="margin-top:4px; font-size:11px; color:#38bdf8; font-weight:bold;"></div>
+    <div id="loading-status" style="margin-top:4px; font-size:11px; color:#fbbf24;"></div>
 
     <div class="option-group">
         <div class="option-label">Kecepatan Tile:</div>
@@ -255,7 +288,7 @@
         </div>
     </div>
     
-    <button id="start-btn">MULAI GAME 🚀</button>
+    <button id="start-btn" style="display:block;">MULAI GAME 🚀</button>
 </div>
 
 <div id="result-screen">
@@ -308,7 +341,7 @@
     let audioCtx = null;
     let audioBuffer = null;
     let audioSource = null;
-    let audioStartTime = 0;
+    let currentSelectedUrl = "https://upload.wikimedia.org/wikipedia/commons/b/b2/Beethoven_Moonlight_1st_movement.ogg";
     
     let tiles = [];
     let particles = [];
@@ -335,10 +368,45 @@
         });
     });
 
+    async function loadAudioFromUrl(url, name) {
+        fileNameDiv.innerText = "🎵 " + name;
+        loadingStatus.innerText = "Mengunduh & memproses audio...";
+        startBtn.style.display = 'none';
+
+        try {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            
+            const response = await fetch(url);
+            const arrayBuffer = await response.arrayBuffer();
+            audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+            
+            loadingStatus.innerText = "Audio siap dimainkan! ✅";
+            startBtn.style.display = 'block';
+        } catch (err) {
+            console.error(err);
+            loadingStatus.innerText = "Gagal memuat audio. Coba lagu lain.";
+        }
+    }
+
+    // Load default lagu pertama
+    loadAudioFromUrl(currentSelectedUrl, "Beethoven - Moonlight Sonata");
+
+    document.querySelectorAll('.song-option').forEach(opt => {
+        opt.addEventListener('click', () => {
+            document.querySelectorAll('.song-option').forEach(o => o.classList.remove('selected'));
+            opt.classList.add('selected');
+            currentSelectedUrl = opt.getAttribute('data-src');
+            loadAudioFromUrl(currentSelectedUrl, opt.innerText);
+        });
+    });
+
     audioInput.addEventListener('change', async (e) => {
         const file = e.target.files[0];
         if (!file) return;
 
+        document.querySelectorAll('.song-option').forEach(o => o.classList.remove('selected'));
         fileNameDiv.innerText = "🎵 " + file.name;
         loadingStatus.innerText = "Memuat audio ke memori...";
         startBtn.style.display = 'none';
@@ -355,7 +423,7 @@
             startBtn.style.display = 'block';
         } catch (err) {
             console.error(err);
-            loadingStatus.innerText = "Gagal memuat audio. Coba file MP3 lain.";
+            loadingStatus.innerText = "Gagal memuat file audio.";
         }
     });
 
@@ -384,12 +452,10 @@
 
         initBgParticles();
 
-        // Putar audio menggunakan Web Audio API (Sangat stabil di HP)
         audioSource = audioCtx.createBufferSource();
         audioSource.buffer = audioBuffer;
         audioSource.connect(audioCtx.destination);
         audioSource.start(0);
-        audioStartTime = audioCtx.currentTime;
 
         audioSource.onended = () => {
             if (isPlaying) showResult();
@@ -400,8 +466,8 @@
         let spawnRate = tileSpeed === 4 ? 650 : (tileSpeed === 6 ? 480 : 350);
         spawnInterval = setInterval(() => {
             if(isPlaying) {
-                let isLong = Math.random() < 0.28; 
-                let tHeight = isLong ? 160 : 65;
+                let isLong = Math.random() < 0.3; // 30% peluang muncul tile panjang (ungu)
+                let tHeight = isLong ? 180 : 65;
 
                 tiles.push({
                     lane: Math.floor(Math.random() * 4),
@@ -433,8 +499,8 @@
         touchVisuals.push({
             x: sparkX,
             y: sparkY,
-            radius: 8,
-            maxRadius: 50,
+            radius: 10,
+            maxRadius: 60,
             alpha: 1,
             color: color
         });
@@ -515,80 +581,4 @@
         lanePressed[lane] = false;
 
         for (let i = 0; i < tiles.length; i++) {
-            let tile = tiles[i];
-            if (tile.lane === lane && tile.isLong && tile.holding) {
-                tile.holding = false;
-                tile.hit = true;
-                score += 200;
-                document.getElementById('score').innerText = score;
-                showFeedback('GREAT HOLD!', '#38bdf8');
-            }
-        }
-    }
-
-    window.addEventListener('keydown', (e) => {
-        if (keyMap.hasOwnProperty(e.key) && !e.repeat) triggerHit(keyMap[e.key]);
-    });
-
-    window.addEventListener('keyup', (e) => {
-        if (keyMap.hasOwnProperty(e.key)) releaseHit(keyMap[e.key]);
-    });
-
-    keyBoxes.forEach((box) => {
-        const lane = parseInt(box.getAttribute('data-lane'));
-        box.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            triggerHit(lane);
-        }, { passive: false });
-        box.addEventListener('touchend', (e) => {
-            e.preventDefault();
-            releaseHit(lane);
-        }, { passive: false });
-        box.addEventListener('mousedown', () => triggerHit(lane));
-        box.addEventListener('mouseup', () => releaseHit(lane));
-    });
-
-    function resetCombo() {
-        combo = 0;
-        comboCount.style.opacity = '0';
-    }
-
-    function showFeedback(text, color) {
-        hitText.innerText = text;
-        hitText.style.color = color;
-        hitText.style.textShadow = `0 0 10px #000, 0 0 15px ${color}`;
-        hitText.style.opacity = '1';
-
-        if (combo > 1) {
-            comboCount.innerText = `${combo}x COMBO`;
-            comboCount.style.opacity = '1';
-        }
-
-        setTimeout(() => { hitText.style.opacity = '0'; }, 300);
-    }
-
-    function showResult() {
-        isPlaying = false;
-        clearInterval(spawnInterval);
-        if (audioSource) {
-            try { audioSource.stop(); } catch(e){}
-        }
-        gameContainer.style.display = 'none';
-        resultScreen.style.display = 'block';
-
-        document.getElementById('res-score').innerText = score;
-        document.getElementById('res-perfect').innerText = countPerfect;
-        document.getElementById('res-great').innerText = countGreat;
-        document.getElementById('res-good').innerText = countGood;
-        document.getElementById('res-miss').innerText = countMiss;
-        document.getElementById('res-combo').innerText = `${maxCombo}x`;
-    }
-
-    function gameLoop() {
-        if (!isPlaying) return;
-
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-        bgParticles.forEach(p => {
-            p.y -= p.speedY;
-     
+        
