@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Rhythm Game - By Mario</title>
+    <title>Custom Music Rhythm Tiles</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
@@ -11,10 +11,11 @@
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
         body {
-            background: #050508;
+            background: #000;
             color: #fff;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: Arial, sans-serif;
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
             min-height: 100vh;
@@ -23,14 +24,13 @@
 
         #setup-screen, #result-screen {
             text-align: center;
-            background: rgba(15, 15, 25, 0.9);
+            background: rgba(10, 15, 30, 0.9);
             padding: 24px;
-            border-radius: 20px;
-            box-shadow: 0 0 30px rgba(0, 0, 0, 0.9);
+            border-radius: 16px;
+            box-shadow: 0 0 25px rgba(0,191,255,0.3);
             max-width: 360px;
             width: 90%;
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(10px);
+            border: 1px solid #38bdf8;
             z-index: 30;
         }
 
@@ -39,33 +39,29 @@
         input[type="file"] { display: none; }
         
         .btn-select-song {
-            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            background: #0284c7;
             color: white;
             padding: 12px 20px;
-            border-radius: 10px;
+            border-radius: 8px;
             cursor: pointer;
             font-weight: bold;
             font-size: 14px;
             margin-top: 15px;
             display: inline-block;
-            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+            box-shadow: 0 0 10px rgba(2, 132, 199, 0.5);
         }
 
         .option-group { margin-top: 15px; }
-        .option-label { font-size: 12px; color: #aaa; margin-bottom: 8px; font-weight: bold; }
+        .option-label { font-size: 12px; color: #cbd5e1; margin-bottom: 8px; font-weight: bold; }
 
-        .diff-container {
-            display: flex;
-            justify-content: center;
-            gap: 8px;
-        }
+        .diff-container { display: flex; justify-content: center; gap: 8px; }
 
         .opt-btn {
-            background: rgba(255, 255, 255, 0.1);
+            background: #1e293b;
             color: #fff;
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            border: 1px solid #334155;
             padding: 8px 12px;
-            border-radius: 8px;
+            border-radius: 6px;
             cursor: pointer;
             font-size: 12px;
             font-weight: bold;
@@ -75,103 +71,78 @@
             background: #38bdf8;
             color: #000;
             border-color: #38bdf8;
-            box-shadow: 0 0 10px rgba(56, 189, 248, 0.5);
+            box-shadow: 0 0 10px #38bdf8;
         }
 
         #start-btn {
-            background: linear-gradient(135deg, #22c55e, #15803d);
+            background: #10b981;
             color: white;
             padding: 12px;
             border: none;
-            border-radius: 10px;
+            border-radius: 8px;
             font-weight: bold;
             font-size: 16px;
             width: 100%;
             margin-top: 20px;
             cursor: pointer;
             display: none;
-            box-shadow: 0 4px 15px rgba(34, 197, 94, 0.4);
+            box-shadow: 0 0 15px rgba(16, 185, 129, 0.5);
         }
 
-        /* Outer Frame Game Container */
+        /* Container Persis Seperti di Video */
         #game-container {
             display: none;
             position: relative;
             width: 100vw;
             height: 100vh;
             max-width: 380px;
-            max-height: 660px;
-            background: #090912;
-            border: 2px solid rgba(255, 255, 255, 0.15);
-            border-radius: 20px;
+            max-height: 640px;
+            background: url('bg.jpg') center/cover no-repeat #000;
+            border: 1.5px solid rgba(255, 255, 255, 0.2);
             overflow: hidden;
-            box-shadow: 0 0 50px rgba(0, 0, 0, 0.8);
+            box-shadow: 0 0 30px rgba(0,0,0,0.9);
         }
 
-        /* Floating / Rotating Artwork di Tengah Seperti di Video */
-        .art-wrapper {
+        /* Dark Overlay tipis di atas gambar bg.jpg */
+        #game-overlay {
             position: absolute;
-            top: 28%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 190px;
-            height: 190px;
-            border-radius: 50%;
-            padding: 6px;
-            background: linear-gradient(45deg, #38bdf8, #f43f5e, #a855f7);
-            box-shadow: 0 0 30px rgba(56, 189, 248, 0.3);
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.45);
+            pointer-events: none;
             z-index: 1;
-            animation: pulseGlow 4s infinite alternate;
-        }
-
-        .art-circle {
-            width: 100%;
-            height: 100%;
-            border-radius: 50%;
-            /* Ganti URL gambar background JPG sesuai selera di bawah ini */
-            background: url('https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=1000&auto=format&fit=crop') center/cover no-repeat;
-            animation: slowRotate 20s linear infinite;
-        }
-
-        @keyframes slowRotate {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
-
-        @keyframes pulseGlow {
-            0% { box-shadow: 0 0 20px rgba(56, 189, 248, 0.3); }
-            100% { box-shadow: 0 0 40px rgba(244, 63, 94, 0.6); }
         }
 
         canvas { display: block; width: 100%; height: 100%; position: relative; z-index: 2; }
 
-        /* Signature Watermark "By Mario" */
+        /* Signature "By Mario" Persis Seperti Video */
         .signature {
             position: absolute;
-            top: 14px;
-            right: 18px;
+            top: 12px;
+            right: 20px;
             font-family: 'Great Vibes', cursive;
-            font-size: 28px;
+            font-size: 32px;
             color: #ffffff;
-            text-shadow: 0 0 8px rgba(0,0,0,0.8), 0 0 15px #38bdf8;
+            text-shadow: 0 0 8px rgba(0,0,0,0.9), 0 0 15px #38bdf8;
             z-index: 10;
             pointer-events: none;
         }
 
         #score-board {
             position: absolute;
-            top: 14px;
-            left: 18px;
-            font-size: 14px;
+            top: 16px;
+            left: 20px;
+            font-size: 16px;
             font-weight: bold;
-            text-shadow: 0 2px 4px #000;
+            font-family: Arial, sans-serif;
+            color: #ffffff;
+            text-shadow: 0 0 8px #000, 0 0 12px #38bdf8;
             z-index: 10;
         }
 
-        /* Visual Rating Hit (PERFECT, GREAT, GOOD, MISS) & Combo */
+        /* Tampilan Hit Rating (PERFECT, GREAT, GOOD, MISS) & Combo */
         #combo-hud {
             position: absolute;
-            top: 48%;
+            top: 42%;
             width: 100%;
             text-align: center;
             font-family: 'Orbitron', sans-serif;
@@ -180,24 +151,18 @@
         }
 
         #hit-text {
-            font-size: 28px;
+            font-size: 26px;
             font-weight: 900;
             color: #38bdf8;
-            text-shadow: 0 0 12px #000, 0 0 20px #38bdf8;
+            text-shadow: 0 0 10px #000, 0 0 15px #38bdf8;
             opacity: 0;
-            transform: scale(0.8);
-            transition: opacity 0.1s ease, transform 0.1s ease;
-        }
-
-        #hit-text.pop {
-            opacity: 1;
-            transform: scale(1.1);
+            transition: opacity 0.15s ease, transform 0.1s ease;
         }
 
         #combo-count {
-            font-size: 18px;
+            font-size: 16px;
             color: #fbbf24;
-            text-shadow: 0 0 10px #000;
+            text-shadow: 0 0 8px #000;
             margin-top: 4px;
             opacity: 0;
         }
@@ -206,31 +171,29 @@
             position: absolute;
             bottom: 0;
             width: 100%;
-            height: 85px;
+            height: 75px;
             display: flex;
-            background: rgba(0, 0, 0, 0.65);
-            border-top: 1px solid rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(8px);
+            background: rgba(0, 0, 0, 0.7);
+            border-top: 1.5px solid rgba(255, 255, 255, 0.25);
             z-index: 10;
         }
 
         .key-box {
             flex: 1;
-            border-right: 1px solid rgba(255, 255, 255, 0.08);
+            border-right: 1px solid rgba(255, 255, 255, 0.15);
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 22px;
             font-weight: bold;
-            color: #e2e8f0;
+            color: #fff;
             touch-action: manipulation;
         }
         .key-box:last-child { border-right: none; }
 
         .key-box.active {
-            background: rgba(56, 189, 248, 0.4);
+            background: rgba(56, 189, 248, 0.5);
             box-shadow: inset 0 0 15px #38bdf8;
-            color: #fff;
         }
 
         .stat-list {
@@ -245,7 +208,7 @@
 <body>
 
 <div id="setup-screen">
-    <h2>🎵 Rhythm Game</h2>
+    <h2>🎵 Custom Music Rhythm Tiles</h2>
     <p style="margin-top:6px; font-size:12px; color:#aaa;">Pilih lagu favoritmu!</p>
     
     <label class="btn-select-song">
@@ -273,258 +236,5 @@
         <div>Perfect: <b id="res-perfect" style="color:#34d399;">0</b></div>
         <div>Great: <b id="res-great" style="color:#38bdf8;">0</b></div>
         <div>Good: <b id="res-good" style="color:#fbbf24;">0</b></div>
-        <div>Miss: <b id="res-miss" style="color:#ef4444;">0</b></div>
-        <div>Max Combo: <b id="res-combo" style="color:#a855f7;">0x</b></div>
-    </div>
-    <button class="opt-btn active" onclick="location.reload()" style="width:100%; padding:12px; font-size:14px;">Main Lagi 🔄</button>
-</div>
-
-<div id="game-container">
-    <!-- Gambar Art Melayang & Berputar -->
-    <div class="art-wrapper">
-        <div class="art-circle"></div>
-    </div>
-
-    <div id="score-board">
-        Score: <span id="score">0</span>
-    </div>
-    
-    <!-- Watermark Signature "By Mario" -->
-    <div class="signature">By Mario</div>
-    
-    <!-- Indikator Rating Hit -->
-    <div id="combo-hud">
-        <div id="hit-text">PERFECT</div>
-        <div id="combo-count">0x COMBO</div>
-    </div>
-
-    <canvas id="gameCanvas" width="360" height="600"></canvas>
-    
-    <div class="key-hints">
-        <div class="key-box" id="k-Left" data-lane="0">←</div>
-        <div class="key-box" id="k-Up" data-lane="1">↑</div>
-        <div class="key-box" id="k-Down" data-lane="2">↓</div>
-        <div class="key-box" id="k-Right" data-lane="3">→</div>
-    </div>
-</div>
-
-<audio id="bg-audio"></audio>
-
-<script>
-    const audioInput = document.getElementById('audio-input');
-    const startBtn = document.getElementById('start-btn');
-    const fileNameDiv = document.getElementById('file-name');
-    const setupScreen = document.getElementById('setup-screen');
-    const resultScreen = document.getElementById('result-screen');
-    const gameContainer = document.getElementById('game-container');
-    const bgAudio = document.getElementById('bg-audio');
-    const canvas = document.getElementById('gameCanvas');
-    const ctx = canvas.getContext('2d');
-    const hitText = document.getElementById('hit-text');
-    const comboCount = document.getElementById('combo-count');
-
-    let tiles = [];
-    let score = 0, combo = 0, maxCombo = 0;
-    let countPerfect = 0, countGreat = 0, countGood = 0, countMiss = 0;
-    let isPlaying = false;
-    let tileSpeed = 4;
-    let spawnInterval = null;
-
-    const keyMap = { 'ArrowLeft': 0, 'ArrowUp': 1, 'ArrowDown': 2, 'ArrowRight': 3 };
-    const keyBoxes = [
-        document.getElementById('k-Left'), document.getElementById('k-Up'),
-        document.getElementById('k-Down'), document.getElementById('k-Right')
-    ];
-
-    document.querySelectorAll('.diff-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            tileSpeed = parseInt(btn.getAttribute('data-speed'));
-        });
-    });
-
-    audioInput.addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            bgAudio.src = URL.createObjectURL(file);
-            fileNameDiv.innerText = "🎵 " + file.name;
-            startBtn.style.display = 'block';
-        }
-    });
-
-    function startGame() {
-        if (!bgAudio.src) return;
-
-        setupScreen.style.display = 'none';
-        gameContainer.style.display = 'block';
-
-        bgAudio.play();
-        isPlaying = true;
-
-        let spawnRate = tileSpeed === 4 ? 650 : (tileSpeed === 6 ? 480 : 350);
-        spawnInterval = setInterval(() => {
-            if(isPlaying) {
-                tiles.push({
-                    lane: Math.floor(Math.random() * 4),
-                    y: -70,
-                    height: 70,
-                    hit: false,
-                    missed: false
-                });
-            }
-        }, spawnRate);
-
-        bgAudio.onended = showResult;
-        requestAnimationFrame(gameLoop);
-    }
-
-    startBtn.addEventListener('click', startGame);
-
-    function triggerHit(lane) {
-        keyBoxes[lane].classList.add('active');
-        const hitZoneY = 510;
-
-        tiles.forEach(tile => {
-            if (tile.lane === lane && !tile.hit && !tile.missed) {
-                let hitOffset = Math.abs(tile.y + tile.height - hitZoneY);
-                
-                // Jangkauan Hit Zone
-                if (hitOffset <= 70) {
-                    tile.hit = true;
-                    combo++;
-                    if (combo > maxCombo) maxCombo = combo;
-
-                    if (hitOffset <= 20) {
-                        countPerfect++;
-                        showFeedback('PERFECT!', '#34d399');
-                        score += 150 + (combo * 5);
-                    } else if (hitOffset <= 45) {
-                        countGreat++;
-                        showFeedback('GREAT!', '#38bdf8');
-                        score += 100 + (combo * 3);
-                    } else {
-                        countGood++;
-                        showFeedback('GOOD', '#fbbf24');
-                        score += 50;
-                    }
-
-                    document.getElementById('score').innerText = score;
-                }
-            }
-        });
-    }
-
-    function releaseHit(lane) {
-        keyBoxes[lane].classList.remove('active');
-    }
-
-    window.addEventListener('keydown', (e) => {
-        if (keyMap.hasOwnProperty(e.key)) triggerHit(keyMap[e.key]);
-    });
-
-    window.addEventListener('keyup', (e) => {
-        if (keyMap.hasOwnProperty(e.key)) releaseHit(keyMap[e.key]);
-    });
-
-    keyBoxes.forEach((box) => {
-        const lane = parseInt(box.getAttribute('data-lane'));
-        box.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            triggerHit(lane);
-        });
-        box.addEventListener('touchend', (e) => {
-            e.preventDefault();
-            releaseHit(lane);
-        });
-    });
-
-    function resetCombo() {
-        combo = 0;
-        comboCount.style.opacity = '0';
-    }
-
-    function showFeedback(text, color) {
-        hitText.innerText = text;
-        hitText.style.color = color;
-        hitText.style.textShadow = `0 0 12px ${color}`;
-        hitText.classList.remove('pop');
-        void hitText.offsetWidth; // Trigger reflow animation
-        hitText.classList.add('pop');
-
-        if (combo > 1) {
-            comboCount.innerText = `${combo}x COMBO`;
-            comboCount.style.opacity = '1';
-        }
-
-        setTimeout(() => { hitText.classList.remove('pop'); }, 300);
-    }
-
-    function showResult() {
-        isPlaying = false;
-        clearInterval(spawnInterval);
-        gameContainer.style.display = 'none';
-        resultScreen.style.display = 'block';
-
-        document.getElementById('res-score').innerText = score;
-        document.getElementById('res-perfect').innerText = countPerfect;
-        document.getElementById('res-great').innerText = countGreat;
-        document.getElementById('res-good').innerText = countGood;
-        document.getElementById('res-miss').innerText = countMiss;
-        document.getElementById('res-combo').innerText = `${maxCombo}x`;
-    }
-
-    function gameLoop() {
-        if (!isPlaying) return;
-
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-        // Garis Pemisah Lane
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
-        ctx.lineWidth = 1;
-        for (let i = 1; i < 4; i++) {
-            ctx.beginPath();
-            ctx.moveTo(i * 90, 0);
-            ctx.lineTo(i * 90, canvas.height);
-            ctx.stroke();
-        }
-
-        // Garis Target Merah
-        ctx.strokeStyle = '#ef4444';
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.moveTo(0, 510);
-        ctx.lineTo(360, 510);
-        ctx.stroke();
-
-        // Render Tile
-        tiles.forEach(tile => {
-            tile.y += tileSpeed;
-
-            if (!tile.hit && !tile.missed && tile.y > 560) {
-                tile.missed = true;
-                countMiss++;
-                resetCombo();
-                showFeedback('MISS', '#ef4444');
-            }
-
-            if (!tile.hit && !tile.missed) {
-                // Desain Tile Keren
-                let grad = ctx.createLinearGradient(0, tile.y, 0, tile.y + tile.height);
-                grad.addColorStop(0, '#38bdf8');
-                grad.addColorStop(1, '#1d4ed8');
-
-                ctx.fillStyle = grad;
-                ctx.fillRect(tile.lane * 90 + 8, tile.y, 74, tile.height);
-
-                ctx.strokeStyle = '#ffffff';
-                ctx.lineWidth = 1.5;
-                ctx.strokeRect(tile.lane * 90 + 8, tile.y, 74, tile.height);
-            }
-        });
-
-        requestAnimationFrame(gameLoop);
-    }
-</script>
-</body>
-</html>
+        <div>Miss: <b id="res-miss" style="color:#ef44
+                       
